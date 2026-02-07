@@ -26,13 +26,18 @@
     "login": "Iniciar Sesión",
     "signUp": "Registrarse",
     "logout": "Cerrar Sesión",
-    "upgrade": "Mejorar Cuenta"
+    "upgrade": "Mejorar Cuenta",
+    "menu": "Menú"
   },
   "landing": {
     "hero": "Domina Cualquier Tema con Aprendizaje Respaldado por la Ciencia",
-    "subtitle": "App bilingüe de cuestionarios y tarjetas con repetición espaciada FSRS",
+    "heroRich": "Domina Cualquier Tema con <highlight>Aprendizaje Respaldado por la Ciencia</highlight>",
+    "subtitle": "App bilingüe de cuestionarios y tarjetas con repetición espaciada FSRS. Estudia de forma inteligente.",
     "cta": "Comenzar",
     "tryWithout": "Probar sin cuenta",
+    "welcomeBack": "¡Bienvenido de nuevo!",
+    "readyToContinue": "¿Listo para continuar donde lo dejaste?",
+    "continueLearning": "Continuar Aprendiendo",
     "features": {
       "fsrs": {
         "title": "Repetición Espaciada",
@@ -68,13 +73,21 @@
     "title": "Tus Temas",
     "selectTheme": "Selecciona un Tema",
     "noThemes": "No hay temas disponibles",
+    "noThemesDetail": "¡Vuelve pronto para nuevo contenido!",
     "dueToday": "pendientes hoy",
     "lastStudied": "Último estudio",
     "never": "Nunca",
     "fullyMemorized": "¡Totalmente Memorizado!",
+    "masteredAll": "Has dominado todas las preguntas de este tema.",
     "reviewAnyway": "Repasar Todo de Todas Formas",
     "hide": "Ocultar Tema",
     "unhide": "Mostrar",
+    "questionCount": "preguntas",
+    "cardCount": "tarjetas",
+    "percentMastered": "dominado",
+    "backToThemes": "Volver a Temas",
+    "progressTitle": "Progreso",
+    "categories": "Categorías",
     "progress": {
       "new": "Nuevo",
       "learning": "Aprendiendo",
@@ -206,6 +219,9 @@
     "outdated": "Desactualizado",
     "proposeQuestion": "Proponer una Pregunta",
     "proposeTheme": "Proponer un Tema"
+  },
+  "footer": {
+    "tagline": "Aprendizaje respaldado por la ciencia"
   },
   "about": {
     "title": "Acerca de LEARN",

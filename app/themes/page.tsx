@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { getAllThemesProgress } from '@/lib/fsrs/progress';
 import { ThemeGrid } from '@/components/themes/theme-grid';
+import { getTranslations, getLocale } from 'next-intl/server';
 
 export const metadata = { title: 'Themes - LEARN' };
 
@@ -9,6 +10,9 @@ export default async function ThemesPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/auth/login');
+
+  const locale = await getLocale();
+  const t = await getTranslations('themes');
 
   // Get all active themes
   const { data: themes } = await supabase
@@ -31,8 +35,8 @@ export default async function ThemesPage() {
 
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4">
-      <h1 className="text-3xl font-bold mb-6">Your Themes</h1>
-      <ThemeGrid themes={visibleThemes} progress={progress} userId={user.id} />
+      <h1 className="text-3xl font-bold mb-6">{t('title')}</h1>
+      <ThemeGrid themes={visibleThemes} progress={progress} userId={user.id} locale={locale} />
     </div>
   );
 }

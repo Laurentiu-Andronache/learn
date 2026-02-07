@@ -39,6 +39,8 @@ export function FlashcardSession({
 }: FlashcardSessionProps) {
   const locale = useLocale();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [knewCount, setKnewCount] = useState(0);
+  const [didntKnowCount, setDidntKnowCount] = useState(0);
   const [results, setResults] = useState<{
     knew: string[];
     didntKnow: string[];
@@ -69,9 +71,20 @@ export function FlashcardSession({
     []
   );
 
+  const handleProgressChange = useCallback(
+    (knew: number, didntKnow: number, index: number) => {
+      setKnewCount(knew);
+      setDidntKnowCount(didntKnow);
+      setCurrentIndex(index);
+    },
+    []
+  );
+
   const handleReviewDidntKnow = useCallback(() => {
     setResults(null);
     setCurrentIndex(0);
+    setKnewCount(0);
+    setDidntKnowCount(0);
   }, []);
 
   if (results) {
@@ -110,8 +123,8 @@ export function FlashcardSession({
       <FlashcardProgress
         current={currentIndex}
         total={questions.length}
-        knew={0}
-        didntKnow={0}
+        knew={knewCount}
+        didntKnow={didntKnowCount}
       />
 
       <FlashcardStack
@@ -120,6 +133,7 @@ export function FlashcardSession({
         onGrade={handleGrade}
         onSuspend={handleSuspend}
         onComplete={handleComplete}
+        onProgressChange={handleProgressChange}
       />
     </div>
   );

@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { hideTheme } from '@/lib/services/user-preferences';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import type { ThemeProgress } from '@/lib/fsrs/progress';
 
 interface ThemeData {
   id: string;
   title_en: string;
+  title_es: string | null;
   description_en: string | null;
+  description_es: string | null;
   icon: string | null;
 }
 
@@ -20,10 +23,15 @@ interface ThemeCardProps {
   theme: ThemeData;
   progress: ThemeProgress | null;
   userId: string;
+  locale: string;
 }
 
-export function ThemeCard({ theme, progress, userId }: ThemeCardProps) {
+export function ThemeCard({ theme, progress, userId, locale }: ThemeCardProps) {
   const router = useRouter();
+  const t = useTranslations('themes');
+
+  const title = locale === 'es' ? (theme.title_es || theme.title_en) : theme.title_en;
+  const description = locale === 'es' ? (theme.description_es || theme.description_en) : theme.description_en;
 
   const total = progress?.total ?? 0;
   const newPct = total > 0 ? (progress!.newCount / total) * 100 : 100;
@@ -43,7 +51,7 @@ export function ThemeCard({ theme, progress, userId }: ThemeCardProps) {
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{theme.icon}</span>
-              <h3 className="font-semibold text-lg leading-tight">{theme.title_en}</h3>
+              <h3 className="font-semibold text-lg leading-tight">{title}</h3>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
@@ -51,14 +59,14 @@ export function ThemeCard({ theme, progress, userId }: ThemeCardProps) {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={(e) => { e.preventDefault(); handleHide(); }}>
-                  Hide Theme
+                  {t('hide')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-sm text-muted-foreground line-clamp-2">{theme.description_en}</p>
+          <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
 
           {/* Progress bar */}
           {total > 0 && (
@@ -70,8 +78,8 @@ export function ThemeCard({ theme, progress, userId }: ThemeCardProps) {
                 <div className="bg-gray-300 dark:bg-gray-600" style={{ width: `${newPct}%` }} />
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{total} questions</span>
-                <span>{progress?.percentComplete ?? 0}% mastered</span>
+                <span>{total} {t('questionCount')}</span>
+                <span>{progress?.percentComplete ?? 0}% {t('percentMastered')}</span>
               </div>
             </div>
           )}
@@ -79,10 +87,10 @@ export function ThemeCard({ theme, progress, userId }: ThemeCardProps) {
           {/* Due today badge */}
           <div className="flex items-center gap-2">
             {progress && progress.dueToday > 0 && (
-              <Badge variant="secondary">{progress.dueToday} due today</Badge>
+              <Badge variant="secondary">{progress.dueToday} {t('dueToday')}</Badge>
             )}
             {progress?.fullyMemorized && (
-              <Badge className="bg-green-600">Fully Memorized!</Badge>
+              <Badge className="bg-green-600">{t('fullyMemorized')}</Badge>
             )}
           </div>
         </CardContent>

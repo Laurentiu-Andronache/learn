@@ -21,9 +21,10 @@ interface FlashcardStackProps {
   onGrade: (questionId: string, knew: boolean) => void;
   onSuspend: (questionId: string) => void;
   onComplete: (results: { knew: string[]; didntKnow: string[] }) => void;
+  onProgressChange?: (knew: number, didntKnow: number, currentIndex: number) => void;
 }
 
-export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComplete }: FlashcardStackProps) {
+export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComplete, onProgressChange }: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [knew, setKnew] = useState<string[]>([]);
@@ -35,22 +36,24 @@ export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComple
     const qId = current.id;
     onGrade(qId, knewIt);
 
+    const newKnew = knewIt ? [...knew, qId] : knew;
+    const newDidntKnow = knewIt ? didntKnow : [...didntKnow, qId];
+
     if (knewIt) {
-      setKnew(prev => [...prev, qId]);
+      setKnew(newKnew);
     } else {
-      setDidntKnow(prev => [...prev, qId]);
+      setDidntKnow(newDidntKnow);
     }
 
     if (currentIndex + 1 >= questions.length) {
-      onComplete({
-        knew: knewIt ? [...knew, qId] : knew,
-        didntKnow: knewIt ? didntKnow : [...didntKnow, qId],
-      });
+      onComplete({ knew: newKnew, didntKnow: newDidntKnow });
     } else {
-      setCurrentIndex(prev => prev + 1);
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
       setIsFlipped(false);
+      onProgressChange?.(newKnew.length, newDidntKnow.length, nextIndex);
     }
-  }, [currentIndex, questions, knew, didntKnow, onGrade, onComplete]);
+  }, [currentIndex, questions, knew, didntKnow, onGrade, onComplete, onProgressChange]);
 
   const current = questions[currentIndex];
   if (!current) return null;
