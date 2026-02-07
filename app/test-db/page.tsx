@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import Link from "next/link";
 
 // Force dynamic rendering for this test page
 export const dynamic = "force-dynamic";
@@ -159,12 +160,12 @@ export default async function TestDbPage() {
         </div>
 
         <div className="text-center">
-          <a
+          <Link
             href="/"
             className="text-blue-600 dark:text-blue-400 hover:underline"
           >
             ← Back to Home
-          </a>
+          </Link>
         </div>
       </div>
     </div>

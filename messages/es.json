@@ -1,0 +1,218 @@
+{
+  "common": {
+    "appName": "LEARN",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "back": "Volver",
+    "next": "Siguiente",
+    "submit": "Enviar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "close": "Cerrar",
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "success": "Éxito",
+    "confirm": "Confirmar",
+    "search": "Buscar...",
+    "noResults": "No se encontraron resultados",
+    "viewAll": "Ver todo"
+  },
+  "nav": {
+    "themes": "Temas",
+    "settings": "Configuración",
+    "admin": "Admin",
+    "about": "Acerca de",
+    "login": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "logout": "Cerrar Sesión",
+    "upgrade": "Mejorar Cuenta"
+  },
+  "landing": {
+    "hero": "Domina Cualquier Tema con Aprendizaje Respaldado por la Ciencia",
+    "subtitle": "App bilingüe de cuestionarios y tarjetas con repetición espaciada FSRS",
+    "cta": "Comenzar",
+    "tryWithout": "Probar sin cuenta",
+    "features": {
+      "fsrs": {
+        "title": "Repetición Espaciada",
+        "description": "El algoritmo FSRS programa repasos en intervalos óptimos para la retención a largo plazo"
+      },
+      "bilingual": {
+        "title": "Bilingüe",
+        "description": "Soporte completo en inglés y español para todo el contenido"
+      },
+      "modes": {
+        "title": "Múltiples Modos de Estudio",
+        "description": "Modos de cuestionario, tarjetas y lectura para adaptarse a tu estilo de aprendizaje"
+      }
+    }
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablecer Contraseña",
+    "updatePassword": "Actualizar Contraseña",
+    "signUpSuccess": "Revisa tu correo para confirmar tu cuenta",
+    "loginError": "Correo o contraseña inválidos",
+    "anonymous": "Probar sin cuenta",
+    "upgradeTitle": "Mejora tu Cuenta",
+    "upgradeDescription": "Agrega un correo y contraseña para guardar tu progreso permanentemente",
+    "displayName": "Nombre para mostrar"
+  },
+  "themes": {
+    "title": "Tus Temas",
+    "selectTheme": "Selecciona un Tema",
+    "noThemes": "No hay temas disponibles",
+    "dueToday": "pendientes hoy",
+    "lastStudied": "Último estudio",
+    "never": "Nunca",
+    "fullyMemorized": "¡Totalmente Memorizado!",
+    "reviewAnyway": "Repasar Todo de Todas Formas",
+    "hide": "Ocultar Tema",
+    "unhide": "Mostrar",
+    "progress": {
+      "new": "Nuevo",
+      "learning": "Aprendiendo",
+      "review": "Repaso",
+      "mastered": "Dominado"
+    }
+  },
+  "modes": {
+    "quiz": "Modo Cuestionario",
+    "quizDescription": "Pon a prueba tus conocimientos con preguntas de opción múltiple",
+    "flashcard": "Modo Tarjetas",
+    "flashcardDescription": "Estudia con tarjetas y autoevaluación",
+    "reading": "Modo Lectura",
+    "readingDescription": "Lee el material educativo"
+  },
+  "subModes": {
+    "full": "Completo",
+    "fullDescription": "Todas las preguntas de este tema",
+    "quickReview": "Repaso Rápido",
+    "quickReviewDescription": "20 preguntas que ya has visto",
+    "categoryFocus": "Enfoque por Categoría",
+    "categoryFocusDescription": "Concéntrate en una categoría específica",
+    "spacedRepetition": "Repetición Espaciada",
+    "spacedRepetitionDescription": "Solo preguntas pendientes de repaso"
+  },
+  "quiz": {
+    "question": "Pregunta",
+    "of": "de",
+    "score": "Puntuación",
+    "idk": "No lo sé",
+    "suspend": "Suspender Pregunta",
+    "learnMore": "Saber Más",
+    "correct": "¡Correcto!",
+    "incorrect": "Incorrecto",
+    "results": {
+      "title": "Resultados del Cuestionario",
+      "score": "Tu Puntuación",
+      "time": "Tiempo",
+      "categoryBreakdown": "Desglose por Categoría",
+      "questionReview": "Revisión de Preguntas",
+      "reviewMissed": "Repasar Preguntas Falladas",
+      "backToThemes": "Volver a Temas",
+      "yourAnswer": "Tu respuesta",
+      "correctAnswer": "Respuesta correcta",
+      "congratulations": "¡Felicitaciones!"
+    }
+  },
+  "flashcard": {
+    "tapToReveal": "Toca para revelar",
+    "knewIt": "Lo Sabía",
+    "didntKnow": "No lo Sabía",
+    "results": {
+      "title": "Resultados de Tarjetas",
+      "knew": "Sabía",
+      "didntKnow": "No Sabía",
+      "reviewDidntKnow": "Repasar Tarjetas que No Sabías",
+      "backToThemes": "Volver a Temas"
+    }
+  },
+  "reading": {
+    "markAsRead": "Marcar como Leído",
+    "completed": "Completado",
+    "continueReading": "Continuar Leyendo"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "theme": "Tema",
+    "dark": "Oscuro",
+    "light": "Claro",
+    "system": "Sistema",
+    "profile": "Perfil",
+    "displayName": "Nombre para mostrar",
+    "suspendedQuestions": "Preguntas Suspendidas",
+    "noSuspended": "No hay preguntas suspendidas",
+    "unsuspend": "Reactivar",
+    "hiddenThemes": "Temas Ocultos",
+    "noHidden": "No hay temas ocultos",
+    "account": "Cuenta",
+    "upgradePrompt": "Estás usando una cuenta de invitado. Mejora para guardar tu progreso."
+  },
+  "admin": {
+    "title": "Panel de Administración",
+    "dashboard": "Panel",
+    "themes": "Temas",
+    "questions": "Preguntas",
+    "reviews": "Reseñas",
+    "feedback": "Comentarios",
+    "reports": "Reportes",
+    "proposedQuestions": "Preguntas Propuestas",
+    "themeProposals": "Propuestas de Temas",
+    "pending": "Pendiente",
+    "approved": "Aprobado",
+    "rejected": "Rechazado",
+    "resolved": "Resuelto",
+    "dismissed": "Descartado",
+    "approve": "Aprobar",
+    "reject": "Rechazar",
+    "resolve": "Resolver",
+    "dismiss": "Descartar",
+    "adminNotes": "Notas del Admin",
+    "upload": "Subir",
+    "jsonUpload": "Subir JSON",
+    "importTheme": "Importar Tema",
+    "importQuestions": "Importar Preguntas",
+    "createTheme": "Crear Tema",
+    "editTheme": "Editar Tema",
+    "totalThemes": "Total de Temas",
+    "totalQuestions": "Total de Preguntas",
+    "totalUsers": "Total de Usuarios",
+    "recentActivity": "Actividad Reciente"
+  },
+  "feedback": {
+    "button": "Comentarios",
+    "title": "Enviar Comentarios",
+    "type": "Tipo",
+    "bug": "Reporte de Error",
+    "feature": "Solicitud de Función",
+    "content": "Problema de Contenido",
+    "other": "Otro",
+    "message": "Tu Mensaje",
+    "placeholder": "Cuéntanos lo que piensas...",
+    "submitted": "¡Gracias por tus comentarios!",
+    "reportQuestion": "Reportar Pregunta",
+    "issueType": "Tipo de Problema",
+    "incorrectAnswer": "Respuesta Incorrecta",
+    "typo": "Error Tipográfico",
+    "unclear": "Poco Claro",
+    "outdated": "Desactualizado",
+    "proposeQuestion": "Proponer una Pregunta",
+    "proposeTheme": "Proponer un Tema"
+  },
+  "about": {
+    "title": "Acerca de LEARN",
+    "description": "LEARN es una aplicación bilingüe de cuestionarios y tarjetas diseñada para ayudarte a dominar cualquier tema usando repetición espaciada respaldada por la ciencia.",
+    "howFsrsWorks": "Cómo Funciona la Repetición Espaciada",
+    "fsrsExplanation": "FSRS (Free Spaced Repetition Scheduler) optimiza tu calendario de repaso según qué tan bien recuerdas cada tarjeta. Las tarjetas difíciles aparecen más seguido, mientras que las dominadas aparecen menos.",
+    "studyModes": "Modos de Estudio",
+    "faq": "Preguntas Frecuentes"
+  }
+}

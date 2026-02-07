@@ -1,0 +1,218 @@
+{
+  "common": {
+    "appName": "LEARN",
+    "save": "Save",
+    "cancel": "Cancel",
+    "back": "Back",
+    "next": "Next",
+    "submit": "Submit",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "success": "Success",
+    "confirm": "Confirm",
+    "search": "Search...",
+    "noResults": "No results found",
+    "viewAll": "View All"
+  },
+  "nav": {
+    "themes": "Themes",
+    "settings": "Settings",
+    "admin": "Admin",
+    "about": "About",
+    "login": "Log In",
+    "signUp": "Sign Up",
+    "logout": "Log Out",
+    "upgrade": "Upgrade Account"
+  },
+  "landing": {
+    "hero": "Master Any Topic with Science-Backed Learning",
+    "subtitle": "Bilingual quiz and flashcard app powered by FSRS spaced repetition",
+    "cta": "Get Started",
+    "tryWithout": "Try Without Account",
+    "features": {
+      "fsrs": {
+        "title": "Spaced Repetition",
+        "description": "FSRS algorithm schedules reviews at optimal intervals for long-term retention"
+      },
+      "bilingual": {
+        "title": "Bilingual",
+        "description": "Full English and Spanish support for all content"
+      },
+      "modes": {
+        "title": "Multiple Study Modes",
+        "description": "Quiz, flashcard, and reading modes to match your learning style"
+      }
+    }
+  },
+  "auth": {
+    "login": "Log In",
+    "signUp": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "resetPassword": "Reset Password",
+    "updatePassword": "Update Password",
+    "signUpSuccess": "Check your email to confirm your account",
+    "loginError": "Invalid email or password",
+    "anonymous": "Try Without Account",
+    "upgradeTitle": "Upgrade Your Account",
+    "upgradeDescription": "Add an email and password to save your progress permanently",
+    "displayName": "Display Name"
+  },
+  "themes": {
+    "title": "Your Themes",
+    "selectTheme": "Select a Theme",
+    "noThemes": "No themes available",
+    "dueToday": "due today",
+    "lastStudied": "Last studied",
+    "never": "Never",
+    "fullyMemorized": "Fully Memorized!",
+    "reviewAnyway": "Review All Anyway",
+    "hide": "Hide Theme",
+    "unhide": "Unhide",
+    "progress": {
+      "new": "New",
+      "learning": "Learning",
+      "review": "Review",
+      "mastered": "Mastered"
+    }
+  },
+  "modes": {
+    "quiz": "Quiz Mode",
+    "quizDescription": "Test your knowledge with multiple choice questions",
+    "flashcard": "Flashcard Mode",
+    "flashcardDescription": "Study with flip cards and self-grading",
+    "reading": "Reading Mode",
+    "readingDescription": "Read the educational material"
+  },
+  "subModes": {
+    "full": "Full",
+    "fullDescription": "All questions in this theme",
+    "quickReview": "Quick Review",
+    "quickReviewDescription": "20 questions you've seen before",
+    "categoryFocus": "Category Focus",
+    "categoryFocusDescription": "Focus on a specific category",
+    "spacedRepetition": "Spaced Repetition",
+    "spacedRepetitionDescription": "Only questions due for review"
+  },
+  "quiz": {
+    "question": "Question",
+    "of": "of",
+    "score": "Score",
+    "idk": "I Don't Know",
+    "suspend": "Suspend Question",
+    "learnMore": "Learn More",
+    "correct": "Correct!",
+    "incorrect": "Incorrect",
+    "results": {
+      "title": "Quiz Results",
+      "score": "Your Score",
+      "time": "Time",
+      "categoryBreakdown": "Category Breakdown",
+      "questionReview": "Question Review",
+      "reviewMissed": "Review Missed Questions",
+      "backToThemes": "Back to Themes",
+      "yourAnswer": "Your answer",
+      "correctAnswer": "Correct answer",
+      "congratulations": "Congratulations!"
+    }
+  },
+  "flashcard": {
+    "tapToReveal": "Tap to reveal",
+    "knewIt": "Knew It",
+    "didntKnow": "Didn't Know",
+    "results": {
+      "title": "Flashcard Results",
+      "knew": "Knew",
+      "didntKnow": "Didn't Know",
+      "reviewDidntKnow": "Review Cards You Didn't Know",
+      "backToThemes": "Back to Themes"
+    }
+  },
+  "reading": {
+    "markAsRead": "Mark as Read",
+    "completed": "Completed",
+    "continueReading": "Continue Reading"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "system": "System",
+    "profile": "Profile",
+    "displayName": "Display Name",
+    "suspendedQuestions": "Suspended Questions",
+    "noSuspended": "No suspended questions",
+    "unsuspend": "Unsuspend",
+    "hiddenThemes": "Hidden Themes",
+    "noHidden": "No hidden themes",
+    "account": "Account",
+    "upgradePrompt": "You're using a guest account. Upgrade to save your progress."
+  },
+  "admin": {
+    "title": "Admin Panel",
+    "dashboard": "Dashboard",
+    "themes": "Themes",
+    "questions": "Questions",
+    "reviews": "Reviews",
+    "feedback": "Feedback",
+    "reports": "Reports",
+    "proposedQuestions": "Proposed Questions",
+    "themeProposals": "Theme Proposals",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed",
+    "approve": "Approve",
+    "reject": "Reject",
+    "resolve": "Resolve",
+    "dismiss": "Dismiss",
+    "adminNotes": "Admin Notes",
+    "upload": "Upload",
+    "jsonUpload": "JSON Upload",
+    "importTheme": "Import Theme",
+    "importQuestions": "Import Questions",
+    "createTheme": "Create Theme",
+    "editTheme": "Edit Theme",
+    "totalThemes": "Total Themes",
+    "totalQuestions": "Total Questions",
+    "totalUsers": "Total Users",
+    "recentActivity": "Recent Activity"
+  },
+  "feedback": {
+    "button": "Feedback",
+    "title": "Send Feedback",
+    "type": "Type",
+    "bug": "Bug Report",
+    "feature": "Feature Request",
+    "content": "Content Issue",
+    "other": "Other",
+    "message": "Your Message",
+    "placeholder": "Tell us what's on your mind...",
+    "submitted": "Thank you for your feedback!",
+    "reportQuestion": "Report Question",
+    "issueType": "Issue Type",
+    "incorrectAnswer": "Incorrect Answer",
+    "typo": "Typo",
+    "unclear": "Unclear",
+    "outdated": "Outdated",
+    "proposeQuestion": "Propose a Question",
+    "proposeTheme": "Propose a Theme"
+  },
+  "about": {
+    "title": "About LEARN",
+    "description": "LEARN is a bilingual quiz and flashcard application designed to help you master any topic using science-backed spaced repetition.",
+    "howFsrsWorks": "How Spaced Repetition Works",
+    "fsrsExplanation": "FSRS (Free Spaced Repetition Scheduler) optimizes your review schedule based on how well you remember each card. Cards you struggle with appear more frequently, while mastered cards appear less often.",
+    "studyModes": "Study Modes",
+    "faq": "FAQ"
+  }
+}
