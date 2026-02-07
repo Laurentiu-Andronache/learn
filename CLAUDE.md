@@ -46,24 +46,28 @@ Example: `20260207000000_initial_schema.sql`
 
 ### Applying Migrations
 
-**Current Status**: Migrations must be applied manually via Supabase Dashboard.
+**IMPORTANT**: Always run this command after creating a new migration file:
 
-**Why automated migration doesn't work yet:**
-- ❌ Direct database connection: Network unreachable from this environment
-- ❌ Supabase CLI: Requires access token (get from https://supabase.com/dashboard/account/tokens)
-- ❌ Management API: Requires personal access token
+```bash
+npx supabase migration up --linked
+```
 
-**Apply migrations manually:**
+This applies pending migrations from `supabase/migrations/` to the remote database.
+
+**How it works:**
+- Reads `SUPABASE_ACCESS_TOKEN` from `.env.local`
+- Connects to linked project (hqathtprnfdovjyrlyfb)
+- Applies only unapplied migrations in order
+- Updates migration tracking in Supabase
+
+**Environment variables required** (in `.env.local`):
+- `SUPABASE_ACCESS_TOKEN` - CLI access token
+- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (for admin operations)
+
+**Manual fallback** (if CLI fails):
 1. Open https://app.supabase.com/project/hqathtprnfdovjyrlyfb/sql/new
 2. Copy migration from `supabase/migrations/YYYYMMDDHHMMSS_*.sql`
 3. Paste and click **Run**
-4. Verify success (should see "Success. No rows returned")
-
-**To enable automation** (one-time setup):
-1. Get Supabase access token: https://supabase.com/dashboard/account/tokens
-2. Run: `npx supabase login` (paste token when prompted)
-3. Run: `npx supabase link --project-ref hqathtprnfdovjyrlyfb`
-4. Future migrations: `npx supabase db push`
 
 ## Supabase Project Details
 
