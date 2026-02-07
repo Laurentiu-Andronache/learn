@@ -46,25 +46,24 @@ Example: `20260207000000_initial_schema.sql`
 
 ### Applying Migrations
 
-**Claude Code will apply migrations automatically using one of these methods:**
+**Current Status**: Migrations must be applied manually via Supabase Dashboard.
 
-1. **Supabase Dashboard SQL Editor** (current method):
-   - Navigate to https://app.supabase.com/project/hqathtprnfdovjyrlyfb/sql
-   - Copy migration file contents
-   - Paste and execute
-   - Verify tables appear in Table Editor
+**Why automated migration doesn't work yet:**
+- ❌ Direct database connection: Network unreachable from this environment
+- ❌ Supabase CLI: Requires access token (get from https://supabase.com/dashboard/account/tokens)
+- ❌ Management API: Requires personal access token
 
-2. **Supabase CLI** (when access token is available):
-   ```bash
-   npx supabase db push
-   ```
+**Apply migrations manually:**
+1. Open https://app.supabase.com/project/hqathtprnfdovjyrlyfb/sql/new
+2. Copy migration from `supabase/migrations/YYYYMMDDHHMMSS_*.sql`
+3. Paste and click **Run**
+4. Verify success (should see "Success. No rows returned")
 
-3. **Direct psql** (when database is accessible):
-   ```bash
-   PGPASSWORD='...' psql -h db.hqathtprnfdovjyrlyfb.supabase.co -p 5432 -U postgres -d postgres -f migrations/file.sql
-   ```
-
-**User should NOT need to manually run SQL.** If a migration needs to be applied, Claude Code will handle it or provide the exact SQL to run.
+**To enable automation** (one-time setup):
+1. Get Supabase access token: https://supabase.com/dashboard/account/tokens
+2. Run: `npx supabase login` (paste token when prompted)
+3. Run: `npx supabase link --project-ref hqathtprnfdovjyrlyfb`
+4. Future migrations: `npx supabase db push`
 
 ## Supabase Project Details
 
