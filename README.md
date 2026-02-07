@@ -1,109 +1,226 @@
-<a href="https://demo-nextjs-with-supabase.vercel.app/">
-  <img alt="Next.js and Supabase Starter Kit - the fastest way to build apps with Next.js and Supabase" src="https://demo-nextjs-with-supabase.vercel.app/opengraph-image.png">
-  <h1 align="center">Next.js and Supabase Starter Kit</h1>
-</a>
+# LEARN
 
-<p align="center">
- The fastest way to build apps with Next.js and Supabase
-</p>
+A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition for optimal learning.
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#demo"><strong>Demo</strong></a> ·
-  <a href="#deploy-to-vercel"><strong>Deploy to Vercel</strong></a> ·
-  <a href="#clone-and-run-locally"><strong>Clone and run locally</strong></a> ·
-  <a href="#feedback-and-issues"><strong>Feedback and issues</strong></a>
-  <a href="#more-supabase-examples"><strong>More Examples</strong></a>
-</p>
-<br/>
+## Tech Stack
+
+- **Framework**: Next.js 16 (App Router) with TypeScript
+- **Styling**: Tailwind CSS
+- **Database**: Supabase (PostgreSQL with RLS)
+- **Authentication**: Supabase Auth (email/password + anonymous)
+- **Deployment**: Vercel
+- **Spaced Repetition**: FSRS (Free Spaced Repetition Scheduler)
 
 ## Features
 
-- Works across the entire [Next.js](https://nextjs.org) stack
-  - App Router
-  - Pages Router
-  - Proxy
-  - Client
-  - Server
-  - It just works!
-- supabase-ssr. A package to configure Supabase Auth to use cookies
-- Password-based authentication block installed via the [Supabase UI Library](https://supabase.com/ui/docs/nextjs/password-based-auth)
-- Styling with [Tailwind CSS](https://tailwindcss.com)
-- Components with [shadcn/ui](https://ui.shadcn.com/)
-- Optional deployment with [Supabase Vercel Integration and Vercel deploy](#deploy-your-own)
-  - Environment variables automatically assigned to Vercel project
+- 🌐 **Bilingual**: Full English/Spanish support
+- 🎯 **Quiz Mode**: Multiple choice, true/false, with immediate feedback
+- 🃏 **Flashcard Mode**: 3D flip animation, self-grading
+- 🧠 **FSRS Scheduling**: Optimized review timing based on forgetting curves
+- 📊 **Progress Tracking**: Per-question statistics and difficulty adjustment
+- 🎨 **Themes**: Organized content by topic (e.g., Vaccines, Grammar)
+- 👥 **Profiles**: Independent progress for multiple users
+- 🔒 **RLS Security**: Row-level security for all user data
+- 📱 **Responsive**: Works on mobile, tablet, and desktop
 
-## Demo
+## Project Structure
 
-You can view a fully working demo at [demo-nextjs-with-supabase.vercel.app](https://demo-nextjs-with-supabase.vercel.app/).
+```
+learn-app/
+├── app/                    # Next.js App Router pages
+│   ├── auth/              # Authentication pages
+│   ├── protected/         # Protected routes example
+│   └── test-db/           # Database connection test
+├── lib/
+│   └── supabase/          # Supabase client utilities
+├── supabase/
+│   └── migrations/        # Database migrations
+├── .env.local             # Local environment variables (not in git)
+└── .env.example           # Environment template
+```
 
-## Deploy to Vercel
+## Database Schema
 
-Vercel deployment will guide you through creating a Supabase account and project.
+### Content Tables (15 total)
+1. **themes** - Top-level content groupings
+2. **categories** - Subject subdivisions
+3. **questions** - Quiz/flashcard items
+4. **profiles** - User profiles
+5. **admin_users** - Admin permissions
+6. **user_card_state** - FSRS scheduling data
+7. **review_logs** - Review history
+8. **suspended_questions** - Hidden questions
+9. **hidden_themes** - Hidden themes
+10. **reading_progress** - Reading mode tracking
+11. **feedback** - User feedback
+12. **question_reports** - Content quality reports
+13. **proposed_questions** - Community contributions
+14. **theme_proposals** - New theme suggestions
 
-After installation of the Supabase integration, all relevant environment variables will be assigned to the project so the deployment is fully functioning.
+All tables have RLS policies for secure data access.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&project-name=nextjs-with-supabase&repository-name=nextjs-with-supabase&demo-title=nextjs-with-supabase&demo-description=This+starter+configures+Supabase+Auth+to+use+cookies%2C+making+the+user%27s+session+available+throughout+the+entire+Next.js+app+-+Client+Components%2C+Server+Components%2C+Route+Handlers%2C+Server+Actions+and+Middleware.&demo-url=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2F&external-id=https%3A%2F%2Fgithub.com%2Fvercel%2Fnext.js%2Ftree%2Fcanary%2Fexamples%2Fwith-supabase&demo-image=https%3A%2F%2Fdemo-nextjs-with-supabase.vercel.app%2Fopengraph-image.png)
+## Local Development Setup
 
-The above will also clone the Starter kit to your GitHub, you can clone that locally and develop locally.
+### Prerequisites
+- Node.js 18+ and npm
+- Supabase account (free tier works)
+- Git
 
-If you wish to just develop locally and not deploy to Vercel, [follow the steps below](#clone-and-run-locally).
+### 1. Clone the Repository
 
-## Clone and run locally
+```bash
+git clone git@github.com-la:Laurentiu-Andronache/learn.git
+cd learn/learn-app
+```
 
-1. You'll first need a Supabase project which can be made [via the Supabase dashboard](https://database.new)
+### 2. Install Dependencies
 
-2. Create a Next.js app using the Supabase Starter template npx command
+```bash
+npm install
+```
 
-   ```bash
-   npx create-next-app --example with-supabase with-supabase-app
-   ```
+### 3. Set Up Environment Variables
 
-   ```bash
-   yarn create next-app --example with-supabase with-supabase-app
-   ```
+Copy the example environment file:
 
-   ```bash
-   pnpm create next-app --example with-supabase with-supabase-app
-   ```
+```bash
+cp .env.example .env.local
+```
 
-3. Use `cd` to change into the app's directory
+Edit `.env.local` with your Supabase credentials:
 
-   ```bash
-   cd with-supabase-app
-   ```
+```bash
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+NEXT_PUBLIC_APP_ADMIN_EMAIL=your-email@example.com
+```
 
-4. Rename `.env.example` to `.env.local` and update the following:
+Get these values from:
+- Supabase Dashboard → Settings → API
 
-  ```env
-  NEXT_PUBLIC_SUPABASE_URL=[INSERT SUPABASE PROJECT URL]
-  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=[INSERT SUPABASE PROJECT API PUBLISHABLE OR ANON KEY]
-  ```
-  > [!NOTE]
-  > This example uses `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, which refers to Supabase's new **publishable** key format.
-  > Both legacy **anon** keys and new **publishable** keys can be used with this variable name during the transition period. Supabase's dashboard may show `NEXT_PUBLIC_SUPABASE_ANON_KEY`; its value can be used in this example.
-  > See the [full announcement](https://github.com/orgs/supabase/discussions/29260) for more information.
+### 4. Database Migration
 
-  Both `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` can be found in [your Supabase project's API settings](https://supabase.com/dashboard/project/_?showConnect=true)
+The database schema is managed automatically. All migrations in `supabase/migrations/` are applied automatically to the Supabase project.
 
-5. You can now run the Next.js local development server:
+**Note**: Claude Code manages all database migrations. You don't need to manually run SQL - migrations are applied automatically as needed.
 
-   ```bash
-   npm run dev
-   ```
+### 5. Run Development Server
 
-   The starter kit should now be running on [localhost:3000](http://localhost:3000/).
+```bash
+npm run dev
+```
 
-6. This template comes with the default shadcn/ui style initialized. If you instead want other ui.shadcn styles, delete `components.json` and [re-install shadcn/ui](https://ui.shadcn.com/docs/installation/next)
+Visit:
+- **Homepage**: http://localhost:3000
+- **Database Test**: http://localhost:3000/test-db
 
-> Check out [the docs for Local Development](https://supabase.com/docs/guides/getting-started/local-development) to also run Supabase locally.
+The test page should show:
+- ✓ Connected to Supabase successfully!
+- Found 0 themes (until you seed data)
+- Found 1 admin users
 
-## Feedback and issues
+### 6. Build for Production
 
-Please file feedback and issues over on the [Supabase GitHub org](https://github.com/supabase/supabase/issues/new/choose).
+```bash
+npm run build
+npm run start
+```
 
-## More Supabase examples
+## Deployment
 
-- [Next.js Subscription Payments Starter](https://github.com/vercel/nextjs-subscription-payments)
-- [Cookie-based Auth and the Next.js 13 App Router (free course)](https://youtube.com/playlist?list=PL5S4mPUpp4OtMhpnp93EFSo42iQ40XjbF)
-- [Supabase Auth and the Next.js App Router](https://github.com/supabase/supabase/tree/master/examples/auth/nextjs)
+### Vercel Deployment
+
+The app is deployed to Vercel at:
+- **Production**: https://learn-app-theta-ten.vercel.app
+- **Test Database**: https://learn-app-theta-ten.vercel.app/test-db
+
+Environment variables are already configured in Vercel. Any code pushed to the `main` branch automatically deploys to production.
+
+## Next Steps for Development
+
+The infrastructure is complete. Here are the recommended next tasks:
+
+### Phase 1: Core Features
+1. **Auth UI**: Implement email/password + anonymous sign-in
+2. **FSRS Integration**: Install `ts-fsrs` and implement scheduler
+3. **Quiz Mode**: Auto-advancing question stack with FSRS scheduling
+4. **Flashcard Mode**: 3D flip animation + self-grading
+5. **Theme Selection**: Browse and select learning themes
+
+### Phase 2: Content
+6. **Port Questions**: Migrate 53 vaccine questions from `learn.html`
+7. **Seed Data**: Create initial themes, categories, questions
+8. **Reading Mode**: Educational content with progress tracking
+
+### Phase 3: Admin & Polish
+9. **Admin Panel**: Content management interface
+10. **Analytics**: Google Analytics integration
+11. **i18n System**: `next-intl` for proper language switching
+12. **Feedback UI**: User feedback and question reporting
+
+### Parallelization
+These can be built independently by different agents:
+- Auth UI (depends on: database ✓)
+- FSRS integration (depends on: database ✓)
+- Quiz UI (depends on: FSRS)
+- Flashcard UI (depends on: FSRS)
+- Admin panel (depends on: Auth)
+
+## Testing
+
+### Test Database Connection
+
+Visit `/test-db` in both local and production to verify:
+1. Environment variables are set
+2. Database connection works
+3. All tables exist
+4. Admin user is configured
+
+### Test Authentication
+
+Visit `/auth/login` to test authentication flow (when implemented).
+
+## Troubleshooting
+
+### Build Errors
+
+If you get prerendering errors:
+- Check that async components use `export const dynamic = "force-dynamic"`
+- Verify environment variables are set in Vercel
+
+### Database Connection Fails
+
+1. Check `.env.local` has correct Supabase credentials
+2. Verify migration was applied (check table list in Supabase dashboard)
+3. Check RLS policies allow access (admin_users table must have your email)
+
+### Vercel Deployment Issues
+
+1. Ensure all environment variables are set in Vercel dashboard
+2. Redeploy after adding environment variables
+3. Check build logs in Vercel dashboard
+
+## Contributing
+
+This is a personal project. If you want to contribute:
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+## License
+
+Private project - all rights reserved.
+
+## Support
+
+For issues or questions:
+- Check the troubleshooting section above
+- Review Supabase logs for database errors
+- Check Vercel logs for deployment errors
+
+---
+
+**Project Status**: Infrastructure complete ✓ | Ready for feature development
+
+**Prototype Reference**: `../learn.html` - Original single-file prototype with 53 vaccine questions
