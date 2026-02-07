@@ -1,88 +1,50 @@
-"use client";
+import { createClient } from "@supabase/supabase-js";
 
-import { useEffect, useState } from "react";
-import { createBrowserClient } from "@supabase/ssr";
+// Force dynamic rendering for this test page
+export const dynamic = "force-dynamic";
 
-export default function TestDbPage() {
-  const [status, setStatus] = useState<{
-    connected: boolean;
-    themes: any[] | null;
-    adminUsers: any[] | null;
-    error: string | null;
-    envVars: {
-      url: boolean;
-      anonKey: boolean;
-    };
-  }>({
-    connected: false,
-    themes: null,
-    adminUsers: null,
-    error: null,
-    envVars: {
-      url: false,
-      anonKey: false,
-    },
-  });
-
-  useEffect(() => {
-    async function testConnection() {
-      const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-      setStatus((prev) => ({
-        ...prev,
-        envVars: {
-          url: !!url,
-          anonKey: !!key,
-        },
-      }));
-
-      if (!url || !key) {
-        setStatus((prev) => ({
-          ...prev,
-          error: "Missing environment variables",
-        }));
-        return;
-      }
-
-      const supabase = createBrowserClient(url, key);
-
-      try {
-        // Test themes table
-        const { data: themes, error: themesError } = await supabase
-          .from("themes")
-          .select("*");
-
-        if (themesError) throw themesError;
-
-        // Test admin_users table
-        const { data: adminUsers, error: adminError } = await supabase
-          .from("admin_users")
-          .select("email, id");
-
-        if (adminError) throw adminError;
-
-        setStatus({
-          connected: true,
-          themes,
-          adminUsers,
-          error: null,
-          envVars: {
-            url: true,
-            anonKey: true,
-          },
-        });
-      } catch (err: any) {
-        setStatus((prev) => ({
-          ...prev,
-          connected: false,
-          error: err.message || "Unknown error",
-        }));
-      }
+async function getServerData() {
+  // Use service role key to bypass RLS for all test queries
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+      },
     }
+  );
 
-    testConnection();
-  }, []);
+  // Test themes table
+  const { data: themes, error: themesError } = await supabase
+    .from("themes")
+    .select("*");
+
+  // Test admin_users table
+  const { data: adminUsers, error: adminError } = await supabase
+    .from("admin_users")
+    .select("email, id");
+
+  return {
+    themes,
+    themesError,
+    adminUsers,
+    adminError,
+    envVars: {
+      url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      anonKey: !!process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      serviceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+    },
+  };
+}
+
+export default async function TestDbPage() {
+  const { themes, themesError, adminUsers, adminError, envVars } =
+    await getServerData();
+
+  const connected = !themesError && !adminError;
+  const error = themesError?.message || adminError?.message;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center p-8">
@@ -92,11 +54,9 @@ export default function TestDbPage() {
         {/* Connection Status */}
         <div className="rounded-lg border p-4">
           <h2 className="text-xl font-semibold mb-2">Connection Status</h2>
-          {status.error ? (
-            <div className="text-red-600 dark:text-red-400">
-              ✗ {status.error}
-            </div>
-          ) : status.connected ? (
+          {error ? (
+            <div className="text-red-600 dark:text-red-400">✗ {error}</div>
+          ) : connected ? (
             <div className="text-green-600 dark:text-green-400">
               ✓ Connected to Supabase successfully!
             </div>
@@ -110,34 +70,43 @@ export default function TestDbPage() {
         {/* Themes Table */}
         <div className="rounded-lg border p-4">
           <h2 className="text-xl font-semibold mb-2">Themes Table</h2>
-          {status.themes !== null ? (
+          {themesError ? (
+            <div className="text-red-600 dark:text-red-400">
+              Error: {themesError.message}
+            </div>
+          ) : (
             <div className="text-gray-600 dark:text-gray-400">
-              Found {status.themes.length} themes
-              {status.themes.length > 0 && (
+              Found {themes?.length || 0} themes
+              {themes && themes.length > 0 && (
                 <pre className="mt-2 text-xs overflow-auto">
-                  {JSON.stringify(status.themes, null, 2)}
+                  {JSON.stringify(themes, null, 2)}
                 </pre>
               )}
             </div>
-          ) : (
-            <div className="text-gray-600 dark:text-gray-400">Loading...</div>
           )}
         </div>
 
         {/* Admin Users Table */}
         <div className="rounded-lg border p-4">
-          <h2 className="text-xl font-semibold mb-2">Admin Users Table</h2>
-          {status.adminUsers !== null ? (
+          <h2 className="text-xl font-semibold mb-2">
+            Admin Users Table{" "}
+            <span className="text-sm font-normal text-gray-500">
+              (via service role)
+            </span>
+          </h2>
+          {adminError ? (
+            <div className="text-red-600 dark:text-red-400">
+              Error: {adminError.message}
+            </div>
+          ) : (
             <div className="text-gray-600 dark:text-gray-400">
-              Found {status.adminUsers.length} admin users
-              {status.adminUsers.length > 0 && (
+              Found {adminUsers?.length || 0} admin users
+              {adminUsers && adminUsers.length > 0 && (
                 <pre className="mt-2 text-xs overflow-auto">
-                  {JSON.stringify(status.adminUsers, null, 2)}
+                  {JSON.stringify(adminUsers, null, 2)}
                 </pre>
               )}
             </div>
-          ) : (
-            <div className="text-gray-600 dark:text-gray-400">Loading...</div>
           )}
         </div>
 
@@ -145,8 +114,9 @@ export default function TestDbPage() {
         <div className="rounded-lg border p-4">
           <h2 className="text-xl font-semibold mb-2">Environment</h2>
           <div className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
-            <div>URL: {status.envVars.url ? "✓ Set" : "✗ Missing"}</div>
-            <div>Anon Key: {status.envVars.anonKey ? "✓ Set" : "✗ Missing"}</div>
+            <div>URL: {envVars.url ? "✓ Set" : "✗ Missing"}</div>
+            <div>Anon Key: {envVars.anonKey ? "✓ Set" : "✗ Missing"}</div>
+            <div>Service Key: {envVars.serviceKey ? "✓ Set" : "✗ Missing"}</div>
           </div>
         </div>
 
