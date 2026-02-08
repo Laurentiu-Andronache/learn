@@ -1,10 +1,31 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { TopicGrid } from "@/components/topics/topic-grid";
 import { getAllTopicsProgress } from "@/lib/fsrs/progress";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Topics - LEARN" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+  return {
+    title: locale === "es" ? "Temas - LEARN" : "Topics - LEARN",
+    description:
+      locale === "es"
+        ? "Explora temas de salud y cognición para mejorar tu longevidad y bienestar"
+        : "Explore health and cognition topics to improve your longevity and wellbeing",
+    alternates: {
+      canonical: `${baseUrl}/topics`,
+      languages: {
+        en: `${baseUrl}/topics`,
+        es: `${baseUrl}/topics`,
+      },
+    },
+  };
+}
 
 export default async function TopicsPage() {
   const supabase = await createClient();

@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { SettingsClient } from "@/components/settings/settings-client";
 import {
   getHiddenTopics,
@@ -7,7 +9,17 @@ import {
 } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 
-export const metadata = { title: "Settings - LEARN" };
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+
+  return {
+    title: locale === "es" ? "Configuración - LEARN" : "Settings - LEARN",
+    robots: {
+      index: false,
+      follow: false,
+    },
+  };
+}
 
 export default async function SettingsPage() {
   const supabase = await createClient();

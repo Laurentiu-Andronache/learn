@@ -7,18 +7,18 @@ import { AnalyticsProvider } from "@/components/analytics-provider";
 import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
+import { StructuredData } from "@/components/seo/structured-data";
+import { generateBaseMetadata } from "@/lib/seo/metadata-utils";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL
   ? `https://${process.env.VERCEL_URL}`
   : "http://localhost:3000";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(defaultUrl),
-  title: "LEARN - Bilingual Study App",
-  description:
-    "Master any topic with science-backed spaced repetition. Bilingual quiz and flashcard app.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  return generateBaseMetadata(defaultUrl, locale);
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,6 +37,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.className} antialiased`}>
+        <StructuredData baseUrl={defaultUrl} locale={locale} />
         <AnalyticsProvider />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider

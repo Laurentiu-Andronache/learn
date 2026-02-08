@@ -20,8 +20,37 @@ learn-app/
 
 - Dev server: `npm run dev` on `:4000`
 - Test page: `/test-db` (local & prod)
-- Deploy: push to main → Vercel auto-deploys to https://learn-app-theta-ten.vercel.app
+- Deploy: push to main → Vercel auto-deploys to https://learn-seven-peach.vercel.app
 - All env vars must be configured in Vercel dashboard
+
+## SEO Implementation
+
+All SEO features are implemented following Next.js App Router best practices:
+
+**Files:**
+- `app/robots.ts` - Blocks /admin, /auth, /settings from crawlers
+- `app/sitemap.ts` - Dynamic sitemap with all public pages + topics
+- `app/manifest.ts` - PWA manifest for installability
+- `app/icon.tsx` - Dynamic favicon generator
+- `app/apple-icon.tsx` - Apple touch icon generator
+- `app/layout.tsx` - Full metadata with OG, Twitter Cards, canonical URLs
+- `lib/seo/metadata-utils.ts` - Metadata helper functions
+- `lib/seo/structured-data.ts` - JSON-LD schema generators
+- `components/seo/structured-data.tsx` - Structured data components
+
+**Key SEO Features:**
+- Dynamic metadata for topic pages (/topics/[id])
+- Dynamic OG images per topic (/topics/[id]/opengraph-image.tsx)
+- Structured data: WebSite, WebPage, EducationalApplication schemas
+- noindex on auth/admin pages
+- hreflang tags for EN/ES
+- Canonical URLs on all pages
+- Sitemap includes all published topics
+
+**Verification:**
+- robots.txt: `/robots.txt`
+- sitemap.xml: `/sitemap.xml`
+- manifest: `/manifest.webmanifest`
 
 ## Conventions
 

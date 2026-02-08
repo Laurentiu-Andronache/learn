@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -10,6 +11,57 @@ import { createClient } from "@/lib/supabase/server";
 
 interface Props {
   params: Promise<{ id: string }>;
+}
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const locale = await getLocale();
+  const supabase = await createClient();
+
+  const { data: topic } = await supabase
+    .from("themes")
+    .select("title_en, title_es, description_en, description_es")
+    .eq("id", id)
+    .single();
+
+  if (!topic) {
+    return {
+      title: "Topic Not Found",
+    };
+  }
+
+  const title =
+    locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
+  const description =
+    locale === "es"
+      ? topic.description_es || topic.description_en
+      : topic.description_en;
+
+  const baseUrl = process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
+  return {
+    title: `${title} | LEARN`,
+    description:
+      description || `Study ${title} with science-backed spaced repetition`,
+    openGraph: {
+      title: `${title} | LEARN`,
+      description:
+        description || `Study ${title} with science-backed spaced repetition`,
+      url: `${baseUrl}/topics/${id}`,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${title} | LEARN`,
+      description:
+        description || `Study ${title} with science-backed spaced repetition`,
+    },
+    alternates: {
+      canonical: `${baseUrl}/topics/${id}`,
+    },
+  };
 }
 
 export default async function TopicDetailPage({ params }: Props) {
