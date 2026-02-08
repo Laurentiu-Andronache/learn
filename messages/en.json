@@ -27,7 +27,8 @@
     "signUp": "Sign Up",
     "logout": "Log Out",
     "upgrade": "Upgrade Account",
-    "menu": "Menu"
+    "menu": "Menu",
+    "greeting": "Hey, {email}!"
   },
   "landing": {
     "hero": "Science-backed learning that will improve you",
@@ -157,6 +158,8 @@
     "tapToReveal": "Tap to reveal",
     "knewIt": "Knew It",
     "didntKnow": "Didn't Know",
+    "answer": "Answer",
+    "cardOf": "Card {current} of {total}",
     "results": {
       "title": "Flashcard Results",
       "knew": "Knew",
@@ -275,9 +278,28 @@
   "about": {
     "title": "About LEARN",
     "description": "LEARN is a bilingual quiz and flashcard application designed to help you master any topic using science-backed spaced repetition.",
+    "intro": "LEARN is a bilingual (English/Spanish) quiz and flashcard application designed to help you master any topic using science-backed spaced repetition. Whether you're studying vaccines, languages, or any subject, LEARN adapts to your memory patterns for optimal long-term retention.",
     "howFsrsWorks": "How Spaced Repetition Works",
-    "fsrsExplanation": "FSRS (Free Spaced Repetition Scheduler) optimizes your review schedule based on how well you remember each card. Cards you struggle with appear more frequently, while mastered cards appear less often.",
+    "fsrsIntro": "LEARN uses the FSRS (Free Spaced Repetition Scheduler) algorithm, a modern, research-backed system for optimizing when you review material.",
+    "fsrsCoreIdea": "The core idea is simple: review information just before you're about to forget it. FSRS tracks how well you remember each card and schedules the next review at the optimal time:",
+    "newCards": "New cards appear frequently at first",
+    "difficultCards": "Difficult cards you struggle with show up more often",
+    "easyCards": "Easy cards you know well appear at longer intervals",
+    "masteredCards": "Mastered cards may only need review every few months",
+    "fsrsEfficiency": "This approach is dramatically more efficient than re-reading or cramming — you spend your time exactly where it's needed most.",
     "studyModes": "Study Modes",
-    "faq": "FAQ"
+    "faq": "FAQ",
+    "faqFsrsQuestion": "What makes FSRS different from other flashcard apps?",
+    "faqFsrsAnswer": "FSRS is a newer algorithm that outperforms traditional systems like SM-2 (used by Anki). It uses machine learning principles to more accurately predict when you'll forget something, resulting in fewer reviews needed to maintain the same level of retention.",
+    "faqAnonymousQuestion": "Can I use LEARN without creating an account?",
+    "faqAnonymousAnswer": "Yes! You can try LEARN as a guest. Your progress will be saved, and you can upgrade to a full account at any time to ensure your data is permanently saved.",
+    "faqBilingualQuestion": "How does bilingual support work?",
+    "faqBilingualAnswer": "All content in LEARN is available in both English and Spanish. You can switch languages at any time using the language switcher in the navigation bar. Your preference is saved to your profile.",
+    "faqProgressQuestion": "How is my progress tracked?",
+    "faqProgressAnswer": "Every time you answer a question or review a flashcard, FSRS updates your card state. Cards progress through states: New → Learning → Review → Mastered. You can see your progress on the topic selection page.",
+    "faqSuspendQuestion": "What does suspending a question do?",
+    "faqSuspendAnswer": "Suspending a question removes it from your review queue. This is useful for questions you find too easy, too hard, or irrelevant. You can unsuspend questions from Settings at any time.",
+    "faqDataQuestion": "Is my data safe?",
+    "faqDataAnswer": "Your data is stored securely in Supabase with row-level security (RLS). Only you can access your progress, preferences, and review history. We never share your data with third parties."
   }
 }

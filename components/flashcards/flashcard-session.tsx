@@ -7,7 +7,6 @@ import { scheduleReview } from "@/lib/fsrs/actions";
 import { Rating } from "@/lib/fsrs/scheduler";
 import { suspendQuestion } from "@/lib/services/user-preferences";
 import type { FSRSRating } from "@/lib/types/database";
-import { FlashcardProgress } from "./flashcard-progress";
 import { FlashcardResults } from "./flashcard-results";
 import { FlashcardStack } from "./flashcard-stack";
 
@@ -39,9 +38,7 @@ export function FlashcardSession({
   questions,
 }: FlashcardSessionProps) {
   const locale = useLocale();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [knewCount, setKnewCount] = useState(0);
-  const [didntKnowCount, setDidntKnowCount] = useState(0);
+  const [sessionKey, setSessionKey] = useState(0);
   const [results, setResults] = useState<{
     knew: string[];
     didntKnow: string[];
@@ -76,20 +73,9 @@ export function FlashcardSession({
     [],
   );
 
-  const handleProgressChange = useCallback(
-    (knew: number, didntKnow: number, index: number) => {
-      setKnewCount(knew);
-      setDidntKnowCount(didntKnow);
-      setCurrentIndex(index);
-    },
-    [],
-  );
-
   const handleReviewDidntKnow = useCallback(() => {
     setResults(null);
-    setCurrentIndex(0);
-    setKnewCount(0);
-    setDidntKnowCount(0);
+    setSessionKey((k) => k + 1);
   }, []);
 
   if (results) {
@@ -125,20 +111,13 @@ export function FlashcardSession({
         {locale === "es" ? themeTitleEs : themeTitleEn}
       </h1>
 
-      <FlashcardProgress
-        current={currentIndex}
-        total={questions.length}
-        knew={knewCount}
-        didntKnow={didntKnowCount}
-      />
-
       <FlashcardStack
+        key={sessionKey}
         questions={questions}
         locale={locale as "en" | "es"}
         onGrade={handleGrade}
         onSuspend={handleSuspend}
         onComplete={handleComplete}
-        onProgressChange={handleProgressChange}
       />
     </div>
   );

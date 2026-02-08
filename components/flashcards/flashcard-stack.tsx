@@ -6,6 +6,7 @@ import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { FlashcardProgress } from "./flashcard-progress";
 
 interface FlashcardQuestion {
   id: string;
@@ -23,11 +24,6 @@ interface FlashcardStackProps {
   onGrade: (questionId: string, knew: boolean) => void;
   onSuspend: (questionId: string) => void;
   onComplete: (results: { knew: string[]; didntKnow: string[] }) => void;
-  onProgressChange?: (
-    knew: number,
-    didntKnow: number,
-    currentIndex: number,
-  ) => void;
 }
 
 export function FlashcardStack({
@@ -36,7 +32,6 @@ export function FlashcardStack({
   onGrade,
   onSuspend,
   onComplete,
-  onProgressChange,
 }: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -44,6 +39,8 @@ export function FlashcardStack({
   const [didntKnow, setDidntKnow] = useState<string[]>([]);
   const [reportOpen, setReportOpen] = useState(false);
   const t = useTranslations("feedback");
+  const tf = useTranslations("flashcard");
+  const tq = useTranslations("quiz");
 
   const advance = useCallback(
     (knewIt: boolean) => {
@@ -67,7 +64,6 @@ export function FlashcardStack({
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
         setIsFlipped(false);
-        onProgressChange?.(newKnew.length, newDidntKnow.length, nextIndex);
       }
     },
     [
@@ -77,7 +73,6 @@ export function FlashcardStack({
       didntKnow,
       onGrade,
       onComplete,
-      onProgressChange,
     ],
   );
 
@@ -96,10 +91,12 @@ export function FlashcardStack({
 
   return (
     <div className="w-full max-w-lg mx-auto space-y-4">
-      {/* Counter */}
-      <div className="text-center text-sm text-muted-foreground">
-        Card {currentIndex + 1} of {questions.length}
-      </div>
+      <FlashcardProgress
+        current={currentIndex}
+        total={questions.length}
+        knew={knew.length}
+        didntKnow={didntKnow.length}
+      />
 
       {/* Flashcard */}
       {/* biome-ignore lint/a11y/useSemanticElements: div needed for 3D perspective container */}
@@ -123,7 +120,7 @@ export function FlashcardStack({
           {/* Front */}
           <Card className="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center">
             <p className="text-lg font-semibold mb-4">{questionText}</p>
-            <p className="text-sm text-muted-foreground">Tap to reveal</p>
+            <p className="text-sm text-muted-foreground">{tf("tapToReveal")}</p>
           </Card>
 
           {/* Back */}
@@ -131,14 +128,14 @@ export function FlashcardStack({
             <div className="flex-1 space-y-3">
               {explanation && (
                 <div>
-                  <p className="text-sm font-medium mb-1">Answer</p>
+                  <p className="text-sm font-medium mb-1">{tf("answer")}</p>
                   <p className="text-sm text-muted-foreground">{explanation}</p>
                 </div>
               )}
               {extra && (
                 <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
                   <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
-                    Learn More
+                    {tq("learnMore")}
                   </p>
                   <p className="text-xs text-muted-foreground">{extra}</p>
                 </div>
@@ -164,7 +161,7 @@ export function FlashcardStack({
                   onSuspend(current.id);
                 }}
               >
-                ⊘ Suspend
+                ⊘ {tq("suspend")}
               </Button>
             </div>
           </Card>
@@ -186,13 +183,13 @@ export function FlashcardStack({
             className="flex-1"
             onClick={() => advance(false)}
           >
-            Didn&apos;t Know
+            {tf("didntKnow")}
           </Button>
           <Button
             className="flex-1 bg-green-600 hover:bg-green-700"
             onClick={() => advance(true)}
           >
-            Knew It
+            {tf("knewIt")}
           </Button>
         </div>
       )}

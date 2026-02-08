@@ -60,6 +60,7 @@ All SEO features are implemented following Next.js App Router best practices:
 - Never use service role key in client components
 - **Server**: `createClient()` from `@/lib/supabase/server`
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
+- **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings.
 
 ## Terminology Mapping (UI → DB)
 
@@ -124,16 +125,9 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `components/quiz/quiz-logic.test.ts` | 17 | Shuffle, grading, results, review-missed |
 | `components/flashcards/flashcard-logic.test.ts` | 11 | Grading, stack advance, categories |
 
-## Dev Status
-
-**Done**: Auth, FSRS, Quiz/Flashcard/Reading modes, Admin panel, i18n (EN/ES), content seeding, unit tests (123).
-**Next**: Analytics, community features, additional content.
-
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
 ### Medium — i18n & UX
-- **30 files with hardcoded English** — translation keys often exist but aren't imported (worst: about page, flashcard components, theme switcher)
-- **FlashcardStack double-render** — duplicate `currentIndex` state with parent
 - **Confetti effect** in quiz-results lacks rAF cleanup on unmount
 - **Client-side themeId filtering** in `getQuestionsList` — move to DB query
 - **Feedback/question_reports INSERT** allows unauthenticated — restrict to `auth.uid() IS NOT NULL`
