@@ -8,6 +8,7 @@ import { FeedbackButton } from "@/components/feedback/feedback-button";
 import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
 import { StructuredData } from "@/components/seo/structured-data";
+import { Toaster } from "@/components/ui/sonner";
 import { generateBaseMetadata } from "@/lib/seo/metadata-utils";
 import "./globals.css";
 
@@ -52,6 +53,7 @@ export default async function RootLayout({
               <Footer />
             </div>
             <FeedbackButton />
+            <Toaster />
           </ThemeProvider>
         </NextIntlClientProvider>
       </body>

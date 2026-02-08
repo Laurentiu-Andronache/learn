@@ -2,6 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
 import { scheduleReview } from "@/lib/fsrs/actions";
 import type { SubMode } from "@/lib/fsrs/question-ordering";
 import { suspendQuestion } from "@/lib/services/user-preferences";
@@ -110,8 +111,8 @@ export function QuizSession({
         categoryColor: q.categoryColor,
       };
 
-      // Fire-and-forget FSRS scheduling
-      scheduleReview(userId, q.question.id, rating, "quiz", wasCorrect, timeMs);
+      scheduleReview(userId, q.question.id, rating, "quiz", wasCorrect, timeMs)
+        .catch(() => toast.error("Failed to save progress. Your answer was recorded locally but may not persist."));
 
       setAnswers((prev) => [...prev, answer]);
 
@@ -127,7 +128,8 @@ export function QuizSession({
   // ── Suspend question ──
   const handleSuspend = useCallback(() => {
     const q = questions[currentIndex];
-    suspendQuestion(userId, q.question.id, "Suspended from quiz session");
+    suspendQuestion(userId, q.question.id, "Suspended from quiz session")
+      .catch(() => toast.error("Failed to suspend question."));
 
     // Skip to next question
     if (currentIndex + 1 >= questions.length) {

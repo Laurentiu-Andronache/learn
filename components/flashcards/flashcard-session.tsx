@@ -2,6 +2,7 @@
 
 import { useLocale } from "next-intl";
 import { useCallback, useRef, useState } from "react";
+import { toast } from "sonner";
 import { scheduleReview } from "@/lib/fsrs/actions";
 import { Rating } from "@/lib/fsrs/scheduler";
 import { suspendQuestion } from "@/lib/services/user-preferences";
@@ -53,7 +54,8 @@ export function FlashcardSession({
       const rating = knew
         ? (Rating.Good as FSRSRating)
         : (Rating.Again as FSRSRating);
-      scheduleReview(userId, questionId, rating, "flashcard", knew, timeMs);
+      scheduleReview(userId, questionId, rating, "flashcard", knew, timeMs)
+        .catch(() => toast.error("Failed to save progress. Your answer was recorded locally but may not persist."));
       startTime.current = Date.now();
     },
     [userId],
@@ -61,7 +63,8 @@ export function FlashcardSession({
 
   const handleSuspend = useCallback(
     (questionId: string) => {
-      suspendQuestion(userId, questionId, "Suspended from flashcard session");
+      suspendQuestion(userId, questionId, "Suspended from flashcard session")
+        .catch(() => toast.error("Failed to suspend question."));
     },
     [userId],
   );

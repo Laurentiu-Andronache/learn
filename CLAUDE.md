@@ -131,9 +131,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
-### Critical — Fix Before Production
-- **Fire-and-forget `scheduleReview()`** — errors silently lost in quiz/flashcard sessions
-
 ### High — Performance & Quality
 - **N+1 in `getAllTopicsProgress()`** — 3 queries per topic (10 topics = 30 queries); batch-fetch instead
 - **Duplicate theme fetch** in `app/topics/[id]/page.tsx` — `generateMetadata()` and page component both query
