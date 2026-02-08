@@ -272,17 +272,16 @@ describe("getQuestionsList", () => {
     expect(result).toEqual(mockData);
   });
 
-  it("filters by themeId client-side through category join", async () => {
+  it("filters by themeId at DB level via !inner join", async () => {
     const mockData = [
       { id: "q1", category: { theme_id: "t1" } },
-      { id: "q2", category: { theme_id: "t2" } },
     ];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );
 
     const result = await getQuestionsList({ themeId: "t1" });
-    expect(result).toEqual([{ id: "q1", category: { theme_id: "t1" } }]);
+    expect(result).toEqual(mockData);
   });
 });
 

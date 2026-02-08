@@ -115,14 +115,19 @@ export async function getQuestionsList(filters?: {
   search?: string;
 }) {
   const { supabase } = await requireAdmin();
+  const selectStr = filters?.themeId
+    ? "*, category:categories!inner(id, name_en, theme_id, theme:themes(id, title_en))"
+    : "*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))";
+
   let query = supabase
     .from("questions")
-    .select(
-      "*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))",
-    )
+    .select(selectStr)
     .order("created_at", { ascending: false })
     .limit(100);
 
+  if (filters?.themeId) {
+    query = query.eq("categories.theme_id", filters.themeId);
+  }
   if (filters?.categoryId) {
     query = query.eq("category_id", filters.categoryId);
   }
@@ -135,14 +140,6 @@ export async function getQuestionsList(filters?: {
 
   const { data, error } = await query;
   if (error) throw new Error(error.message);
-
-  // Filter by theme if needed (through category join)
-  if (filters?.themeId) {
-    return (data || []).filter(
-      (q: { category?: { theme_id?: string } }) =>
-        q.category?.theme_id === filters.themeId,
-    );
-  }
   return data || [];
 }
 
