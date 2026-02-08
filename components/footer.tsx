@@ -8,7 +8,7 @@ export async function Footer() {
   return (
     <footer className="border-t py-6">
       <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground pr-28">
-        <p>LEARN — {tFooter("tagline")}</p>
+        <p className="ml-4">LEARN — {tFooter("tagline")}</p>
         <div className="flex gap-4">
           <Link
             href="/about"

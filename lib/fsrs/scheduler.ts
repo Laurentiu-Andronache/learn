@@ -1,5 +1,17 @@
-import { FSRS, generatorParameters, Rating, State, createEmptyCard } from 'ts-fsrs';
-import type { Card, RecordLogItem, FSRSParameters, IPreview, Grade } from 'ts-fsrs';
+import type {
+  Card,
+  FSRSParameters,
+  Grade,
+  IPreview,
+  RecordLogItem,
+} from "ts-fsrs";
+import {
+  createEmptyCard,
+  FSRS,
+  generatorParameters,
+  Rating,
+  State,
+} from "ts-fsrs";
 
 // Initialize FSRS with default parameters
 const params = generatorParameters();

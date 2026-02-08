@@ -1,11 +1,11 @@
 "use client";
 
-import { useTranslations } from "next-intl";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, RotateCcw, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 
 interface FlashcardResultsProps {
   knew: number;
@@ -42,14 +42,20 @@ export function FlashcardResults({
               <CheckCircle2 size={18} className="text-green-600" />
               <div>
                 <p className="text-lg font-semibold text-green-600">{knew}</p>
-                <p className="text-xs text-muted-foreground">{tResults("knew")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {tResults("knew")}
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
               <XCircle size={18} className="text-red-600" />
               <div>
-                <p className="text-lg font-semibold text-red-600">{didntKnow}</p>
-                <p className="text-xs text-muted-foreground">{tResults("didntKnow")}</p>
+                <p className="text-lg font-semibold text-red-600">
+                  {didntKnow}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {tResults("didntKnow")}
+                </p>
               </div>
             </div>
           </div>
@@ -67,7 +73,8 @@ export function FlashcardResults({
           <CardContent className="space-y-3">
             {categories.map((cat) => {
               const catTotal = cat.knew + cat.didntKnow;
-              const catPercent = catTotal > 0 ? Math.round((cat.knew / catTotal) * 100) : 0;
+              const catPercent =
+                catTotal > 0 ? Math.round((cat.knew / catTotal) * 100) : 0;
               return (
                 <div key={cat.name} className="space-y-1">
                   <div className="flex justify-between text-sm">
@@ -93,9 +100,9 @@ export function FlashcardResults({
           </Button>
         )}
         <Button variant="outline" asChild className="w-full" size="lg">
-          <Link href="/themes">
+          <Link href="/topics">
             <ArrowLeft size={16} />
-            {tResults("backToThemes")}
+            {tResults("backToTopics")}
           </Link>
         </Button>
       </div>

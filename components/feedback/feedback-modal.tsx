@@ -1,12 +1,25 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
 
 interface FeedbackModalProps {
   open: boolean;
@@ -14,10 +27,11 @@ interface FeedbackModalProps {
 }
 
 export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
-  const [type, setType] = useState<string>('feature');
-  const [message, setMessage] = useState('');
+  const [type, setType] = useState<string>("feature");
+  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const t = useTranslations();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,8 +39,10 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     setSubmitting(true);
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      await supabase.from('feedback').insert({
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      await supabase.from("feedback").insert({
         user_id: user?.id || null,
         type,
         message: message.trim(),
@@ -37,8 +53,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
       setTimeout(() => {
         onOpenChange(false);
         setSubmitted(false);
-        setMessage('');
-        setType('feature');
+        setMessage("");
+        setType("feature");
       }, 2000);
     } finally {
       setSubmitting(false);
@@ -49,37 +65,49 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Send Feedback</DialogTitle>
-          <DialogDescription>We appreciate your input to improve LEARN.</DialogDescription>
+          <DialogTitle>{t("feedback.title")}</DialogTitle>
+          <DialogDescription>{t("feedback.description")}</DialogDescription>
         </DialogHeader>
         {submitted ? (
-          <p className="text-center py-6 text-green-600 font-medium">Thank you for your feedback!</p>
+          <p className="text-center py-6 text-green-600 font-medium">
+            {t("feedback.submitted")}
+          </p>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label>Type</Label>
+              <Label>{t("feedback.type")}</Label>
               <Select value={type} onValueChange={setType}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="bug">Bug Report</SelectItem>
-                  <SelectItem value="feature">Feature Request</SelectItem>
-                  <SelectItem value="content">Content Issue</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
+                  <SelectItem value="bug">{t("feedback.bug")}</SelectItem>
+                  <SelectItem value="feature">
+                    {t("feedback.feature")}
+                  </SelectItem>
+                  <SelectItem value="content">
+                    {t("feedback.content")}
+                  </SelectItem>
+                  <SelectItem value="other">{t("feedback.other")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label>Message</Label>
+              <Label>{t("feedback.message")}</Label>
               <Textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="Tell us what's on your mind..."
+                placeholder={t("feedback.placeholder")}
                 rows={4}
                 required
               />
             </div>
-            <Button type="submit" disabled={submitting || !message.trim()} className="w-full">
-              {submitting ? 'Sending...' : 'Send Feedback'}
+            <Button
+              type="submit"
+              disabled={submitting || !message.trim()}
+              className="w-full"
+            >
+              {submitting ? t("feedback.sending") : t("feedback.sendFeedback")}
             </Button>
           </form>
         )}

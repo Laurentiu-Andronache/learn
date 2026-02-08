@@ -1,18 +1,18 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
 import { Menu } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
 } from "@/components/ui/sheet";
-import { LogoutButton } from "@/components/logout-button";
 
 export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const [open, setOpen] = useState(false);
@@ -39,11 +39,11 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
           {isLoggedIn ? (
             <>
               <Link
-                href="/themes"
+                href="/topics"
                 onClick={() => setOpen(false)}
                 className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
               >
-                {t("themes")}
+                {t("topics")}
               </Link>
               <Link
                 href="/settings"

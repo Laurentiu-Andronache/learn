@@ -1,14 +1,16 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 
 export function AnonymousLoginButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const t = useTranslations();
 
   const handleAnonymousLogin = async () => {
     setIsLoading(true);
@@ -18,9 +20,10 @@ export function AnonymousLoginButton() {
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
-      router.push("/themes");
+      router.refresh();
+      router.push("/topics");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setIsLoading(false);
     }
@@ -34,7 +37,7 @@ export function AnonymousLoginButton() {
         onClick={handleAnonymousLogin}
         disabled={isLoading}
       >
-        {isLoading ? "Starting..." : "Try Without Account"}
+        {isLoading ? t("auth.starting") : t("auth.anonymous")}
       </Button>
       {error && <p className="text-sm text-red-500 text-center">{error}</p>}
     </div>

@@ -1,13 +1,15 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { AnonymousLoginButton } from "@/components/anonymous-login-button";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AnonymousLoginButton } from "@/components/anonymous-login-button";
 import { createClient } from "@/lib/supabase/server";
-import { getTranslations } from "next-intl/server";
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const t = await getTranslations();
 
   return (
@@ -25,7 +27,7 @@ export default async function HomePage() {
               </p>
             </div>
             <Button asChild size="lg">
-              <Link href="/themes">{t("landing.continueLearning")}</Link>
+              <Link href="/topics">{t("landing.continueLearning")}</Link>
             </Button>
           </>
         ) : (
@@ -33,7 +35,14 @@ export default async function HomePage() {
             <div className="space-y-4 max-w-2xl">
               <h1 className="text-5xl sm:text-6xl font-bold tracking-tight">
                 {t.rich("landing.heroRich", {
-                  highlight: (chunks) => <span className="text-primary">{chunks}</span>
+                  highlight: (chunks) => (
+                    <span className="text-primary">{chunks}</span>
+                  ),
+                  free: (chunks) => (
+                    <span className="bg-gradient-to-r from-violet-500 via-pink-500 to-amber-500 bg-clip-text text-transparent animate-pulse">
+                      {chunks}
+                    </span>
+                  ),
                 })}
               </h1>
               <p className="text-xl text-muted-foreground max-w-xl mx-auto">
@@ -61,7 +70,9 @@ export default async function HomePage() {
           <Card>
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-4xl">🧠</div>
-              <h3 className="font-semibold text-lg">{t("landing.features.fsrs.title")}</h3>
+              <h3 className="font-semibold text-lg">
+                {t("landing.features.fsrs.title")}
+              </h3>
               <p className="text-sm text-muted-foreground">
                 {t("landing.features.fsrs.description")}
               </p>
@@ -70,7 +81,9 @@ export default async function HomePage() {
           <Card>
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-4xl">🌍</div>
-              <h3 className="font-semibold text-lg">{t("landing.features.bilingual.title")}</h3>
+              <h3 className="font-semibold text-lg">
+                {t("landing.features.bilingual.title")}
+              </h3>
               <p className="text-sm text-muted-foreground">
                 {t("landing.features.bilingual.description")}
               </p>
@@ -79,7 +92,9 @@ export default async function HomePage() {
           <Card>
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-4xl">📚</div>
-              <h3 className="font-semibold text-lg">{t("landing.features.modes.title")}</h3>
+              <h3 className="font-semibold text-lg">
+                {t("landing.features.modes.title")}
+              </h3>
               <p className="text-sm text-muted-foreground">
                 {t("landing.features.modes.description")}
               </p>

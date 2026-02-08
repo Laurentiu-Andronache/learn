@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useCallback } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
+import { useCallback, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface FlashcardQuestion {
   id: string;
@@ -17,50 +17,74 @@ interface FlashcardQuestion {
 
 interface FlashcardStackProps {
   questions: FlashcardQuestion[];
-  locale: 'en' | 'es';
+  locale: "en" | "es";
   onGrade: (questionId: string, knew: boolean) => void;
   onSuspend: (questionId: string) => void;
   onComplete: (results: { knew: string[]; didntKnow: string[] }) => void;
-  onProgressChange?: (knew: number, didntKnow: number, currentIndex: number) => void;
+  onProgressChange?: (
+    knew: number,
+    didntKnow: number,
+    currentIndex: number,
+  ) => void;
 }
 
-export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComplete, onProgressChange }: FlashcardStackProps) {
+export function FlashcardStack({
+  questions,
+  locale,
+  onGrade,
+  onSuspend,
+  onComplete,
+  onProgressChange,
+}: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [knew, setKnew] = useState<string[]>([]);
   const [didntKnow, setDidntKnow] = useState<string[]>([]);
 
-  const advance = useCallback((knewIt: boolean) => {
-    const current = questions[currentIndex];
-    if (!current) return;
-    const qId = current.id;
-    onGrade(qId, knewIt);
+  const advance = useCallback(
+    (knewIt: boolean) => {
+      const current = questions[currentIndex];
+      if (!current) return;
+      const qId = current.id;
+      onGrade(qId, knewIt);
 
-    const newKnew = knewIt ? [...knew, qId] : knew;
-    const newDidntKnow = knewIt ? didntKnow : [...didntKnow, qId];
+      const newKnew = knewIt ? [...knew, qId] : knew;
+      const newDidntKnow = knewIt ? didntKnow : [...didntKnow, qId];
 
-    if (knewIt) {
-      setKnew(newKnew);
-    } else {
-      setDidntKnow(newDidntKnow);
-    }
+      if (knewIt) {
+        setKnew(newKnew);
+      } else {
+        setDidntKnow(newDidntKnow);
+      }
 
-    if (currentIndex + 1 >= questions.length) {
-      onComplete({ knew: newKnew, didntKnow: newDidntKnow });
-    } else {
-      const nextIndex = currentIndex + 1;
-      setCurrentIndex(nextIndex);
-      setIsFlipped(false);
-      onProgressChange?.(newKnew.length, newDidntKnow.length, nextIndex);
-    }
-  }, [currentIndex, questions, knew, didntKnow, onGrade, onComplete, onProgressChange]);
+      if (currentIndex + 1 >= questions.length) {
+        onComplete({ knew: newKnew, didntKnow: newDidntKnow });
+      } else {
+        const nextIndex = currentIndex + 1;
+        setCurrentIndex(nextIndex);
+        setIsFlipped(false);
+        onProgressChange?.(newKnew.length, newDidntKnow.length, nextIndex);
+      }
+    },
+    [
+      currentIndex,
+      questions,
+      knew,
+      didntKnow,
+      onGrade,
+      onComplete,
+      onProgressChange,
+    ],
+  );
 
   const current = questions[currentIndex];
   if (!current) return null;
 
-  const questionText = locale === 'es' ? current.question_es : current.question_en;
-  const explanation = locale === 'es' ? current.explanation_es : current.explanation_en;
-  const extra = locale === 'es' ? current.extra_es : current.extra_en;
+  const questionText =
+    locale === "es" ? current.question_es : current.question_en;
+  const explanation =
+    locale === "es" ? current.explanation_es : current.explanation_en;
+  const extra = locale === "es" ? current.extra_es : current.extra_en;
 
   const handleFlip = () => {
     if (!isFlipped) setIsFlipped(true);
@@ -74,16 +98,22 @@ export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComple
       </div>
 
       {/* Flashcard */}
+      {/* biome-ignore lint/a11y/useSemanticElements: div needed for 3D perspective container */}
       <div
+        role="button"
+        tabIndex={0}
         className="relative w-full aspect-[3/2] cursor-pointer"
-        style={{ perspective: '1000px' }}
+        style={{ perspective: "1000px" }}
         onClick={handleFlip}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") handleFlip();
+        }}
       >
         <div
           className={cn(
-            'absolute inset-0 transition-transform duration-300',
-            '[transform-style:preserve-3d]',
-            isFlipped && '[transform:rotateY(180deg)]'
+            "absolute inset-0 transition-transform duration-300",
+            "[transform-style:preserve-3d]",
+            isFlipped && "[transform:rotateY(180deg)]",
           )}
         >
           {/* Front */}
@@ -103,7 +133,9 @@ export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComple
               )}
               {extra && (
                 <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
-                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">Learn More</p>
+                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                    Learn More
+                  </p>
                   <p className="text-xs text-muted-foreground">{extra}</p>
                 </div>
               )}
@@ -112,7 +144,10 @@ export function FlashcardStack({ questions, locale, onGrade, onSuspend, onComple
               variant="ghost"
               size="sm"
               className="mt-2 self-end"
-              onClick={(e) => { e.stopPropagation(); onSuspend(current.id); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onSuspend(current.id);
+              }}
             >
               ⊘ Suspend
             </Button>

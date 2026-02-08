@@ -1,10 +1,10 @@
 "use client";
 
+import { Loader2, RotateCcw } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
-import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { unsuspendQuestion } from "@/lib/services/user-preferences";
-import { Loader2, RotateCcw } from "lucide-react";
 
 interface SuspendedQuestionsListProps {
   userId: string;
@@ -21,7 +21,10 @@ interface SuspendedQuestionsListProps {
   }>;
 }
 
-export function SuspendedQuestionsList({ userId, items: initial }: SuspendedQuestionsListProps) {
+export function SuspendedQuestionsList({
+  userId,
+  items: initial,
+}: SuspendedQuestionsListProps) {
   const t = useTranslations("settings");
   const locale = useLocale();
   const [items, setItems] = useState(initial);
@@ -48,7 +51,9 @@ export function SuspendedQuestionsList({ userId, items: initial }: SuspendedQues
         const q = item.question;
         const text = locale === "es" ? q.question_es : q.question_en;
         const cat = q.category
-          ? locale === "es" ? q.category.name_es : q.category.name_en
+          ? locale === "es"
+            ? q.category.name_es
+            : q.category.name_en
           : null;
 
         return (
@@ -58,9 +63,7 @@ export function SuspendedQuestionsList({ userId, items: initial }: SuspendedQues
           >
             <div className="flex-1 min-w-0">
               <p className="text-sm truncate">{text}</p>
-              {cat && (
-                <p className="text-xs text-muted-foreground">{cat}</p>
-              )}
+              {cat && <p className="text-xs text-muted-foreground">{cat}</p>}
             </div>
             <Button
               variant="ghost"

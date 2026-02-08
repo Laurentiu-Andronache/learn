@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState, useTransition, useCallback } from "react";
-import { useTranslations } from "next-intl";
-import { updateReadingProgress } from "@/lib/services/user-preferences";
-import { Button } from "@/components/ui/button";
 import { Check, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { updateReadingProgress } from "@/lib/services/user-preferences";
 
 interface ReadingProgressBarProps {
   userId: string;
@@ -12,7 +12,11 @@ interface ReadingProgressBarProps {
   initialPercent: number;
 }
 
-export function ReadingProgressBar({ userId, themeId, initialPercent }: ReadingProgressBarProps) {
+export function ReadingProgressBar({
+  userId,
+  themeId,
+  initialPercent,
+}: ReadingProgressBarProps) {
   const t = useTranslations("reading");
   const [scrollPercent, setScrollPercent] = useState(0);
   const [completed, setCompleted] = useState(initialPercent >= 100);
@@ -21,12 +25,15 @@ export function ReadingProgressBar({ userId, themeId, initialPercent }: ReadingP
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const docHeight =
+        document.documentElement.scrollHeight - window.innerHeight;
       if (docHeight <= 0) {
         setScrollPercent(100);
         return;
       }
-      setScrollPercent(Math.min(100, Math.round((scrollTop / docHeight) * 100)));
+      setScrollPercent(
+        Math.min(100, Math.round((scrollTop / docHeight) * 100)),
+      );
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
@@ -35,7 +42,7 @@ export function ReadingProgressBar({ userId, themeId, initialPercent }: ReadingP
 
   const handleMarkAsRead = useCallback(() => {
     startTransition(async () => {
-      await updateReadingProgress(userId, themeId, themeId, 1, 100);
+      await updateReadingProgress(userId, themeId, null, 1, 100);
       setCompleted(true);
     });
   }, [userId, themeId]);
@@ -54,7 +61,9 @@ export function ReadingProgressBar({ userId, themeId, initialPercent }: ReadingP
       {!completed && scrollPercent > 80 && (
         <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
           <div className="max-w-[680px] mx-auto px-4 py-3 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">{scrollPercent}%</span>
+            <span className="text-sm text-muted-foreground">
+              {scrollPercent}%
+            </span>
             <Button size="sm" onClick={handleMarkAsRead} disabled={isPending}>
               {isPending ? (
                 <Loader2 size={14} className="animate-spin" />

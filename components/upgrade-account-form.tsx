@@ -1,6 +1,8 @@
 "use client";
 
-import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -11,8 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 export function UpgradeAccountForm() {
   const [email, setEmail] = useState("");
@@ -20,6 +21,7 @@ export function UpgradeAccountForm() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const t = useTranslations();
 
   const handleUpgrade = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,9 +47,9 @@ export function UpgradeAccountForm() {
           .eq("id", user.id);
       }
 
-      router.push("/themes");
+      router.push("/topics");
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
       setIsLoading(false);
     }
@@ -56,16 +58,14 @@ export function UpgradeAccountForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-2xl">Create Your Account</CardTitle>
-        <CardDescription>
-          Add an email and password to save your progress permanently
-        </CardDescription>
+        <CardTitle className="text-2xl">{t("auth.upgradeTitle")}</CardTitle>
+        <CardDescription>{t("auth.upgradeDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleUpgrade}>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input
                 id="email"
                 type="email"
@@ -76,7 +76,7 @@ export function UpgradeAccountForm() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t("auth.password")}</Label>
               <Input
                 id="password"
                 type="password"
@@ -88,7 +88,7 @@ export function UpgradeAccountForm() {
             </div>
             {error && <p className="text-sm text-red-500">{error}</p>}
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save My Progress"}
+              {isLoading ? t("auth.saving") : t("auth.saveProgress")}
             </Button>
           </div>
         </form>

@@ -1,13 +1,19 @@
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getProfile, getSuspendedQuestions, getHiddenThemes } from "@/lib/services/user-preferences";
 import { SettingsClient } from "@/components/settings/settings-client";
+import {
+  getHiddenTopics,
+  getProfile,
+  getSuspendedQuestions,
+} from "@/lib/services/user-preferences";
+import { createClient } from "@/lib/supabase/server";
 
 export const metadata = { title: "Settings - LEARN" };
 
 export default async function SettingsPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/auth/login");
@@ -15,10 +21,10 @@ export default async function SettingsPage() {
 
   const isAnonymous = user.is_anonymous ?? false;
 
-  const [profile, suspendedQuestions, hiddenThemes] = await Promise.all([
+  const [profile, suspendedQuestions, hiddenTopics] = await Promise.all([
     getProfile(user.id).catch(() => null),
     getSuspendedQuestions(user.id).catch(() => []),
-    getHiddenThemes(user.id).catch(() => []),
+    getHiddenTopics(user.id).catch(() => []),
   ]);
 
   /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -30,7 +36,7 @@ export default async function SettingsPage() {
       createdAt={user.created_at}
       profile={profile}
       suspendedQuestions={suspendedQuestions as any}
-      hiddenThemes={hiddenThemes as any}
+      hiddenTopics={hiddenTopics as any}
     />
   );
   /* eslint-enable @typescript-eslint/no-explicit-any */

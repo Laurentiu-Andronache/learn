@@ -1,14 +1,14 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
 import { useLocale } from "next-intl";
-import { FlashcardStack } from "./flashcard-stack";
+import { useCallback, useRef, useState } from "react";
+import { scheduleReview } from "@/lib/fsrs/actions";
+import { Rating } from "@/lib/fsrs/scheduler";
+import { suspendQuestion } from "@/lib/services/user-preferences";
+import type { FSRSRating } from "@/lib/types/database";
 import { FlashcardProgress } from "./flashcard-progress";
 import { FlashcardResults } from "./flashcard-results";
-import { scheduleReview } from "@/lib/fsrs/actions";
-import { suspendQuestion } from "@/lib/services/user-preferences";
-import { Rating } from "@/lib/fsrs/scheduler";
-import type { FSRSRating } from "@/lib/types/database";
+import { FlashcardStack } from "./flashcard-stack";
 
 interface FlashcardQuestionData {
   id: string;
@@ -50,25 +50,27 @@ export function FlashcardSession({
   const handleGrade = useCallback(
     (questionId: string, knew: boolean) => {
       const timeMs = Date.now() - startTime.current;
-      const rating = knew ? (Rating.Good as FSRSRating) : (Rating.Again as FSRSRating);
+      const rating = knew
+        ? (Rating.Good as FSRSRating)
+        : (Rating.Again as FSRSRating);
       scheduleReview(userId, questionId, rating, "flashcard", knew, timeMs);
       startTime.current = Date.now();
     },
-    [userId]
+    [userId],
   );
 
   const handleSuspend = useCallback(
     (questionId: string) => {
       suspendQuestion(userId, questionId, "Suspended from flashcard session");
     },
-    [userId]
+    [userId],
   );
 
   const handleComplete = useCallback(
     (finalResults: { knew: string[]; didntKnow: string[] }) => {
       setResults(finalResults);
     },
-    []
+    [],
   );
 
   const handleProgressChange = useCallback(
@@ -77,7 +79,7 @@ export function FlashcardSession({
       setDidntKnowCount(didntKnow);
       setCurrentIndex(index);
     },
-    []
+    [],
   );
 
   const handleReviewDidntKnow = useCallback(() => {

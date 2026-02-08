@@ -1,10 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 
 interface ReviewItem {
   id: string;
@@ -17,10 +18,17 @@ interface ReviewQueueProps<T extends ReviewItem> {
   items: T[];
   renderItem: (item: T) => React.ReactNode;
   onUpdateStatus: (id: string, status: string, notes?: string) => Promise<void>;
-  statusOptions: { value: string; label: string; variant?: "default" | "secondary" | "destructive" | "outline" }[];
+  statusOptions: {
+    value: string;
+    label: string;
+    variant?: "default" | "secondary" | "destructive" | "outline";
+  }[];
 }
 
-const statusColors: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+const statusColors: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
   pending: "secondary",
   reviewing: "default",
   resolved: "outline",
@@ -39,6 +47,7 @@ export function ReviewQueue<T extends ReviewItem>({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState<string | null>(null);
+  const t = useTranslations();
 
   const handleAction = async (id: string, status: string) => {
     setLoading(id);
@@ -53,7 +62,11 @@ export function ReviewQueue<T extends ReviewItem>({
   };
 
   if (items.length === 0) {
-    return <p className="text-center text-muted-foreground py-8">No items to review.</p>;
+    return (
+      <p className="text-center text-muted-foreground py-8">
+        {t("admin.noItems")}
+      </p>
+    );
   }
 
   return (
@@ -81,7 +94,7 @@ export function ReviewQueue<T extends ReviewItem>({
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Admin notes..."
+              placeholder={t("admin.adminNotes")}
               rows={2}
               className="text-sm"
             />
@@ -107,7 +120,9 @@ export function ReviewQueue<T extends ReviewItem>({
                 setNotes(item.admin_notes ?? "");
               }}
             >
-              {editingId === item.id ? "Hide Notes" : "Add Notes"}
+              {editingId === item.id
+                ? t("admin.hideNotes")
+                : t("admin.addNotes")}
             </Button>
           </div>
         </div>

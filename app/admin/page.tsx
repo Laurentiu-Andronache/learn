@@ -1,4 +1,5 @@
-import { createClient } from "@/lib/supabase/server";
+import Link from "next/link";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -6,8 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
 
 async function getDashboardStats() {
   const supabase = await createClient();
@@ -24,9 +24,7 @@ async function getDashboardStats() {
     supabase.from("themes").select("id", { count: "exact", head: true }),
     supabase.from("questions").select("id", { count: "exact", head: true }),
     supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase
-      .from("feedback")
-      .select("id", { count: "exact", head: true }),
+    supabase.from("feedback").select("id", { count: "exact", head: true }),
     supabase
       .from("question_reports")
       .select("id", { count: "exact", head: true })
@@ -92,7 +90,7 @@ export default async function AdminDashboard() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Themes</CardDescription>
+            <CardDescription>Topics</CardDescription>
             <CardTitle className="text-3xl">{stats.themes}</CardTitle>
           </CardHeader>
         </Card>
@@ -146,10 +144,10 @@ export default async function AdminDashboard() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-2">
           <Link
-            href="/admin/themes"
+            href="/admin/topics"
             className="inline-flex items-center rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
           >
-            Manage Themes
+            Manage Topics
           </Link>
           <Link
             href="/admin/questions"

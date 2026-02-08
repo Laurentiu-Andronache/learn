@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { useTranslations } from 'next-intl';
-import { Progress } from '@/components/ui/progress';
-import { Badge } from '@/components/ui/badge';
+import { useTranslations } from "next-intl";
+import { useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 
 export interface QuizProgressProps {
   current: number;
@@ -22,7 +22,7 @@ export function QuizProgress({
   categoryName,
   categoryColor,
 }: QuizProgressProps) {
-  const t = useTranslations('quiz');
+  const t = useTranslations("quiz");
   const [elapsed, setElapsed] = useState(0);
   const startRef = useRef(Date.now());
 
@@ -36,7 +36,7 @@ export function QuizProgress({
   const percent = total > 0 ? Math.round((answered / total) * 100) : 0;
   const minutes = Math.floor(elapsed / 60);
   const seconds = elapsed % 60;
-  const timeStr = `${minutes}:${String(seconds).padStart(2, '0')}`;
+  const timeStr = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
   return (
     <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b pb-3 pt-2 px-1 space-y-2">
@@ -46,20 +46,24 @@ export function QuizProgress({
             <Badge
               variant="outline"
               className="text-xs shrink-0"
-              style={categoryColor ? { borderColor: categoryColor, color: categoryColor } : undefined}
+              style={
+                categoryColor
+                  ? { borderColor: categoryColor, color: categoryColor }
+                  : undefined
+              }
             >
               {categoryName}
             </Badge>
           )}
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {t('question')} {current}/{total}
+            {t("question")} {current}/{total}
           </span>
         </div>
         <div className="flex items-center gap-3 text-sm text-muted-foreground shrink-0">
           <span className="tabular-nums">{timeStr}</span>
           {answered > 0 && (
             <span className="font-medium">
-              {t('score')}: {correct}/{answered}
+              {t("score")}: {correct}/{answered}
             </span>
           )}
         </div>

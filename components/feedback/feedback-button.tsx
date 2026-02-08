@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { FeedbackModal } from './feedback-modal';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { FeedbackModal } from "./feedback-modal";
 
 export function FeedbackButton() {
   const [open, setOpen] = useState(false);

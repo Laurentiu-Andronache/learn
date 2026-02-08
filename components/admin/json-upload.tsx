@@ -1,15 +1,16 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { useState } from "react";
 import {
-  validateImportJson,
-  importThemeJson,
   type ImportSummary,
   type ImportTheme,
+  importThemeJson,
+  validateImportJson,
 } from "@/lib/services/admin-import";
 
 export function JsonUpload() {
@@ -19,6 +20,7 @@ export function JsonUpload() {
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const t = useTranslations();
 
   const handleValidate = async () => {
     setError(null);
@@ -41,7 +43,9 @@ export function JsonUpload() {
     setError(null);
     try {
       const res = await importThemeJson(parsed);
-      setResult(`Imported ${res.questionsInserted} questions. Theme ID: ${res.themeId}`);
+      setResult(
+        `Imported ${res.questionsInserted} questions. Theme ID: ${res.themeId}`,
+      );
       setJsonText("");
       setSummary(null);
       setParsed(null);
@@ -91,11 +95,11 @@ export function JsonUpload() {
 
       <div className="flex gap-2">
         <Button onClick={handleValidate} disabled={!jsonText.trim()}>
-          Validate
+          {t("common.submit")}
         </Button>
         {parsed && (
           <Button onClick={handleImport} disabled={importing}>
-            {importing ? "Importing..." : "Import"}
+            {importing ? t("admin.importing") : t("admin.import")}
           </Button>
         )}
       </div>
@@ -113,19 +117,23 @@ export function JsonUpload() {
               <span className="font-medium">Theme:</span> {summary.themeTitle}
             </p>
             <p className="text-sm">
-              <span className="font-medium">Categories:</span> {summary.categoryCount}
+              <span className="font-medium">Categories:</span>{" "}
+              {summary.categoryCount}
             </p>
             <p className="text-sm">
-              <span className="font-medium">Questions:</span> {summary.questionCount}
+              <span className="font-medium">Questions:</span>{" "}
+              {summary.questionCount}
             </p>
             {summary.errors.length === 0 ? (
               <Badge variant="default">Valid</Badge>
             ) : (
               <div>
-                <Badge variant="destructive">{summary.errors.length} errors</Badge>
+                <Badge variant="destructive">
+                  {summary.errors.length} errors
+                </Badge>
                 <ul className="mt-2 space-y-1">
-                  {summary.errors.map((err, i) => (
-                    <li key={i} className="text-sm text-red-500">
+                  {summary.errors.map((err) => (
+                    <li key={err} className="text-sm text-red-500">
                       {err}
                     </li>
                   ))}

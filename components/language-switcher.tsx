@@ -1,5 +1,9 @@
 "use client";
 
+import { Languages } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
+import { useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,10 +12,6 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Languages } from "lucide-react";
-import { useLocale } from "next-intl";
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 const languages = [
@@ -20,6 +20,7 @@ const languages = [
 ] as const;
 
 function setLocaleCookie(locale: string) {
+  // biome-ignore lint/suspicious/noDocumentCookie: simple locale cookie, no framework alternative needed
   document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 }
 

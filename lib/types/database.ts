@@ -6,7 +6,7 @@
 // CONTENT TABLES
 // ============================================================================
 
-export type QuestionType = 'multiple_choice' | 'true_false';
+export type QuestionType = "multiple_choice" | "true_false";
 
 export interface Theme {
   id: string;
@@ -56,7 +56,7 @@ export interface Question {
 // USER MANAGEMENT
 // ============================================================================
 
-export type Language = 'en' | 'es';
+export type Language = "en" | "es";
 
 export interface Profile {
   id: string;
@@ -79,9 +79,9 @@ export interface AdminUser {
 // SPACED REPETITION (FSRS)
 // ============================================================================
 
-export type CardState = 'new' | 'learning' | 'review' | 'relearning';
+export type CardState = "new" | "learning" | "review" | "relearning";
 export type FSRSRating = 1 | 2 | 3 | 4; // Again, Hard, Good, Easy
-export type ReviewMode = 'quiz' | 'flashcard';
+export type ReviewMode = "quiz" | "flashcard";
 
 export interface UserCardState {
   id: string;
@@ -150,10 +150,19 @@ export interface ReadingProgress {
 // FEEDBACK & MODERATION
 // ============================================================================
 
-export type FeedbackType = 'bug' | 'feature' | 'content' | 'other';
-export type IssueType = 'incorrect_answer' | 'typo' | 'unclear' | 'outdated' | 'other';
-export type ModerationStatus = 'pending' | 'reviewing' | 'resolved' | 'dismissed';
-export type ProposalStatus = 'pending' | 'approved' | 'rejected';
+export type FeedbackType = "bug" | "feature" | "content" | "other";
+export type IssueType =
+  | "incorrect_answer"
+  | "typo"
+  | "unclear"
+  | "outdated"
+  | "other";
+export type ModerationStatus =
+  | "pending"
+  | "reviewing"
+  | "resolved"
+  | "dismissed";
+export type ProposalStatus = "pending" | "approved" | "rejected";
 
 export interface Feedback {
   id: string;
@@ -216,18 +225,41 @@ export interface ThemeProposal {
 // INSERT TYPES (omit server-generated fields)
 // ============================================================================
 
-export type ThemeInsert = Omit<Theme, 'id' | 'created_at' | 'updated_at'> & { id?: string };
-export type CategoryInsert = Omit<Category, 'id' | 'created_at'> & { id?: string };
-export type QuestionInsert = Omit<Question, 'id' | 'created_at' | 'updated_at'> & { id?: string };
-export type ProfileInsert = Omit<Profile, 'created_at' | 'updated_at'>;
-export type UserCardStateInsert = Omit<UserCardState, 'id' | 'created_at' | 'updated_at'> & { id?: string };
-export type ReviewLogInsert = Omit<ReviewLog, 'id' | 'reviewed_at'> & { id?: string };
+export type ThemeInsert = Omit<Theme, "id" | "created_at" | "updated_at"> & {
+  id?: string;
+};
+export type CategoryInsert = Omit<Category, "id" | "created_at"> & {
+  id?: string;
+};
+export type QuestionInsert = Omit<
+  Question,
+  "id" | "created_at" | "updated_at"
+> & { id?: string };
+export type ProfileInsert = Omit<Profile, "created_at" | "updated_at">;
+export type UserCardStateInsert = Omit<
+  UserCardState,
+  "id" | "created_at" | "updated_at"
+> & { id?: string };
+export type ReviewLogInsert = Omit<ReviewLog, "id" | "reviewed_at"> & {
+  id?: string;
+};
 
 // ============================================================================
 // UPDATE TYPES (all fields optional except id)
 // ============================================================================
 
-export type ThemeUpdate = Partial<Omit<Theme, 'id' | 'created_at' | 'updated_at'>>;
-export type QuestionUpdate = Partial<Omit<Question, 'id' | 'created_at' | 'updated_at'>>;
-export type ProfileUpdate = Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>;
-export type UserCardStateUpdate = Partial<Omit<UserCardState, 'id' | 'user_id' | 'question_id' | 'created_at' | 'updated_at'>>;
+export type ThemeUpdate = Partial<
+  Omit<Theme, "id" | "created_at" | "updated_at">
+>;
+export type QuestionUpdate = Partial<
+  Omit<Question, "id" | "created_at" | "updated_at">
+>;
+export type ProfileUpdate = Partial<
+  Omit<Profile, "id" | "created_at" | "updated_at">
+>;
+export type UserCardStateUpdate = Partial<
+  Omit<
+    UserCardState,
+    "id" | "user_id" | "question_id" | "created_at" | "updated_at"
+  >
+>;

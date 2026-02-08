@@ -1,5 +1,5 @@
-import { getThemeProposalsList } from '@/lib/services/admin-reviews';
-import { ThemeProposalsClient } from './theme-proposals-client';
+import { getThemeProposalsList } from "@/lib/services/admin-reviews";
+import { ThemeProposalsClient } from "./theme-proposals-client";
 
 export default async function ThemeProposalsPage() {
   const items = await getThemeProposalsList();

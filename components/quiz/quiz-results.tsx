@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useTranslations } from 'next-intl';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import Link from 'next/link';
-import confetti from 'canvas-confetti';
-import { cn } from '@/lib/utils';
+import confetti from "canvas-confetti";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 export interface QuizAnswer {
   questionId: string;
@@ -27,25 +27,38 @@ interface QuizResultsProps {
   onReviewMissed: () => void;
 }
 
-export function QuizResults({ answers, totalTimeMs, themeId, onReviewMissed }: QuizResultsProps) {
-  const t = useTranslations('quiz.results');
+export function QuizResults({
+  answers,
+  totalTimeMs,
+  themeId,
+  onReviewMissed,
+}: QuizResultsProps) {
+  const t = useTranslations("quiz.results");
 
-  const correct = answers.filter(a => a.wasCorrect).length;
+  const correct = answers.filter((a) => a.wasCorrect).length;
   const total = answers.length;
   const percent = total > 0 ? Math.round((correct / total) * 100) : 0;
   const minutes = Math.floor(totalTimeMs / 60000);
   const seconds = Math.floor((totalTimeMs % 60000) / 1000);
 
   // Category breakdown
-  const categoryMap = new Map<string, { name: string; color: string | null; correct: number; total: number }>();
+  const categoryMap = new Map<
+    string,
+    { name: string; color: string | null; correct: number; total: number }
+  >();
   for (const a of answers) {
-    const existing = categoryMap.get(a.categoryName) || { name: a.categoryName, color: a.categoryColor, correct: 0, total: 0 };
+    const existing = categoryMap.get(a.categoryName) || {
+      name: a.categoryName,
+      color: a.categoryColor,
+      correct: 0,
+      total: 0,
+    };
     existing.total++;
     if (a.wasCorrect) existing.correct++;
     categoryMap.set(a.categoryName, existing);
   }
 
-  const missed = answers.filter(a => !a.wasCorrect);
+  const missed = answers.filter((a) => !a.wasCorrect);
 
   // Confetti burst on good score
   useEffect(() => {
@@ -69,13 +82,13 @@ export function QuizResults({ answers, totalTimeMs, themeId, onReviewMissed }: Q
       {/* Score card */}
       <Card>
         <CardContent className="pt-6 text-center space-y-2">
-          {percent >= 80 && <p className="text-2xl">{t('congratulations')}</p>}
+          {percent >= 80 && <p className="text-2xl">{t("congratulations")}</p>}
           <p className="text-5xl font-bold tabular-nums">{percent}%</p>
           <p className="text-muted-foreground">
-            {t('score')}: {correct}/{total}
+            {t("score")}: {correct}/{total}
           </p>
           <p className="text-sm text-muted-foreground">
-            {t('time')}: {minutes}m {seconds}s
+            {t("time")}: {minutes}m {seconds}s
           </p>
         </CardContent>
       </Card>
@@ -84,18 +97,27 @@ export function QuizResults({ answers, totalTimeMs, themeId, onReviewMissed }: Q
       {categoryMap.size > 1 && (
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">{t('categoryBreakdown')}</CardTitle>
+            <CardTitle className="text-lg">{t("categoryBreakdown")}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
-              {Array.from(categoryMap.values()).map(cat => (
-                <div key={cat.name} className="flex items-center justify-between text-sm">
+              {Array.from(categoryMap.values()).map((cat) => (
+                <div
+                  key={cat.name}
+                  className="flex items-center justify-between text-sm"
+                >
                   <span className="flex items-center gap-2">
-                    {cat.color && <span className="w-3 h-3 rounded-full" style={{ backgroundColor: cat.color }} />}
+                    {cat.color && (
+                      <span
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                    )}
                     {cat.name}
                   </span>
                   <span className="tabular-nums">
-                    {cat.correct}/{cat.total} ({Math.round((cat.correct / cat.total) * 100)}%)
+                    {cat.correct}/{cat.total} (
+                    {Math.round((cat.correct / cat.total) * 100)}%)
                   </span>
                 </div>
               ))}
@@ -107,44 +129,49 @@ export function QuizResults({ answers, totalTimeMs, themeId, onReviewMissed }: Q
       {/* Per-question review */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{t('questionReview')}</CardTitle>
+          <CardTitle className="text-lg">{t("questionReview")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {answers.map((a, i) => (
             <div
               key={a.questionId}
               className={cn(
-                'rounded-lg border p-3 space-y-1',
-                a.wasCorrect && 'border-green-500/30 bg-green-500/5',
-                !a.wasCorrect && !a.wasIdk && 'border-red-500/30 bg-red-500/5',
-                a.wasIdk && 'border-yellow-500/30 bg-yellow-500/5',
+                "rounded-lg border p-3 space-y-1",
+                a.wasCorrect && "border-green-500/30 bg-green-500/5",
+                !a.wasCorrect && !a.wasIdk && "border-red-500/30 bg-red-500/5",
+                a.wasIdk && "border-yellow-500/30 bg-yellow-500/5",
               )}
             >
               <div className="flex items-start gap-2">
-                <span className={cn(
-                  'text-sm font-bold shrink-0 mt-0.5',
-                  a.wasCorrect && 'text-green-600',
-                  !a.wasCorrect && !a.wasIdk && 'text-red-600',
-                  a.wasIdk && 'text-yellow-600',
-                )}>
-                  {a.wasCorrect ? '\u2713' : a.wasIdk ? '?' : '\u2717'}
+                <span
+                  className={cn(
+                    "text-sm font-bold shrink-0 mt-0.5",
+                    a.wasCorrect && "text-green-600",
+                    !a.wasCorrect && !a.wasIdk && "text-red-600",
+                    a.wasIdk && "text-yellow-600",
+                  )}
+                >
+                  {a.wasCorrect ? "\u2713" : a.wasIdk ? "?" : "\u2717"}
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-medium leading-snug">
-                    <span className="text-muted-foreground">{i + 1}.</span> {a.questionText}
+                    <span className="text-muted-foreground">{i + 1}.</span>{" "}
+                    {a.questionText}
                   </p>
                   {!a.wasCorrect && (
                     <div className="mt-1 text-xs space-y-0.5">
                       {a.selectedIndex !== null && (
                         <p className="text-red-600 dark:text-red-400">
-                          {t('yourAnswer')}: {a.options[a.selectedIndex]}
+                          {t("yourAnswer")}: {a.options[a.selectedIndex]}
                         </p>
                       )}
                       {a.wasIdk && (
-                        <p className="text-yellow-600 dark:text-yellow-400 italic">Skipped</p>
+                        <p className="text-yellow-600 dark:text-yellow-400 italic">
+                          Skipped
+                        </p>
                       )}
                       <p className="text-green-600 dark:text-green-400">
-                        {t('correctAnswer')}: {a.options[a.correctIndex]}
+                        {t("correctAnswer")}: {a.options[a.correctIndex]}
                       </p>
                     </div>
                   )}
@@ -159,11 +186,11 @@ export function QuizResults({ answers, totalTimeMs, themeId, onReviewMissed }: Q
       <div className="flex gap-3 pb-4">
         {missed.length > 0 && (
           <Button onClick={onReviewMissed} variant="outline" className="flex-1">
-            {t('reviewMissed')}
+            {t("reviewMissed")}
           </Button>
         )}
         <Button asChild className="flex-1">
-          <Link href={`/themes/${themeId}`}>{t('backToThemes')}</Link>
+          <Link href={`/topics/${themeId}`}>{t("backToTopics")}</Link>
         </Button>
       </div>
     </div>

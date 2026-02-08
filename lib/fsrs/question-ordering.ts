@@ -1,7 +1,11 @@
-import { createClient } from '@/lib/supabase/server';
-import type { Question, UserCardState } from '@/lib/types/database';
+import { createClient } from "@/lib/supabase/server";
+import type { Question, UserCardState } from "@/lib/types/database";
 
-export type SubMode = 'full' | 'quick_review' | 'category_focus' | 'spaced_repetition';
+export type SubMode =
+  | "full"
+  | "quick_review"
+  | "category_focus"
+  | "spaced_repetition";
 
 export interface OrderedQuestion {
   question: Question;
@@ -20,50 +24,58 @@ export interface OrderingOptions {
 export async function getOrderedQuestions(
   userId: string,
   themeId: string,
-  options: OrderingOptions
+  options: OrderingOptions,
 ): Promise<OrderedQuestion[]> {
   const supabase = await createClient();
   const now = new Date();
 
   // 1. Fetch all questions for theme with category info
   let questionsQuery = supabase
-    .from('questions')
+    .from("questions")
     .select(`
       *,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
-    .eq('categories.theme_id', themeId);
+    .eq("categories.theme_id", themeId);
 
   // Category focus filter
-  if (options.subMode === 'category_focus' && options.categoryId) {
-    questionsQuery = questionsQuery.eq('category_id', options.categoryId);
+  if (options.subMode === "category_focus" && options.categoryId) {
+    questionsQuery = questionsQuery.eq("category_id", options.categoryId);
   }
 
   const { data: questions, error: qError } = await questionsQuery;
   if (qError || !questions || questions.length === 0) return [];
 
   // 2. Exclude suspended questions
-  const questionIds = questions.map(q => q.id);
+  const questionIds = questions.map((q) => q.id);
   const { data: suspended } = await supabase
-    .from('suspended_questions')
-    .select('question_id')
-    .eq('user_id', userId)
-    .in('question_id', questionIds);
-  const suspendedSet = new Set((suspended || []).map(s => s.question_id));
+    .from("suspended_questions")
+    .select("question_id")
+    .eq("user_id", userId)
+    .in("question_id", questionIds);
+  const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
 
   // 3. Get user card states
   const { data: cardStates } = await supabase
-    .from('user_card_state')
-    .select('*')
-    .eq('user_id', userId)
-    .in('question_id', questionIds);
-  const stateMap = new Map((cardStates || []).map(cs => [cs.question_id, cs]));
+    .from("user_card_state")
+    .select("*")
+    .eq("user_id", userId)
+    .in("question_id", questionIds);
+  const stateMap = new Map(
+    (cardStates || []).map((cs) => [cs.question_id, cs]),
+  );
 
   // 4. Build ordered list
   let orderedQuestions: OrderedQuestion[] = questions
-    .filter(q => !suspendedSet.has(q.id))
-    .map(q => {
-      const cat = q.categories as { id: string; name_en: string; name_es: string; color: string | null; theme_id: string };
+    .filter((q) => !suspendedSet.has(q.id))
+    .map((q) => {
+      const cat = q.categories as {
+        id: string;
+        name_en: string;
+        name_es: string;
+        color: string | null;
+        theme_id: string;
+      };
       return {
         question: {
           id: q.id,
@@ -91,13 +103,13 @@ export async function getOrderedQuestions(
 
   // 5. Apply sub-mode filters
   switch (options.subMode) {
-    case 'quick_review':
+    case "quick_review":
       // Only cards already seen, limit 20
-      orderedQuestions = orderedQuestions.filter(oq => oq.cardState !== null);
+      orderedQuestions = orderedQuestions.filter((oq) => oq.cardState !== null);
       break;
-    case 'spaced_repetition':
+    case "spaced_repetition":
       // Only due/overdue cards
-      orderedQuestions = orderedQuestions.filter(oq => {
+      orderedQuestions = orderedQuestions.filter((oq) => {
         if (!oq.cardState) return false;
         return new Date(oq.cardState.due) <= now;
       });
@@ -136,7 +148,7 @@ export async function getOrderedQuestions(
   }
 
   // Quick review default limit
-  if (options.subMode === 'quick_review' && !options.limit) {
+  if (options.subMode === "quick_review" && !options.limit) {
     orderedQuestions = orderedQuestions.slice(0, 20);
   }
 
@@ -149,33 +161,35 @@ export async function getSubModeCounts(userId: string, themeId: string) {
   const now = new Date();
 
   const { data: questions } = await supabase
-    .from('questions')
-    .select('id, categories!inner(theme_id)')
-    .eq('categories.theme_id', themeId);
+    .from("questions")
+    .select("id, categories!inner(theme_id)")
+    .eq("categories.theme_id", themeId);
 
   if (!questions || questions.length === 0) {
     return { full: 0, quickReview: 0, spacedRepetition: 0 };
   }
 
-  const questionIds = questions.map(q => q.id);
+  const questionIds = questions.map((q) => q.id);
 
   const { data: suspended } = await supabase
-    .from('suspended_questions')
-    .select('question_id')
-    .eq('user_id', userId)
-    .in('question_id', questionIds);
-  const suspendedSet = new Set((suspended || []).map(s => s.question_id));
+    .from("suspended_questions")
+    .select("question_id")
+    .eq("user_id", userId)
+    .in("question_id", questionIds);
+  const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
 
-  const activeIds = questionIds.filter(id => !suspendedSet.has(id));
+  const activeIds = questionIds.filter((id) => !suspendedSet.has(id));
 
   const { data: cardStates } = await supabase
-    .from('user_card_state')
-    .select('question_id, due')
-    .eq('user_id', userId)
-    .in('question_id', activeIds);
+    .from("user_card_state")
+    .select("question_id, due")
+    .eq("user_id", userId)
+    .in("question_id", activeIds);
 
   const seen = (cardStates || []).length;
-  const dueNow = (cardStates || []).filter(cs => new Date(cs.due) <= now).length;
+  const dueNow = (cardStates || []).filter(
+    (cs) => new Date(cs.due) <= now,
+  ).length;
 
   return {
     full: activeIds.length,

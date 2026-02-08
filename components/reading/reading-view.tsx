@@ -1,12 +1,12 @@
 "use client";
 
-import { useTranslations, useLocale } from "next-intl";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import { ReadingProgressBar } from "./reading-progress";
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { Button } from "@/components/ui/button";
+import { ReadingProgressBar } from "./reading-progress";
 
 interface ReadingViewProps {
   userId: string;
@@ -29,22 +29,29 @@ export function ReadingView({ userId, theme, progress }: ReadingViewProps) {
   const locale = useLocale();
 
   const title = locale === "es" ? theme.title_es : theme.title_en;
-  const content = locale === "es"
-    ? (theme.intro_text_es || theme.intro_text_en)
-    : (theme.intro_text_en || theme.intro_text_es);
+  const content =
+    locale === "es"
+      ? theme.intro_text_es || theme.intro_text_en
+      : theme.intro_text_en || theme.intro_text_es;
 
-  const totalProgress = progress.length > 0
-    ? progress.reduce((sum, p) => sum + p.completion_percent, 0) / progress.length
-    : 0;
+  const totalProgress =
+    progress.length > 0
+      ? progress.reduce((sum, p) => sum + p.completion_percent, 0) /
+        progress.length
+      : 0;
 
   return (
     <div className="relative min-h-screen">
-      <ReadingProgressBar userId={userId} themeId={theme.id} initialPercent={totalProgress} />
+      <ReadingProgressBar
+        userId={userId}
+        themeId={theme.id}
+        initialPercent={totalProgress}
+      />
 
       <div className="max-w-[680px] mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <Button variant="ghost" size="icon-sm" asChild>
-            <Link href="/themes">
+            <Link href="/topics">
               <ArrowLeft size={16} />
             </Link>
           </Button>

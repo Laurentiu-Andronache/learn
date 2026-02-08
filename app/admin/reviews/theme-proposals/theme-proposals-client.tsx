@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { ReviewQueue } from '@/components/admin/review-queue';
-import { updateThemeProposalStatus } from '@/lib/services/admin-reviews';
+import { ReviewQueue } from "@/components/admin/review-queue";
+import { updateThemeProposalStatus } from "@/lib/services/admin-reviews";
 
 interface ThemeProposalItem {
   id: string;
@@ -13,15 +13,19 @@ interface ThemeProposalItem {
   description_en: string | null;
 }
 
-export function ThemeProposalsClient({ items }: { items: ThemeProposalItem[] }) {
+export function ThemeProposalsClient({
+  items,
+}: {
+  items: ThemeProposalItem[];
+}) {
   return (
     <ReviewQueue
       items={items}
       onUpdateStatus={updateThemeProposalStatus}
       statusOptions={[
-        { value: 'reviewing', label: 'Reviewing' },
-        { value: 'approved', label: 'Approve' },
-        { value: 'rejected', label: 'Reject', variant: 'destructive' },
+        { value: "reviewing", label: "Reviewing" },
+        { value: "approved", label: "Approve" },
+        { value: "rejected", label: "Reject", variant: "destructive" },
       ]}
       renderItem={(item) => (
         <div>

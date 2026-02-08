@@ -14,7 +14,7 @@ async function getServerData() {
         persistSession: false,
         autoRefreshToken: false,
       },
-    }
+    },
   );
 
   // Test themes table
@@ -70,14 +70,14 @@ export default async function TestDbPage() {
 
         {/* Themes Table */}
         <div className="rounded-lg border p-4">
-          <h2 className="text-xl font-semibold mb-2">Themes Table</h2>
+          <h2 className="text-xl font-semibold mb-2">Topics Table</h2>
           {themesError ? (
             <div className="text-red-600 dark:text-red-400">
               Error: {themesError.message}
             </div>
           ) : (
             <div className="text-gray-600 dark:text-gray-400">
-              Found {themes?.length || 0} themes
+              Found {themes?.length || 0} topics
               {themes && themes.length > 0 && (
                 <pre className="mt-2 text-xs overflow-auto">
                   {JSON.stringify(themes, null, 2)}
@@ -153,8 +153,8 @@ export default async function TestDbPage() {
             </li>
             <li>Check that all environment variables are set correctly</li>
             <li>
-              Once successful, you can start building features (auth, quiz
-              mode, etc.)
+              Once successful, you can start building features (auth, quiz mode,
+              etc.)
             </li>
           </ol>
         </div>

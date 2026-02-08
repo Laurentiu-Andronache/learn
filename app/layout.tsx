@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
-import { ThemeProvider } from "next-themes";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { ThemeProvider } from "next-themes";
 import { AnalyticsProvider } from "@/components/analytics-provider";
 import { FeedbackButton } from "@/components/feedback/feedback-button";
-import { NavBar } from "@/components/nav-bar";
 import { Footer } from "@/components/footer";
+import { NavBar } from "@/components/nav-bar";
 import "./globals.css";
 
 const defaultUrl = process.env.VERCEL_URL

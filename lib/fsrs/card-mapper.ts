@@ -1,5 +1,5 @@
-import { State, createEmptyCard } from 'ts-fsrs';
-import type { Card } from 'ts-fsrs';
+import type { Card } from "ts-fsrs";
+import { createEmptyCard, State } from "ts-fsrs";
 
 // DB user_card_state row type (matches schema)
 export interface DbCardState {
@@ -9,7 +9,7 @@ export interface DbCardState {
   scheduled_days: number;
   reps: number;
   lapses: number;
-  state: 'new' | 'learning' | 'review' | 'relearning';
+  state: "new" | "learning" | "review" | "relearning";
   last_review: string | null;
   due: string;
 }
@@ -17,22 +17,32 @@ export interface DbCardState {
 // Map DB state string to ts-fsrs State enum
 function mapState(dbState: string): State {
   switch (dbState) {
-    case 'new': return State.New;
-    case 'learning': return State.Learning;
-    case 'review': return State.Review;
-    case 'relearning': return State.Relearning;
-    default: return State.New;
+    case "new":
+      return State.New;
+    case "learning":
+      return State.Learning;
+    case "review":
+      return State.Review;
+    case "relearning":
+      return State.Relearning;
+    default:
+      return State.New;
   }
 }
 
 // Map ts-fsrs State enum to DB state string
-function unmapState(state: State): DbCardState['state'] {
+function unmapState(state: State): DbCardState["state"] {
   switch (state) {
-    case State.New: return 'new';
-    case State.Learning: return 'learning';
-    case State.Review: return 'review';
-    case State.Relearning: return 'relearning';
-    default: return 'new';
+    case State.New:
+      return "new";
+    case State.Learning:
+      return "learning";
+    case State.Review:
+      return "review";
+    case State.Relearning:
+      return "relearning";
+    default:
+      return "new";
   }
 }
 
@@ -48,7 +58,9 @@ export function toCard(dbState: DbCardState): Card {
     reps: dbState.reps,
     lapses: dbState.lapses,
     state: mapState(dbState.state),
-    last_review: dbState.last_review ? new Date(dbState.last_review) : undefined,
+    last_review: dbState.last_review
+      ? new Date(dbState.last_review)
+      : undefined,
   };
 }
 

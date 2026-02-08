@@ -18,7 +18,7 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 - 🃏 **Flashcard Mode**: 3D flip animation, self-grading
 - 🧠 **FSRS Scheduling**: Optimized review timing based on forgetting curves
 - 📊 **Progress Tracking**: Per-question statistics and difficulty adjustment
-- 🎨 **Themes**: Organized content by topic (e.g., Vaccines, Grammar)
+- 🎨 **Topics**: Organized content by topic (e.g., Vaccines, Grammar)
 - 👥 **Profiles**: Independent progress for multiple users
 - 🔒 **RLS Security**: Row-level security for all user data
 - 📱 **Responsive**: Works on mobile, tablet, and desktop
@@ -29,20 +29,29 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 learn-app/
 ├── app/                    # Next.js App Router pages
 │   ├── auth/              # Authentication pages
-│   ├── protected/         # Protected routes example
+│   ├── topics/            # Topic browse, detail, quiz, flashcard, reading
+│   ├── admin/             # Admin panel (topics, questions, reviews)
+│   ├── settings/          # User preferences
 │   └── test-db/           # Database connection test
+├── components/            # React components
+│   ├── topics/            # TopicCard, TopicGrid
+│   ├── admin/             # TopicForm, AdminTopicActions
+│   ├── reading/           # ReadingProgress
+│   └── settings/          # HiddenTopicsList
 ├── lib/
-│   └── supabase/          # Supabase client utilities
+│   ├── supabase/          # Supabase client utilities
+│   ├── services/          # Server actions (admin-topics, user-preferences)
+│   └── fsrs/              # FSRS spaced repetition logic
+├── messages/              # i18n translations (en.json, es.json)
 ├── supabase/
 │   └── migrations/        # Database migrations
-├── .env.local             # Local environment variables (not in git)
-└── .env.example           # Environment template
+└── .env.local             # Local environment variables (not in git)
 ```
 
 ## Database Schema
 
 ### Content Tables (15 total)
-1. **themes** - Top-level content groupings
+1. **themes** - Top-level content groupings (displayed as "Topics" in UI)
 2. **categories** - Subject subdivisions
 3. **questions** - Quiz/flashcard items
 4. **profiles** - User profiles
@@ -50,12 +59,12 @@ learn-app/
 6. **user_card_state** - FSRS scheduling data
 7. **review_logs** - Review history
 8. **suspended_questions** - Hidden questions
-9. **hidden_themes** - Hidden themes
+9. **hidden_themes** - Hidden topics
 10. **reading_progress** - Reading mode tracking
 11. **feedback** - User feedback
 12. **question_reports** - Content quality reports
 13. **proposed_questions** - Community contributions
-14. **theme_proposals** - New theme suggestions
+14. **theme_proposals** - New topic suggestions
 
 All tables have RLS policies for secure data access.
 
@@ -117,7 +126,7 @@ Visit:
 
 The test page should show:
 - ✓ Connected to Supabase successfully!
-- Found 0 themes (until you seed data)
+- Found 0 topics (until you seed data)
 - Found 1 admin users
 
 ### 6. Build for Production
@@ -137,35 +146,24 @@ The app is deployed to Vercel at:
 
 Environment variables are already configured in Vercel. Any code pushed to the `main` branch automatically deploys to production.
 
-## Next Steps for Development
+## Development Status
 
-The infrastructure is complete. Here are the recommended next tasks:
+### Completed
+- Auth (email/password + anonymous sign-in)
+- FSRS spaced repetition scheduling
+- Quiz mode (multiple choice, true/false, immediate feedback)
+- Flashcard mode (3D flip, self-grading)
+- Reading mode with progress tracking
+- Topic browse and selection
+- Admin panel (topic/question CRUD, content reviews)
+- i18n (English/Spanish via next-intl)
+- Content seeding (vaccine questions)
+- User preferences (hidden topics, suspended questions)
 
-### Phase 1: Core Features
-1. **Auth UI**: Implement email/password + anonymous sign-in
-2. **FSRS Integration**: Install `ts-fsrs` and implement scheduler
-3. **Quiz Mode**: Auto-advancing question stack with FSRS scheduling
-4. **Flashcard Mode**: 3D flip animation + self-grading
-5. **Theme Selection**: Browse and select learning themes
-
-### Phase 2: Content
-6. **Port Questions**: Migrate 53 vaccine questions from `learn.html`
-7. **Seed Data**: Create initial themes, categories, questions
-8. **Reading Mode**: Educational content with progress tracking
-
-### Phase 3: Admin & Polish
-9. **Admin Panel**: Content management interface
-10. **Analytics**: Google Analytics integration
-11. **i18n System**: `next-intl` for proper language switching
-12. **Feedback UI**: User feedback and question reporting
-
-### Parallelization
-These can be built independently by different agents:
-- Auth UI (depends on: database ✓)
-- FSRS integration (depends on: database ✓)
-- Quiz UI (depends on: FSRS)
-- Flashcard UI (depends on: FSRS)
-- Admin panel (depends on: Auth)
+### Next
+- Analytics integration
+- Community features
+- Additional content topics
 
 ## Testing
 
@@ -221,6 +219,6 @@ For issues or questions:
 
 ---
 
-**Project Status**: Infrastructure complete ✓ | Ready for feature development
+**Project Status**: Core features complete ✓ | Quiz, Flashcard, Reading modes live
 
 **Prototype Reference**: `../learn.html` - Original single-file prototype with 53 vaccine questions

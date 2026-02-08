@@ -1,0 +1,49 @@
+import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
+import { TopicGrid } from "@/components/topics/topic-grid";
+import { getAllTopicsProgress } from "@/lib/fsrs/progress";
+import { createClient } from "@/lib/supabase/server";
+
+export const metadata = { title: "Topics - LEARN" };
+
+export default async function TopicsPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const locale = await getLocale();
+  const t = await getTranslations("topics");
+
+  // Get all active topics
+  const { data: topics } = await supabase
+    .from("themes")
+    .select("*")
+    .eq("is_active", true)
+    .order("created_at");
+
+  // Get progress for all topics
+  const progress = await getAllTopicsProgress(user.id);
+
+  // Get hidden topic IDs
+  const { data: hidden } = await supabase
+    .from("hidden_themes")
+    .select("theme_id")
+    .eq("user_id", user.id);
+  const hiddenIds = new Set((hidden || []).map((h) => h.theme_id));
+
+  const visibleTopics = (topics || []).filter((t) => !hiddenIds.has(t.id));
+
+  return (
+    <div className="container max-w-5xl mx-auto py-8 px-4">
+      <h1 className="text-3xl font-bold mb-6">{t("title")}</h1>
+      <TopicGrid
+        topics={visibleTopics}
+        progress={progress}
+        userId={user.id}
+        locale={locale}
+      />
+    </div>
+  );
+}

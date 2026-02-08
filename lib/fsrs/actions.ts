@@ -1,15 +1,15 @@
-'use server';
+"use server";
 
-import { createClient } from '@/lib/supabase/server';
-import { fsrs, Rating } from '@/lib/fsrs/scheduler';
-import { toCard, fromCard, createNewCard } from '@/lib/fsrs/card-mapper';
-import type { Grade } from 'ts-fsrs';
+import type { Grade } from "ts-fsrs";
+import { createNewCard, fromCard, toCard } from "@/lib/fsrs/card-mapper";
+import { fsrs, Rating } from "@/lib/fsrs/scheduler";
+import { createClient } from "@/lib/supabase/server";
 
 export async function scheduleReview(
   userId: string,
   questionId: string,
   rating: 1 | 2 | 3 | 4,
-  mode: 'quiz' | 'flashcard',
+  mode: "quiz" | "flashcard",
   wasCorrect: boolean | null,
   answerTimeMs: number | null,
 ) {
@@ -17,10 +17,10 @@ export async function scheduleReview(
 
   // Fetch current card state
   const { data: existingState } = await supabase
-    .from('user_card_state')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('question_id', questionId)
+    .from("user_card_state")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("question_id", questionId)
     .single();
 
   const now = new Date();
@@ -45,7 +45,7 @@ export async function scheduleReview(
   let cardStateId: string;
   if (existingState) {
     const { data: updated } = await supabase
-      .from('user_card_state')
+      .from("user_card_state")
       .update({
         ...dbFields,
         times_correct: existingState.times_correct + timesCorrectInc,
@@ -53,13 +53,13 @@ export async function scheduleReview(
         times_idk: existingState.times_idk + timesIdkInc,
         updated_at: now.toISOString(),
       })
-      .eq('id', existingState.id)
-      .select('id')
+      .eq("id", existingState.id)
+      .select("id")
       .single();
     cardStateId = updated!.id;
   } else {
     const { data: inserted } = await supabase
-      .from('user_card_state')
+      .from("user_card_state")
       .insert({
         user_id: userId,
         question_id: questionId,
@@ -68,13 +68,13 @@ export async function scheduleReview(
         times_incorrect: timesIncorrectInc,
         times_idk: timesIdkInc,
       })
-      .select('id')
+      .select("id")
       .single();
     cardStateId = inserted!.id;
   }
 
   // Insert review log
-  await supabase.from('review_logs').insert({
+  await supabase.from("review_logs").insert({
     user_id: userId,
     question_id: questionId,
     card_state_id: cardStateId,

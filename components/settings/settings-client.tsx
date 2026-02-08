@@ -1,16 +1,29 @@
 "use client";
 
+import {
+  AlertTriangle,
+  BookX,
+  Eye,
+  Settings,
+  Shield,
+  User,
+} from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { HiddenTopicsList } from "./hidden-topics-list";
 import { ProfileEditor } from "./profile-editor";
 import { SuspendedQuestionsList } from "./suspended-questions-list";
-import { HiddenThemesList } from "./hidden-themes-list";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, Settings, User, Eye, BookX, Shield } from "lucide-react";
-import Link from "next/link";
 
 interface SettingsClientProps {
   userId: string;
@@ -32,7 +45,7 @@ interface SettingsClientProps {
       category: { name_en: string; name_es: string } | null;
     } | null;
   }>;
-  hiddenThemes: Array<{
+  hiddenTopics: Array<{
     id: string;
     hidden_at: string;
     theme: {
@@ -52,7 +65,7 @@ export function SettingsClient({
   createdAt,
   profile,
   suspendedQuestions,
-  hiddenThemes,
+  hiddenTopics,
 }: SettingsClientProps) {
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
@@ -114,9 +127,7 @@ export function SettingsClient({
           <Separator />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">{t("account")}</span>
-            {email && (
-              <p className="text-sm text-muted-foreground">{email}</p>
-            )}
+            {email && <p className="text-sm text-muted-foreground">{email}</p>}
             <p className="text-xs text-muted-foreground">
               {new Date(createdAt).toLocaleDateString()}
             </p>
@@ -139,27 +150,30 @@ export function SettingsClient({
         </CardHeader>
         {suspendedQuestions.length > 0 && (
           <CardContent>
-            <SuspendedQuestionsList userId={userId} items={suspendedQuestions} />
+            <SuspendedQuestionsList
+              userId={userId}
+              items={suspendedQuestions}
+            />
           </CardContent>
         )}
       </Card>
 
-      {/* Hidden Themes */}
+      {/* Hidden Topics */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Shield size={18} />
-            {t("hiddenThemes")}
+            {t("hiddenTopics")}
           </CardTitle>
           <CardDescription>
-            {hiddenThemes.length === 0
+            {hiddenTopics.length === 0
               ? t("noHidden")
-              : `${hiddenThemes.length} ${hiddenThemes.length === 1 ? "theme" : "themes"}`}
+              : `${hiddenTopics.length} ${hiddenTopics.length === 1 ? "topic" : "topics"}`}
           </CardDescription>
         </CardHeader>
-        {hiddenThemes.length > 0 && (
+        {hiddenTopics.length > 0 && (
           <CardContent>
-            <HiddenThemesList userId={userId} items={hiddenThemes} />
+            <HiddenTopicsList userId={userId} items={hiddenTopics} />
           </CardContent>
         )}
       </Card>

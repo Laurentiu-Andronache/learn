@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import Script from 'next/script';
-import { GA_MEASUREMENT_ID } from '@/lib/analytics';
+import Script from "next/script";
+import { GA_MEASUREMENT_ID } from "@/lib/analytics";
 
 export function AnalyticsProvider() {
   if (!GA_MEASUREMENT_ID) return null;

@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/lib/supabase/server";
 
 export interface ImportQuestion {
   type: string;
@@ -42,12 +42,19 @@ export interface ImportSummary {
   errors: string[];
 }
 
-export async function validateImportJson(json: unknown): Promise<ImportSummary> {
+export async function validateImportJson(
+  json: unknown,
+): Promise<ImportSummary> {
   const errors: string[] = [];
   const data = json as Record<string, unknown>;
 
   if (!data || typeof data !== "object") {
-    return { themeTitle: "", categoryCount: 0, questionCount: 0, errors: ["Invalid JSON object"] };
+    return {
+      themeTitle: "",
+      categoryCount: 0,
+      questionCount: 0,
+      errors: ["Invalid JSON object"],
+    };
   }
 
   const title = (data.title_en as string) || "(no title)";
@@ -121,7 +128,10 @@ export async function importThemeJson(json: ImportTheme) {
       .select("id")
       .single();
 
-    if (catErr) throw new Error(`Category "${cat.name_en}" insert failed: ${catErr.message}`);
+    if (catErr)
+      throw new Error(
+        `Category "${cat.name_en}" insert failed: ${catErr.message}`,
+      );
 
     if (cat.questions.length > 0) {
       const rows = cat.questions.map((q) => ({
@@ -140,12 +150,15 @@ export async function importThemeJson(json: ImportTheme) {
       }));
 
       const { error: qErr } = await supabase.from("questions").insert(rows);
-      if (qErr) throw new Error(`Questions insert for "${cat.name_en}" failed: ${qErr.message}`);
+      if (qErr)
+        throw new Error(
+          `Questions insert for "${cat.name_en}" failed: ${qErr.message}`,
+        );
       totalInserted += rows.length;
     }
   }
 
-  revalidatePath("/admin/themes");
+  revalidatePath("/admin/topics");
   revalidatePath("/admin/questions");
   return { themeId: theme.id, questionsInserted: totalInserted };
 }

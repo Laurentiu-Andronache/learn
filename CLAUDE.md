@@ -1,172 +1,80 @@
-# LEARN NextJS App - Claude Code Instructions
+# LEARN NextJS App
 
-## Project Overview
+Purpose of this app: use the latest in learning science to help users excel in topics related to healthspan extension and cognitive improvement.
 
-Production NextJS rewrite of the LEARN quiz/flashcard app with:
-- **Stack**: NextJS 16 App Router + TypeScript + Tailwind + Supabase
-- **Database**: PostgreSQL (Supabase) with 15 tables + RLS
-- **Spaced Repetition**: FSRS algorithm for optimal review scheduling
-- **Bilingual**: Full EN/ES support
-- **Deployment**: Vercel (https://learn-app-theta-ten.vercel.app)
+NextJS 16 App Router + TypeScript + Tailwind + Supabase | PostgreSQL (14 tables + RLS) | FSRS spaced repetition | EN/ES i18n | Vercel deploy
 
-## Repository Structure
+## Repo Structure
 
 ```
-/home/nebu/la/learn/
-├── learn.html          # Original prototype (reference only)
-├── context/            # Reference materials
-├── CLAUDE.md          # Prototype documentation
-└── learn-app/         # ← THIS DIRECTORY (production app)
-    ├── app/           # NextJS pages
-    ├── lib/           # Utilities
-    ├── supabase/      # Database migrations
-    └── CLAUDE.md      # This file
+learn-app/
+├── app/           # NextJS pages
+├── components/    # React components
+├── lib/           # Utilities, services, types
+├── supabase/      # Database migrations
+├── CLAUDE.md      # This file
+└── CLAUDE-supabase.md  # DB schema, migrations, admin access
 ```
 
-## Database Migration Workflow
+## Dev Workflow
 
-**IMPORTANT**: Claude Code is responsible for all database schema changes.
+- Dev server: `npm run dev` on `:4000`
+- Test page: `/test-db` (local & prod)
+- Deploy: push to main → Vercel auto-deploys to https://learn-app-theta-ten.vercel.app
+- All env vars must be configured in Vercel dashboard
 
-### When to Create a Migration
+## Conventions
 
-Create a new migration file when:
-- Adding/removing tables
-- Modifying table schemas (columns, constraints)
-- Changing RLS policies
-- Adding/removing indexes
-- Creating/modifying functions
+- Server components by default, `'use client'` only when needed
+- Tailwind only (no CSS modules)
+- RLS on all data access, never bypass
+- Never use service role key in client components
+- **Server**: `createClient()` from `@/lib/supabase/server`
+- **Client**: `createBrowserClient()` from `@supabase/ssr`
 
-### Migration File Naming
+## Terminology Mapping (UI → DB)
 
-```
-supabase/migrations/YYYYMMDDHHMMSS_description.sql
-```
+UI uses **Topics > Categories > Questions**. DB tables remain `themes`, `categories`, `questions`, `hidden_themes`, `theme_proposals`.
 
-Example: `20260207000000_initial_schema.sql`
+| UI Term | DB Table | Route |
+|---------|----------|-------|
+| Topic | themes | /topics |
+| Category | categories | — |
+| Question | questions | — |
+| Hidden Topic | hidden_themes | — |
+| Topic Proposal | theme_proposals | — |
 
-### Applying Migrations
+Service functions use new names (e.g. `createTopic`, `hideTopic`) but query old DB table names internally.
 
-**IMPORTANT**: Always run this command after creating a new migration file:
+## Key Routes
 
-```bash
-npx supabase migration up --linked
-```
+| Route | Description |
+|-------|-------------|
+| `/topics` | Topic grid (main browse) |
+| `/topics/[id]` | Topic detail |
+| `/topics/[id]/quiz` | Quiz mode |
+| `/topics/[id]/flashcards` | Flashcard mode |
+| `/topics/[id]/reading` | Reading mode |
+| `/admin/topics` | Admin topic management |
+| `/settings` | User preferences |
 
-This applies pending migrations from `supabase/migrations/` to the remote database.
+## Component/Service Naming
 
-**How it works:**
-- Reads `SUPABASE_ACCESS_TOKEN` from `.env.local`
-- Connects to linked project (hqathtprnfdovjyrlyfb)
-- Applies only unapplied migrations in order
-- Updates migration tracking in Supabase
+Components and services use "Topic" naming, DB queries use "theme" table names:
+- `components/topics/topic-card.tsx`, `topic-grid.tsx`
+- `components/settings/hidden-topics-list.tsx`
+- `components/admin/topic-form.tsx`, `topic-actions.tsx`
+- `lib/services/admin-topics.ts` — `createTopic`, `updateTopic`, `getAllTopics`
+- `lib/services/user-preferences.ts` — `hideTopic`, `unhideTopic`, `getHiddenTopics`
+- `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress`
 
-**Environment variables required** (in `.env.local`):
-- `SUPABASE_ACCESS_TOKEN` - CLI access token
-- `SUPABASE_SERVICE_ROLE_KEY` - Service role key (for admin operations)
+## Dev Status
 
-**Manual fallback** (if CLI fails):
-1. Open https://app.supabase.com/project/hqathtprnfdovjyrlyfb/sql/new
-2. Copy migration from `supabase/migrations/YYYYMMDDHHMMSS_*.sql`
-3. Paste and click **Run**
+**Done**: Auth, FSRS, Quiz/Flashcard/Reading modes, Admin panel, i18n (EN/ES), content seeding.
+**Next**: Analytics, community features, additional content.
 
-## Supabase Project Details
+## UX Patterns (from prototype)
 
-- **Project**: learn (hqathtprnfdovjyrlyfb)
-- **Region**: us-east-1
-- **Dashboard**: https://app.supabase.com/project/hqathtprnfdovjyrlyfb
-- **URL**: https://hqathtprnfdovjyrlyfb.supabase.co
-- **Credentials**: Stored in `/home/nebu/la/learn/learn-app/.env.local` (not in git)
-
-## Development Workflow
-
-### Starting Work
-```bash
-cd /home/nebu/la/learn/learn-app
-npm run dev  # http://localhost:3000
-```
-
-### Testing
-- **Local test page**: http://localhost:3000/test-db
-- **Production test page**: https://learn-app-theta-ten.vercel.app/test-db
-
-### Deployment
-```bash
-git add -A
-git commit -m "description"
-git push  # Auto-deploys to Vercel
-```
-
-## Key Conventions
-
-### Code Style
-- Use TypeScript strict mode
-- Server components by default (use 'use client' only when needed)
-- Tailwind for all styling (no CSS modules)
-- Supabase RLS for all data access (never bypass)
-
-### Database Access
-- **Client-side**: Use `createBrowserClient()` from `@supabase/ssr`
-- **Server-side**: Use `createClient()` from `@/lib/supabase/server`
-- **Never** use service role key in client components
-
-### File Organization
-- `/app/(route)/page.tsx` - Pages
-- `/app/(route)/layout.tsx` - Layouts
-- `/lib/` - Utilities, helpers, types
-- `/components/` - Reusable React components (create as needed)
-
-### Environment Variables
-- `NEXT_PUBLIC_*` - Available client-side (public)
-- Others - Server-side only (secret)
-- All env vars configured in Vercel dashboard
-
-## Database Schema Reference
-
-15 tables organized as:
-
-**Content (public read, admin write):**
-- themes, categories, questions
-
-**User Management:**
-- profiles, admin_users
-
-**FSRS Spaced Repetition:**
-- user_card_state, review_logs
-
-**User Preferences:**
-- suspended_questions, hidden_themes, reading_progress
-
-**Feedback & Moderation:**
-- feedback, question_reports, proposed_questions, theme_proposals
-
-Full schema in: `supabase/migrations/20260207000000_initial_schema.sql`
-
-## Admin Access
-
-Admin privileges managed via `admin_users` table:
-
-```sql
--- Add admin user
-INSERT INTO admin_users (email, granted_at)
-VALUES ('email@example.com', NOW())
-ON CONFLICT (email) DO NOTHING;
-```
-
-Admin check function: `is_admin(user_id UUID) RETURNS BOOLEAN`
-
-## Next Development Steps
-
-See README.md for detailed roadmap. High-level phases:
-
-1. **Core Features**: Auth UI, FSRS integration, Quiz/Flashcard modes
-2. **Content**: Port 53 vaccine questions, seed data
-3. **Admin & Polish**: Admin panel, analytics, i18n
-
-## Prototype Reference
-
-Original single-file implementation: `/home/nebu/la/learn/learn.html`
-
-Keep UX patterns from prototype:
 - State machine flow (Language → Profile → Mode → Sub-mode → Session)
 - Fisher-Yates shuffle for quiz options
 - "I don't know" button
@@ -174,39 +82,8 @@ Keep UX patterns from prototype:
 - Per-question difficulty tracking
 - Export/import progress
 
-## Common Tasks
-
-### Add a new table
-1. Create migration file in `supabase/migrations/`
-2. Include CREATE TABLE + RLS policies + indexes
-3. Apply via dashboard/CLI
-4. Update this CLAUDE.md schema reference
-
-### Modify existing table
-1. Create migration with ALTER statements
-2. Update RLS policies if needed
-3. Apply migration
-4. Update affected TypeScript types
-
-### Deploy changes
-1. Commit to git
-2. Push to main branch
-3. Vercel auto-deploys
-4. Verify at https://learn-app-theta-ten.vercel.app
-
 ## Troubleshooting
 
-**Migration fails:**
-- Check for syntax errors
-- Verify table/column names don't conflict
-- Ensure RLS policies reference valid tables
-
-**Test page shows errors:**
-- Verify .env.local has correct credentials
-- Check Supabase dashboard for table existence
-- Confirm admin_users has your email
-
-**Build fails on Vercel:**
-- Check TypeScript errors locally first
-- Ensure all env vars set in Vercel dashboard
-- Review build logs in Vercel dashboard
+- `admin_users` table must contain your email for admin access
+- All env vars must be set in both `.env.local` and Vercel dashboard
+- See `CLAUDE-supabase.md` for migration troubleshooting

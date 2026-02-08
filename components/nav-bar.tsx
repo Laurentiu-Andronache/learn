@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { Button } from "@/components/ui/button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
+import { getTranslations } from "next-intl/server";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { LogoutButton } from "@/components/logout-button";
 import { MobileNav } from "@/components/mobile-nav";
-import { getTranslations } from "next-intl/server";
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
 
 export async function NavBar() {
   const supabase = await createClient();
@@ -17,7 +17,7 @@ export async function NavBar() {
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center justify-between">
-        <Link href="/" className="font-bold text-xl tracking-tight">
+        <Link href="/" className="font-bold text-xl tracking-tight ml-4">
           LEARN
         </Link>
 
@@ -26,7 +26,7 @@ export async function NavBar() {
           {user ? (
             <>
               <Button asChild variant="ghost" size="sm">
-                <Link href="/themes">{t("themes")}</Link>
+                <Link href="/topics">{t("topics")}</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
                 <Link href="/settings">{t("settings")}</Link>

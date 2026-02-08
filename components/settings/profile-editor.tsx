@@ -1,19 +1,22 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { Check, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Input } from "@/components/ui/input";
+import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateProfile } from "@/lib/services/user-preferences";
-import { Check, Loader2 } from "lucide-react";
 
 interface ProfileEditorProps {
   userId: string;
   displayName: string;
 }
 
-export function ProfileEditor({ userId, displayName: initial }: ProfileEditorProps) {
+export function ProfileEditor({
+  userId,
+  displayName: initial,
+}: ProfileEditorProps) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   const [name, setName] = useState(initial);
@@ -42,11 +45,7 @@ export function ProfileEditor({ userId, displayName: initial }: ProfileEditorPro
           placeholder={t("displayName")}
           className="flex-1"
         />
-        <Button
-          size="sm"
-          onClick={handleSave}
-          disabled={!dirty || isPending}
-        >
+        <Button size="sm" onClick={handleSave} disabled={!dirty || isPending}>
           {isPending ? (
             <Loader2 size={14} className="animate-spin" />
           ) : saved ? (

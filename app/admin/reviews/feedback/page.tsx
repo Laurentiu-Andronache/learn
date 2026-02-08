@@ -24,7 +24,9 @@ export default async function FeedbackPage() {
               </div>
               <p className="text-sm">{item.message}</p>
               {item.url && (
-                <p className="text-xs text-muted-foreground">Page: {item.url}</p>
+                <p className="text-xs text-muted-foreground">
+                  Page: {item.url}
+                </p>
               )}
             </div>
           ))}
