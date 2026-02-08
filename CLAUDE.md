@@ -125,11 +125,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `components/quiz/quiz-logic.test.ts` | 17 | Shuffle, grading, results, review-missed |
 | `components/flashcards/flashcard-logic.test.ts` | 11 | Grading, stack advance, categories |
 
-## Known Issues & Tech Debt (from Feb 2026 audit)
-
-### Medium — i18n & UX
-- **Feedback/question_reports INSERT** allows unauthenticated — restrict to `auth.uid() IS NOT NULL`
-
 ## UX Patterns (from prototype)
 
 - State machine flow (Language → Profile → Mode → Sub-mode → Session)

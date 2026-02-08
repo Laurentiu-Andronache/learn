@@ -48,9 +48,10 @@ export function QuestionReportForm({
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (!user) return;
       const questionRef = questionText ? `\n\n[Question: ${questionText}]` : `\n\n[Question ID: ${questionId}]`;
       await supabase.from("feedback").insert({
-        user_id: user?.id || null,
+        user_id: user.id,
         type: "content",
         message: `[${issueType}] ${description.trim()}${questionRef}`,
         url: window.location.href,

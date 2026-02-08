@@ -1,14 +1,25 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FeedbackModal } from "./feedback-modal";
+import { createClient } from "@/lib/supabase/client";
 
 export function FeedbackButton() {
   const [open, setOpen] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   const pathname = usePathname();
   const isStudyPage = /\/topics\/[^/]+\/(quiz|flashcards|reading)/.test(pathname);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setAuthenticated(!!user);
+    });
+  }, []);
+
+  if (!authenticated) return null;
 
   return (
     <>

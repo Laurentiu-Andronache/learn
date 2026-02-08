@@ -64,8 +64,9 @@ export function FeedbackModal({ open, onOpenChange, defaultType }: FeedbackModal
       const {
         data: { user },
       } = await supabase.auth.getUser();
+      if (!user) return;
       await supabase.from("feedback").insert({
-        user_id: user?.id || null,
+        user_id: user.id,
         type,
         message: message.trim(),
         name: name.trim() || null,
