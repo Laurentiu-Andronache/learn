@@ -223,7 +223,17 @@
     "addNotes": "Add Notes",
     "deactivate": "Deactivate",
     "restore": "Restore",
-    "noItems": "No items to review."
+    "noItems": "No items to review.",
+    "delete": "Delete",
+    "topic": "Topic",
+    "category": "Category",
+    "allTopics": "All Topics",
+    "allCategories": "All Categories",
+    "allTypes": "All Types",
+    "searchQuestions": "Search questions...",
+    "editQuestion": "Edit Question",
+    "saveQuestion": "Save",
+    "cancelEdit": "Cancel"
   },
   "feedback": {
     "button": "Feedback",
@@ -245,6 +255,9 @@
     "outdated": "Outdated",
     "proposeQuestion": "Propose a Question",
     "proposeTopic": "Propose a Topic",
+    "name": "Name",
+    "namePlaceholder": "Optional",
+    "includeEmail": "Include my email",
     "sending": "Sending...",
     "submitting": "Submitting...",
     "sendFeedback": "Send Feedback",

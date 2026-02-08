@@ -95,7 +95,7 @@ export default async function AdminLayout({
             className="w-full justify-start"
             size="sm"
           >
-            <Link href="/admin/reviews/theme-proposals">Theme Ideas</Link>
+            <Link href="/admin/reviews/theme-proposals">Topic Ideas</Link>
           </Button>
         </nav>
       </aside>

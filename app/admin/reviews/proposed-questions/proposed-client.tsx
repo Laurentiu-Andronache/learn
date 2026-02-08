@@ -1,7 +1,7 @@
 "use client";
 
 import { ReviewQueue } from "@/components/admin/review-queue";
-import { updateProposedQuestionStatus } from "@/lib/services/admin-reviews";
+import { updateProposedQuestionStatus, deleteProposedQuestion } from "@/lib/services/admin-reviews";
 
 interface ProposedItem {
   id: string;
@@ -18,6 +18,7 @@ export function ProposedQueueClient({ items }: { items: ProposedItem[] }) {
     <ReviewQueue
       items={items}
       onUpdateStatus={updateProposedQuestionStatus}
+      onDelete={deleteProposedQuestion}
       statusOptions={[
         { value: "approved", label: "Approve" },
         { value: "rejected", label: "Reject", variant: "destructive" },

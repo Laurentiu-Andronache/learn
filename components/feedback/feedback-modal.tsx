@@ -1,8 +1,9 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -10,6 +11,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -31,7 +33,20 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [name, setName] = useState("");
+  const [includeEmail, setIncludeEmail] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const t = useTranslations();
+
+  useEffect(() => {
+    if (!open) return;
+    const fetchEmail = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      setUserEmail(user?.email ?? null);
+    };
+    fetchEmail();
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,6 +61,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         user_id: user?.id || null,
         type,
         message: message.trim(),
+        name: name.trim() || null,
+        email: includeEmail && userEmail ? userEmail : null,
         url: window.location.href,
         user_agent: navigator.userAgent,
       });
@@ -55,6 +72,8 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         setSubmitted(false);
         setMessage("");
         setType("feature");
+        setName("");
+        setIncludeEmail(false);
       }, 2000);
     } finally {
       setSubmitting(false);
@@ -93,6 +112,14 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
               </Select>
             </div>
             <div className="space-y-2">
+              <Label>{t("feedback.name")}</Label>
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t("feedback.namePlaceholder")}
+              />
+            </div>
+            <div className="space-y-2">
               <Label>{t("feedback.message")}</Label>
               <Textarea
                 value={message}
@@ -102,6 +129,18 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
                 required
               />
             </div>
+            {userEmail && (
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="includeEmail"
+                  checked={includeEmail}
+                  onCheckedChange={(checked) => setIncludeEmail(checked === true)}
+                />
+                <Label htmlFor="includeEmail" className="text-sm font-normal cursor-pointer">
+                  {t("feedback.includeEmail")} ({userEmail})
+                </Label>
+              </div>
+            )}
             <Button
               type="submit"
               disabled={submitting || !message.trim()}

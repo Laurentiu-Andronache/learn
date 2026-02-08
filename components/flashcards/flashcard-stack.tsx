@@ -1,6 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
+import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -40,6 +42,8 @@ export function FlashcardStack({
   const [isFlipped, setIsFlipped] = useState(false);
   const [knew, setKnew] = useState<string[]>([]);
   const [didntKnow, setDidntKnow] = useState<string[]>([]);
+  const [reportOpen, setReportOpen] = useState(false);
+  const t = useTranslations("feedback");
 
   const advance = useCallback(
     (knewIt: boolean) => {
@@ -140,20 +144,38 @@ export function FlashcardStack({
                 </div>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2 self-end"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSuspend(current.id);
-              }}
-            >
-              ⊘ Suspend
-            </Button>
+            <div className="mt-2 flex justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setReportOpen(true);
+                }}
+              >
+                &#9873; {t("reportQuestion")}
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSuspend(current.id);
+                }}
+              >
+                ⊘ Suspend
+              </Button>
+            </div>
           </Card>
         </div>
       </div>
+
+      <QuestionReportForm
+        questionId={current.id}
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+      />
 
       {/* Grading buttons - only show when flipped */}
       {isFlipped && (

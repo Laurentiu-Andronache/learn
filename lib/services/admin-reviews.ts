@@ -164,3 +164,53 @@ export async function deleteQuestion(id: string) {
   if (error) throw new Error(error.message);
   revalidatePath("/admin/questions");
 }
+
+export async function deleteFeedback(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("feedback").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/reviews/feedback");
+}
+
+export async function deleteReport(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("question_reports").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/reviews/reports");
+}
+
+export async function deleteProposedQuestion(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("proposed_questions").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/reviews/proposed-questions");
+}
+
+export async function deleteThemeProposal(id: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.from("theme_proposals").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/reviews/theme-proposals");
+}
+
+// Lookup lists
+export async function getThemesList() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("themes")
+    .select("id, title_en")
+    .eq("is_active", true)
+    .order("title_en");
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function getCategoriesList() {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id, name_en, theme_id")
+    .order("name_en");
+  if (error) throw new Error(error.message);
+  return data;
+}

@@ -1,7 +1,7 @@
 "use client";
 
 import { ReviewQueue } from "@/components/admin/review-queue";
-import { updateThemeProposalStatus } from "@/lib/services/admin-reviews";
+import { updateThemeProposalStatus, deleteThemeProposal } from "@/lib/services/admin-reviews";
 
 interface ThemeProposalItem {
   id: string;
@@ -22,6 +22,7 @@ export function ThemeProposalsClient({
     <ReviewQueue
       items={items}
       onUpdateStatus={updateThemeProposalStatus}
+      onDelete={deleteThemeProposal}
       statusOptions={[
         { value: "reviewing", label: "Reviewing" },
         { value: "approved", label: "Approve" },

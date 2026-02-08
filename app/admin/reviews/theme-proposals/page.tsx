@@ -6,7 +6,7 @@ export default async function ThemeProposalsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Theme Proposals</h1>
+      <h1 className="text-2xl font-bold">Topic Ideas</h1>
       <ThemeProposalsClient items={items} />
     </div>
   );

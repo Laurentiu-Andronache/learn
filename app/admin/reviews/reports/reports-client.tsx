@@ -1,7 +1,7 @@
 "use client";
 
 import { ReviewQueue } from "@/components/admin/review-queue";
-import { updateReportStatus } from "@/lib/services/admin-reviews";
+import { updateReportStatus, deleteReport } from "@/lib/services/admin-reviews";
 
 interface ReportItem {
   id: string;
@@ -18,6 +18,7 @@ export function ReportsClient({ items }: { items: ReportItem[] }) {
     <ReviewQueue
       items={items}
       onUpdateStatus={updateReportStatus}
+      onDelete={deleteReport}
       statusOptions={[
         { value: "reviewing", label: "Reviewing" },
         { value: "resolved", label: "Resolve" },

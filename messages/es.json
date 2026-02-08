@@ -223,7 +223,17 @@
     "addNotes": "Agregar Notas",
     "deactivate": "Desactivar",
     "restore": "Restaurar",
-    "noItems": "No hay elementos para revisar."
+    "noItems": "No hay elementos para revisar.",
+    "delete": "Eliminar",
+    "topic": "Tema",
+    "category": "Categoría",
+    "allTopics": "Todos los Temas",
+    "allCategories": "Todas las Categorías",
+    "allTypes": "Todos los Tipos",
+    "searchQuestions": "Buscar preguntas...",
+    "editQuestion": "Editar Pregunta",
+    "saveQuestion": "Guardar",
+    "cancelEdit": "Cancelar"
   },
   "feedback": {
     "button": "Comentarios",
@@ -245,6 +255,9 @@
     "outdated": "Desactualizado",
     "proposeQuestion": "Proponer una Pregunta",
     "proposeTopic": "Proponer un Tema",
+    "name": "Nombre",
+    "namePlaceholder": "Opcional",
+    "includeEmail": "Incluir mi correo",
     "sending": "Enviando...",
     "submitting": "Enviando...",
     "sendFeedback": "Enviar Comentarios",

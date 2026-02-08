@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { Rating } from "@/lib/fsrs/scheduler";
 import type { FSRSRating, Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -52,10 +53,12 @@ export function QuizCard({
 }: QuizCardProps) {
   const t = useTranslations("quiz");
   const tCommon = useTranslations("common");
+  const tFeedback = useTranslations("feedback");
   const startTime = useRef(Date.now());
 
   const [phase, setPhase] = useState<Phase>("answering");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [reportOpen, setReportOpen] = useState(false);
 
   const questionText =
     locale === "es" ? question.question_es : question.question_en;
@@ -246,6 +249,23 @@ export function QuizCard({
                 </div>
               </details>
             )}
+
+            {/* Report question */}
+            <div className="flex justify-end">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground"
+                onClick={() => setReportOpen(true)}
+              >
+                &#9873; {tFeedback("reportQuestion")}
+              </Button>
+            </div>
+            <QuestionReportForm
+              questionId={question.id}
+              open={reportOpen}
+              onOpenChange={setReportOpen}
+            />
 
             {/* Next button */}
             <Button onClick={handleNext} className="w-full" size="lg">

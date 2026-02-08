@@ -18,6 +18,7 @@ interface ReviewQueueProps<T extends ReviewItem> {
   items: T[];
   renderItem: (item: T) => React.ReactNode;
   onUpdateStatus: (id: string, status: string, notes?: string) => Promise<void>;
+  onDelete?: (id: string) => Promise<void>;
   statusOptions: {
     value: string;
     label: string;
@@ -41,6 +42,7 @@ export function ReviewQueue<T extends ReviewItem>({
   items,
   renderItem,
   onUpdateStatus,
+  onDelete,
   statusOptions,
 }: ReviewQueueProps<T>) {
   const router = useRouter();
@@ -124,6 +126,25 @@ export function ReviewQueue<T extends ReviewItem>({
                 ? t("admin.hideNotes")
                 : t("admin.addNotes")}
             </Button>
+            {onDelete && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-destructive hover:text-destructive"
+                onClick={async () => {
+                  setLoading(item.id);
+                  try {
+                    await onDelete(item.id);
+                    router.refresh();
+                  } finally {
+                    setLoading(null);
+                  }
+                }}
+                disabled={loading === item.id}
+              >
+                {t("admin.delete")}
+              </Button>
+            )}
           </div>
         </div>
       ))}
