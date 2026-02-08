@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/server";
 
 export interface TopicFormData {
   title_en: string;
@@ -17,7 +17,7 @@ export interface TopicFormData {
 }
 
 export async function createTopic(data: TopicFormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data: topic, error } = await supabase
     .from("themes")
     .insert(data)
@@ -29,7 +29,7 @@ export async function createTopic(data: TopicFormData) {
 }
 
 export async function updateTopic(id: string, data: TopicFormData) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from("themes").update(data).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/topics");
@@ -37,7 +37,7 @@ export async function updateTopic(id: string, data: TopicFormData) {
 }
 
 export async function softDeleteTopic(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase
     .from("themes")
     .update({ is_active: false })
@@ -47,7 +47,7 @@ export async function softDeleteTopic(id: string) {
 }
 
 export async function restoreTopic(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase
     .from("themes")
     .update({ is_active: true })
@@ -57,7 +57,7 @@ export async function restoreTopic(id: string) {
 }
 
 export async function getTopicById(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("themes")
     .select("*")
@@ -68,7 +68,7 @@ export async function getTopicById(id: string) {
 }
 
 export async function getAllTopics() {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("themes")
     .select("*")

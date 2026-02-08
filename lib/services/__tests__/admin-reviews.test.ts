@@ -1,15 +1,15 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
 // Mock Supabase server client
+const mockUser = { id: "admin-uuid", email: "admin@test.com" };
 const mockSupabase = {
-  auth: {
-    getUser: vi.fn(),
-  },
   from: vi.fn(),
 };
 
 vi.mock("@/lib/supabase/server", () => ({
-  createClient: vi.fn(() => Promise.resolve(mockSupabase)),
+  requireAdmin: vi.fn(() =>
+    Promise.resolve({ supabase: mockSupabase, user: mockUser }),
+  ),
 }));
 
 vi.mock("next/cache", () => ({
@@ -124,9 +124,6 @@ describe("getReportsList", () => {
 
 describe("updateReportStatus", () => {
   it("updates status and sets resolved_at for terminal statuses", async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "admin-uuid" } },
-    });
 
     const updateMock = vi.fn();
     const eqMock = vi.fn();
@@ -151,9 +148,6 @@ describe("updateReportStatus", () => {
   });
 
   it("does not set resolved_at for non-terminal statuses", async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "admin-uuid" } },
-    });
 
     const updateMock = vi.fn();
     const eqMock = vi.fn();
@@ -167,9 +161,6 @@ describe("updateReportStatus", () => {
   });
 
   it("throws on error", async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "admin-uuid" } },
-    });
 
     const updateMock = vi.fn();
     const eqMock = vi.fn();
@@ -187,9 +178,6 @@ describe("updateReportStatus", () => {
 
 describe("updateProposedQuestionStatus", () => {
   it("updates proposed question with admin notes", async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "admin-uuid" } },
-    });
 
     const updateMock = vi.fn();
     const eqMock = vi.fn();
@@ -214,9 +202,6 @@ describe("updateProposedQuestionStatus", () => {
 
 describe("updateThemeProposalStatus", () => {
   it("updates theme proposal status", async () => {
-    mockSupabase.auth.getUser.mockResolvedValue({
-      data: { user: { id: "admin-uuid" } },
-    });
 
     const updateMock = vi.fn();
     const eqMock = vi.fn();

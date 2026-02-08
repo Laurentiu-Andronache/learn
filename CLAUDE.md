@@ -132,8 +132,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
 ### Critical — Fix Before Production
-- ~~**No middleware.ts** — `proxy.ts` exists but is dead code~~ **RESOLVED**: `proxy.ts` is the correct Next.js 16 convention (replaces `middleware.ts`). Cleaned up to session-refresh-only; auth checks stay in layouts per Next.js 16 security guidance.
-- **Server actions lack app-layer auth** — admin actions in `admin-topics.ts`, `admin-reviews.ts` rely solely on RLS
 - **Fire-and-forget `scheduleReview()`** — errors silently lost in quiz/flashcard sessions
 
 ### High — Performance & Quality
@@ -141,7 +139,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 - **Duplicate theme fetch** in `app/topics/[id]/page.tsx` — `generateMetadata()` and page component both query
 - **Sequential queries** in `question-ordering.ts:51-63` and `progress.ts` — use `Promise.all()`
 - **5x `as any` casts** on Supabase returns — add proper types
-- **`updateStatus()` accepts arbitrary table name** — restrict to union type
 
 ### Medium — i18n & UX
 - **30 files with hardcoded English** — translation keys often exist but aren't imported (worst: about page, flashcard components, theme switcher)
@@ -164,3 +161,4 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 - `admin_users` table must contain your email for admin access
 - All env vars must be set in both `.env.local` and Vercel dashboard
 - See `CLAUDE-supabase.md` for migration troubleshooting
+- `proxy.ts` is the correct Next.js 16 convention (replaces `middleware.ts`)

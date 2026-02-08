@@ -1,19 +1,18 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireAdmin } from "@/lib/supabase/server";
 
-// Generic status update
+type AdminTable = "question_reports" | "proposed_questions" | "theme_proposals";
+
+// Generic status update — now uses requireAdmin's user for resolved_by/reviewed_by
 async function updateStatus(
-  table: string,
+  table: AdminTable,
   id: string,
   status: string,
   adminNotes?: string,
 ) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { supabase, user } = await requireAdmin();
 
   const updates: Record<string, unknown> = { status };
   if (adminNotes !== undefined) updates.admin_notes = adminNotes;
@@ -25,10 +24,8 @@ async function updateStatus(
   ) {
     updates.resolved_at = new Date().toISOString();
     updates.reviewed_at = new Date().toISOString();
-    if (user) {
-      updates.resolved_by = user.id;
-      updates.reviewed_by = user.id;
-    }
+    updates.resolved_by = user.id;
+    updates.reviewed_by = user.id;
   }
 
   const { error } = await supabase.from(table).update(updates).eq("id", id);
@@ -37,7 +34,7 @@ async function updateStatus(
 
 // Feedback
 export async function getFeedbackList(type?: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   let query = supabase
     .from("feedback")
     .select("*")
@@ -52,7 +49,7 @@ export async function getFeedbackList(type?: string) {
 
 // Question reports
 export async function getReportsList() {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("question_reports")
     .select("*, question:questions(question_en, question_es)")
@@ -72,7 +69,7 @@ export async function updateReportStatus(
 
 // Proposed questions
 export async function getProposedQuestionsList() {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("proposed_questions")
     .select("*, category:categories(name_en, name_es)")
@@ -92,7 +89,7 @@ export async function updateProposedQuestionStatus(
 
 // Theme proposals
 export async function getThemeProposalsList() {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("theme_proposals")
     .select("*")
@@ -117,7 +114,7 @@ export async function getQuestionsList(filters?: {
   type?: string;
   search?: string;
 }) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   let query = supabase
     .from("questions")
     .select(
@@ -153,7 +150,7 @@ export async function updateQuestion(
   id: string,
   updates: Record<string, unknown>,
 ) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase
     .from("questions")
     .update(updates)
@@ -163,14 +160,14 @@ export async function updateQuestion(
 }
 
 export async function deleteQuestion(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from("questions").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/questions");
 }
 
 export async function deleteFeedback(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from("feedback").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reviews/bug-reports");
@@ -180,21 +177,21 @@ export async function deleteFeedback(id: string) {
 }
 
 export async function deleteReport(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from("question_reports").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reviews/reports");
 }
 
 export async function deleteProposedQuestion(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from("proposed_questions").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reviews/proposed-questions");
 }
 
 export async function deleteThemeProposal(id: string) {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { error } = await supabase.from("theme_proposals").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reviews/theme-proposals");
@@ -202,7 +199,7 @@ export async function deleteThemeProposal(id: string) {
 
 // Lookup lists
 export async function getThemesList() {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("themes")
     .select("id, title_en")
@@ -213,7 +210,7 @@ export async function getThemesList() {
 }
 
 export async function getCategoriesList() {
-  const supabase = await createClient();
+  const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("categories")
     .select("id, name_en, theme_id")

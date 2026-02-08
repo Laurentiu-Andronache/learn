@@ -6,6 +6,28 @@ import { cookies } from "next/headers";
  * global variable. Always create a new client within each function when using
  * it.
  */
+/**
+ * Verifies the current user is authenticated and in admin_users.
+ * Returns { supabase, user } for reuse — avoids duplicate client/auth calls.
+ * Throws "Unauthorized" if not admin.
+ */
+export async function requireAdmin() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  const { data: admin } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("email", user.email!)
+    .maybeSingle();
+  if (!admin) throw new Error("Unauthorized");
+
+  return { supabase, user };
+}
+
 export async function createClient() {
   const cookieStore = await cookies();
 
