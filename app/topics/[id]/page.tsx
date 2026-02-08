@@ -14,7 +14,7 @@ const getTopicById = cache(async (id: string) => {
   const supabase = await createClient();
   const { data } = await supabase
     .from("themes")
-    .select("*")
+    .select("*, creator:profiles!creator_id(display_name)")
     .eq("id", id)
     .single();
   return data;
@@ -108,6 +108,9 @@ export default async function TopicDetailPage({ params }: Props) {
           <div>
             <h1 className="text-3xl font-bold">{title}</h1>
             <p className="text-muted-foreground">{description}</p>
+            <p className="text-xs text-muted-foreground mt-1">
+              {tTopics("createdBy", { creator: topic.creator?.display_name || tTopics("anonymous") })}
+            </p>
           </div>
         </div>
       </div>

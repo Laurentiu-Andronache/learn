@@ -40,7 +40,6 @@ export default async function AdminTopicsPage() {
                 {!topic.is_active && (
                   <Badge variant="secondary">Inactive</Badge>
                 )}
-                {topic.is_builtin && <Badge variant="outline">Built-in</Badge>}
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">

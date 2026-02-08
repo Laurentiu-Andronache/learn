@@ -60,6 +60,31 @@ export async function getSuspendedQuestions(userId: string): Promise<SuspendedQu
   return data || [];
 }
 
+export async function unsuspendAllForTopic(
+  userId: string,
+  themeId: string,
+): Promise<number> {
+  const supabase = await createClient();
+  // Get question IDs for this topic
+  const { data: cats } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("theme_id", themeId);
+  if (!cats?.length) return 0;
+  const { data: questions } = await supabase
+    .from("questions")
+    .select("id")
+    .in("category_id", cats.map((c) => c.id));
+  if (!questions?.length) return 0;
+  const { data: deleted } = await supabase
+    .from("suspended_questions")
+    .delete()
+    .eq("user_id", userId)
+    .in("question_id", questions.map((q) => q.id))
+    .select("id");
+  return deleted?.length ?? 0;
+}
+
 // ============ HIDDEN TOPICS ============
 
 export async function hideTopic(userId: string, themeId: string) {

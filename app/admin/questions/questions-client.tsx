@@ -4,6 +4,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { QuestionEditForm } from "@/components/admin/question-edit-form";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
+import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -86,6 +88,28 @@ export function QuestionsClient({
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
+  // Auto-translate: compute original bilingual values for the currently-editing question
+  const editingOriginals = useMemo(() => {
+    if (!editingId) return {};
+    const q = questions.find((q) => q.id === editingId);
+    if (!q) return {};
+    return {
+      question_en: q.question_en,
+      question_es: q.question_es,
+      options_en: q.options_en,
+      options_es: q.options_es,
+      explanation_en: q.explanation_en,
+      explanation_es: q.explanation_es,
+      extra_en: q.extra_en,
+      extra_es: q.extra_es,
+    };
+  }, [editingId, questions]);
+
+  const { interceptSave, dialogProps } = useAutoTranslate({
+    originalValues: editingOriginals,
+    errorMessage: t("admin.translate.error"),
+  });
+
   // Deep-link tracking
   const deepLinked = useRef(false);
 
@@ -142,14 +166,16 @@ export function QuestionsClient({
 
   const handleSave = async (updates: Record<string, unknown>) => {
     if (!editingId) return;
-    setSaving(true);
-    try {
-      await updateQuestion(editingId, updates);
-      setEditingId(null);
-      fetchQuestions();
-    } finally {
-      setSaving(false);
-    }
+    interceptSave(updates, async (finalUpdates) => {
+      setSaving(true);
+      try {
+        await updateQuestion(editingId, finalUpdates);
+        setEditingId(null);
+        fetchQuestions();
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -254,6 +280,8 @@ export function QuestionsClient({
           </p>
         )}
       </div>
+
+      <TranslateDialog {...dialogProps} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ interface TopicData {
   description_en: string | null;
   description_es: string | null;
   icon: string | null;
+  creator: { display_name: string | null } | null;
 }
 
 interface TopicGridProps {

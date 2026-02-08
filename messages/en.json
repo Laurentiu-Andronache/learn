@@ -107,6 +107,23 @@
     "backToTopics": "Back to Topics",
     "progressTitle": "Progress",
     "categories": "Categories",
+    "shareLink": "Share Topic Link",
+    "linkCopied": "Link copied to clipboard!",
+    "unsuspendAll": "Unsuspend All Questions",
+    "unsuspendAllSuccess": "{count} questions unsuspended.",
+    "noSuspendedQuestions": "No suspended questions in this topic.",
+    "resetToday": "Reset Today's Progress",
+    "resetTodayTitle": "Reset Today's Progress?",
+    "resetTodayConfirm": "This will undo all reviews you did today for this topic. Your progress from previous days will be preserved.",
+    "resetTodaySuccess": "{count} reviews undone.",
+    "noReviewsToday": "No reviews today for this topic.",
+    "resetAll": "Reset All Progress",
+    "resetAllTitle": "Reset All Progress?",
+    "resetAllConfirm": "This will permanently delete all your review history, card states, and suspended questions for this topic. This cannot be undone.",
+    "resetAllSuccess": "All progress reset for this topic.",
+    "noProgressToReset": "No progress to reset for this topic.",
+    "createdBy": "by {creator}",
+    "anonymous": "Anonymous",
     "progress": {
       "new": "New",
       "learning": "Learning",
@@ -238,7 +255,15 @@
     "editQuestion": "Edit Question",
     "editReading": "Edit Reading",
     "saveQuestion": "Save",
-    "cancelEdit": "Cancel"
+    "cancelEdit": "Cancel",
+    "translate": {
+      "title": "Auto-Translate",
+      "description": "Auto-translate your changes to {targetLang}?",
+      "confirm": "Translate & Save",
+      "decline": "Save Without Translating",
+      "translating": "Translating...",
+      "error": "Translation failed. Saved without translating."
+    }
   },
   "feedback": {
     "button": "Feedback",

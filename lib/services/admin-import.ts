@@ -95,6 +95,11 @@ export async function validateImportJson(
 export async function importThemeJson(json: ImportTheme) {
   const supabase = await createClient();
 
+  // Get current user for creator_id
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   // Insert theme
   const { data: theme, error: themeErr } = await supabase
     .from("themes")
@@ -106,7 +111,7 @@ export async function importThemeJson(json: ImportTheme) {
       icon: json.icon || null,
       color: json.color || null,
       is_active: true,
-      is_builtin: false,
+      creator_id: user?.id ?? null,
     })
     .select("id")
     .single();

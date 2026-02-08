@@ -194,6 +194,128 @@ export async function undoLastReview(userId: string, questionId: string) {
   }
 }
 
+async function getQuestionIdsForTheme(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  themeId: string,
+): Promise<string[]> {
+  const { data: cats } = await supabase
+    .from("categories")
+    .select("id")
+    .eq("theme_id", themeId);
+  if (!cats?.length) return [];
+  const catIds = cats.map((c) => c.id);
+  const { data: questions } = await supabase
+    .from("questions")
+    .select("id")
+    .in("category_id", catIds);
+  return questions?.map((q) => q.id) ?? [];
+}
+
+export async function resetTodayProgress(
+  userId: string,
+  themeId: string,
+): Promise<number> {
+  const supabase = await createClient();
+  const questionIds = await getQuestionIdsForTheme(supabase, themeId);
+  if (!questionIds.length) return 0;
+
+  const todayMidnight = new Date();
+  todayMidnight.setUTCHours(0, 0, 0, 0);
+
+  // Fetch today's review logs for this topic's questions
+  const { data: todayLogs } = await supabase
+    .from("review_logs")
+    .select("id, question_id, stability_before, difficulty_before, created_at")
+    .eq("user_id", userId)
+    .in("question_id", questionIds)
+    .gte("created_at", todayMidnight.toISOString())
+    .order("created_at", { ascending: true });
+
+  if (!todayLogs?.length) return 0;
+
+  // Group by question_id — first log today tells us the "before" state
+  const firstLogByQuestion = new Map<
+    string,
+    { stability_before: number | null; difficulty_before: number | null }
+  >();
+  for (const log of todayLogs) {
+    if (!firstLogByQuestion.has(log.question_id)) {
+      firstLogByQuestion.set(log.question_id, {
+        stability_before: log.stability_before,
+        difficulty_before: log.difficulty_before,
+      });
+    }
+  }
+
+  // Restore each question's card state to its pre-today state
+  for (const [questionId, before] of firstLogByQuestion) {
+    if (before.stability_before === null) {
+      // Card was new today → delete card state entirely
+      await supabase
+        .from("user_card_state")
+        .delete()
+        .eq("user_id", userId)
+        .eq("question_id", questionId);
+    } else {
+      // Restore to pre-today values
+      await supabase
+        .from("user_card_state")
+        .update({
+          stability: before.stability_before,
+          difficulty: before.difficulty_before,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("question_id", questionId);
+    }
+  }
+
+  // Bulk delete today's review logs
+  const logIds = todayLogs.map((l) => l.id);
+  await supabase.from("review_logs").delete().in("id", logIds);
+
+  return todayLogs.length;
+}
+
+export async function resetAllProgress(
+  userId: string,
+  themeId: string,
+): Promise<{ reviewLogs: number; cardStates: number; suspended: number }> {
+  const supabase = await createClient();
+  const questionIds = await getQuestionIdsForTheme(supabase, themeId);
+  if (!questionIds.length) return { reviewLogs: 0, cardStates: 0, suspended: 0 };
+
+  // Delete review logs first
+  const { data: deletedLogs } = await supabase
+    .from("review_logs")
+    .delete()
+    .eq("user_id", userId)
+    .in("question_id", questionIds)
+    .select("id");
+
+  // Delete card states
+  const { data: deletedStates } = await supabase
+    .from("user_card_state")
+    .delete()
+    .eq("user_id", userId)
+    .in("question_id", questionIds)
+    .select("id");
+
+  // Delete suspended questions
+  const { data: deletedSuspended } = await supabase
+    .from("suspended_questions")
+    .delete()
+    .eq("user_id", userId)
+    .in("question_id", questionIds)
+    .select("id");
+
+  return {
+    reviewLogs: deletedLogs?.length ?? 0,
+    cardStates: deletedStates?.length ?? 0,
+    suspended: deletedSuspended?.length ?? 0,
+  };
+}
+
 export async function findNextTopic(
   userId: string,
   excludeThemeId: string,

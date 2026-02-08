@@ -107,6 +107,23 @@
     "backToTopics": "Volver a Temas",
     "progressTitle": "Progreso",
     "categories": "Categorías",
+    "shareLink": "Compartir Enlace del Tema",
+    "linkCopied": "¡Enlace copiado al portapapeles!",
+    "unsuspendAll": "Reactivar Todas las Preguntas",
+    "unsuspendAllSuccess": "{count} preguntas reactivadas.",
+    "noSuspendedQuestions": "No hay preguntas suspendidas en este tema.",
+    "resetToday": "Restablecer Progreso de Hoy",
+    "resetTodayTitle": "¿Restablecer Progreso de Hoy?",
+    "resetTodayConfirm": "Esto deshará todos los repasos que hiciste hoy en este tema. Tu progreso de días anteriores se conservará.",
+    "resetTodaySuccess": "{count} repasos deshechos.",
+    "noReviewsToday": "No hay repasos hoy para este tema.",
+    "resetAll": "Restablecer Todo el Progreso",
+    "resetAllTitle": "¿Restablecer Todo el Progreso?",
+    "resetAllConfirm": "Esto eliminará permanentemente todo tu historial de repasos, estados de tarjetas y preguntas suspendidas de este tema. No se puede deshacer.",
+    "resetAllSuccess": "Todo el progreso restablecido para este tema.",
+    "noProgressToReset": "No hay progreso que restablecer para este tema.",
+    "createdBy": "por {creator}",
+    "anonymous": "Anónimo",
     "progress": {
       "new": "Nuevo",
       "learning": "Aprendiendo",
@@ -238,7 +255,15 @@
     "editQuestion": "Editar Pregunta",
     "editReading": "Editar Lectura",
     "saveQuestion": "Guardar",
-    "cancelEdit": "Cancelar"
+    "cancelEdit": "Cancelar",
+    "translate": {
+      "title": "Auto-Traducir",
+      "description": "¿Traducir automáticamente tus cambios al {targetLang}?",
+      "confirm": "Traducir y Guardar",
+      "decline": "Guardar Sin Traducir",
+      "translating": "Traduciendo...",
+      "error": "La traducción falló. Se guardó sin traducir."
+    }
   },
   "feedback": {
     "button": "Comentarios",

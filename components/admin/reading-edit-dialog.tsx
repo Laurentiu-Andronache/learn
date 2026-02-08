@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
+import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import { getTopicById, updateTopicIntroText } from "@/lib/services/admin-topics";
 
 interface ReadingEditDialogProps {
@@ -35,14 +37,24 @@ export function ReadingEditDialog({
   const [introTextEn, setIntroTextEn] = useState("");
   const [introTextEs, setIntroTextEs] = useState("");
 
+  // Stable originals captured at load time
+  const originalsRef = useRef({ intro_text_en: "", intro_text_es: "" });
+  const { interceptSave, dialogProps } = useAutoTranslate({
+    originalValues: originalsRef.current,
+    errorMessage: t("admin.translate.error"),
+  });
+
   const loadTopic = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const topic = await getTopicById(themeId);
       setTopicTitle(topic.title_en);
-      setIntroTextEn(topic.intro_text_en ?? "");
-      setIntroTextEs(topic.intro_text_es ?? "");
+      const en = topic.intro_text_en ?? "";
+      const es = topic.intro_text_es ?? "";
+      setIntroTextEn(en);
+      setIntroTextEs(es);
+      originalsRef.current = { intro_text_en: en, intro_text_es: es };
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load topic");
     } finally {
@@ -55,21 +67,28 @@ export function ReadingEditDialog({
   }, [open, loadTopic]);
 
   const handleSave = async () => {
-    setSaving(true);
-    setError(null);
-    try {
-      await updateTopicIntroText(
-        themeId,
-        introTextEn.trim() || null,
-        introTextEs.trim() || null,
-      );
-      onSaved?.();
-      onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
-    } finally {
-      setSaving(false);
-    }
+    const current = {
+      intro_text_en: introTextEn.trim() || null,
+      intro_text_es: introTextEs.trim() || null,
+    };
+
+    interceptSave(current, async (final) => {
+      setSaving(true);
+      setError(null);
+      try {
+        await updateTopicIntroText(
+          themeId,
+          (final.intro_text_en as string) || null,
+          (final.intro_text_es as string) || null,
+        );
+        onSaved?.();
+        onOpenChange(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save");
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   return (
@@ -138,6 +157,8 @@ export function ReadingEditDialog({
             </div>
           </div>
         )}
+
+        <TranslateDialog {...dialogProps} />
       </DialogContent>
     </Dialog>
   );

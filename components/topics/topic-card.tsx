@@ -1,8 +1,19 @@
 "use client";
 
-import Link from "next/link";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -10,10 +21,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { resetAllProgress, resetTodayProgress } from "@/lib/fsrs/actions";
 import type { TopicProgress } from "@/lib/fsrs/progress";
-import { hideTopic } from "@/lib/services/user-preferences";
+import {
+  hideTopic,
+  unsuspendAllForTopic,
+} from "@/lib/services/user-preferences";
 
 interface TopicData {
   id: string;
@@ -22,6 +38,7 @@ interface TopicData {
   description_en: string | null;
   description_es: string | null;
   icon: string | null;
+  creator: { display_name: string | null } | null;
 }
 
 interface TopicCardProps {
@@ -34,6 +51,11 @@ interface TopicCardProps {
 export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
   const router = useRouter();
   const t = useTranslations("topics");
+  const tc = useTranslations("common");
+  const [confirmAction, setConfirmAction] = useState<
+    "resetToday" | "resetAll" | null
+  >(null);
+  const menuInteracting = useRef(false);
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
@@ -53,39 +75,105 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
     router.refresh();
   };
 
+  const handleShareLink = async () => {
+    const url = `${window.location.origin}/topics/${topic.id}`;
+    await navigator.clipboard.writeText(url);
+    toast.success(t("linkCopied"));
+  };
+
+  const handleUnsuspendAll = async () => {
+    const count = await unsuspendAllForTopic(userId, topic.id);
+    if (count > 0) {
+      toast.success(t("unsuspendAllSuccess", { count }));
+      router.refresh();
+    } else {
+      toast.info(t("noSuspendedQuestions"));
+    }
+  };
+
+  const handleResetToday = async () => {
+    const count = await resetTodayProgress(userId, topic.id);
+    if (count > 0) {
+      toast.success(t("resetTodaySuccess", { count }));
+      router.refresh();
+    } else {
+      toast.info(t("noReviewsToday"));
+    }
+    setConfirmAction(null);
+  };
+
+  const handleResetAll = async () => {
+    const result = await resetAllProgress(userId, topic.id);
+    const total = result.reviewLogs + result.cardStates + result.suspended;
+    if (total > 0) {
+      toast.success(t("resetAllSuccess"));
+      router.refresh();
+    } else {
+      toast.info(t("noProgressToReset"));
+    }
+    setConfirmAction(null);
+  };
+
   return (
-    <Link href={`/topics/${topic.id}`}>
-      <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+    <div className="h-full">
+      <Card
+        className="hover:shadow-md transition-shadow cursor-pointer h-full"
+        onClick={() => {
+          if (menuInteracting.current) return;
+          router.push(`/topics/${topic.id}`);
+        }}
+      >
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
               <span className="text-2xl">{topic.icon}</span>
               <h3 className="font-semibold text-lg leading-tight">{title}</h3>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+            <DropdownMenu onOpenChange={(open) => {
+              if (!open) {
+                menuInteracting.current = true;
+                setTimeout(() => { menuInteracting.current = false; }, 0);
+              }
+            }}>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0"
+                  onPointerDown={() => { menuInteracting.current = true; }}
+                  onClick={(e) => e.stopPropagation()}
                 >
                   ⋯
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.preventDefault();
-                    handleHide();
-                  }}
-                >
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuItem onClick={handleShareLink}>
+                  {t("shareLink")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleUnsuspendAll}>
+                  {t("unsuspendAll")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setConfirmAction("resetToday")}>
+                  {t("resetToday")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleHide}>
                   {t("hide")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive"
+                  onClick={() => setConfirmAction("resetAll")}
+                >
+                  {t("resetAll")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            {t("createdBy", { creator: topic.creator?.display_name || t("anonymous") })}
+          </p>
           <p className="text-sm text-muted-foreground line-clamp-2">
             {description}
           </p>
@@ -135,6 +223,48 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
           </div>
         </CardContent>
       </Card>
-    </Link>
+
+      {/* Confirmation dialogs */}
+      <AlertDialog
+        open={confirmAction !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setConfirmAction(null);
+            menuInteracting.current = true;
+            setTimeout(() => { menuInteracting.current = false; }, 0);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "resetToday"
+                ? t("resetTodayTitle")
+                : t("resetAllTitle")}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "resetToday"
+                ? t("resetTodayConfirm")
+                : t("resetAllConfirm")}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
+            <AlertDialogAction
+              variant={
+                confirmAction === "resetAll" ? "destructive" : "default"
+              }
+              onClick={
+                confirmAction === "resetToday"
+                  ? handleResetToday
+                  : handleResetAll
+              }
+            >
+              {tc("confirm")}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +9,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { QuestionEditForm, type QuestionEditFormData } from "@/components/admin/question-edit-form";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
+import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import { getQuestionById, updateQuestion } from "@/lib/services/admin-reviews";
 
 interface QuestionEditDialogProps {
@@ -33,6 +35,25 @@ export function QuestionEditDialog({
     themeName?: string;
     categoryName?: string;
   }>({});
+
+  const originalValues = useMemo(() => {
+    if (!question) return {};
+    return {
+      question_en: question.question_en,
+      question_es: question.question_es,
+      options_en: question.options_en,
+      options_es: question.options_es,
+      explanation_en: question.explanation_en,
+      explanation_es: question.explanation_es,
+      extra_en: question.extra_en,
+      extra_es: question.extra_es,
+    };
+  }, [question]);
+
+  const { interceptSave, dialogProps } = useAutoTranslate({
+    originalValues,
+    errorMessage: t("admin.translate.error"),
+  });
 
   const loadQuestion = useCallback(async () => {
     setLoading(true);
@@ -69,17 +90,19 @@ export function QuestionEditDialog({
   }, [open, loadQuestion]);
 
   const handleSave = async (updates: Record<string, unknown>) => {
-    setSaving(true);
-    setError(null);
-    try {
-      await updateQuestion(questionId, updates);
-      onSaved?.();
-      onOpenChange(false);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save");
-    } finally {
-      setSaving(false);
-    }
+    interceptSave(updates, async (finalUpdates) => {
+      setSaving(true);
+      setError(null);
+      try {
+        await updateQuestion(questionId, finalUpdates);
+        onSaved?.();
+        onOpenChange(false);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Failed to save");
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   return (
@@ -106,6 +129,8 @@ export function QuestionEditDialog({
             saving={saving}
           />
         ) : null}
+
+        <TranslateDialog {...dialogProps} />
       </DialogContent>
     </Dialog>
   );

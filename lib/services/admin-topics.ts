@@ -13,14 +13,13 @@ export interface TopicFormData {
   intro_text_en: string | null;
   intro_text_es: string | null;
   is_active: boolean;
-  is_builtin: boolean;
 }
 
 export async function createTopic(data: TopicFormData) {
-  const { supabase } = await requireAdmin();
+  const { supabase, user } = await requireAdmin();
   const { data: topic, error } = await supabase
     .from("themes")
-    .insert(data)
+    .insert({ ...data, creator_id: user.id })
     .select("id")
     .single();
   if (error) throw new Error(error.message);
@@ -60,7 +59,7 @@ export async function getTopicById(id: string) {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("themes")
-    .select("*")
+    .select("*, creator:profiles!creator_id(display_name)")
     .eq("id", id)
     .single();
   if (error) throw new Error(error.message);
@@ -87,7 +86,7 @@ export async function getAllTopics() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("themes")
-    .select("*")
+    .select("*, creator:profiles!creator_id(display_name)")
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data;

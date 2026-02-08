@@ -2,7 +2,8 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
+import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import {
   createTopic,
   type TopicFormData,
@@ -31,7 +34,6 @@ const topicSchema = z.object({
   intro_text_en: z.string().nullable(),
   intro_text_es: z.string().nullable(),
   is_active: z.boolean(),
-  is_builtin: z.boolean(),
 });
 
 interface TopicFormProps {
@@ -40,10 +42,33 @@ interface TopicFormProps {
   defaultValues?: TopicFormData;
 }
 
+const BILINGUAL_KEYS = [
+  "title_en", "title_es",
+  "description_en", "description_es",
+  "intro_text_en", "intro_text_es",
+] as const;
+
 export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
   const router = useRouter();
+  const t = useTranslations();
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const originalBilingual = useMemo(() => {
+    const vals = defaultValues ?? {
+      title_en: "", title_es: "",
+      description_en: null, description_es: null,
+      intro_text_en: null, intro_text_es: null,
+    };
+    const result: Record<string, unknown> = {};
+    for (const key of BILINGUAL_KEYS) result[key] = vals[key];
+    return result;
+  }, [defaultValues]);
+
+  const { interceptSave, dialogProps } = useAutoTranslate({
+    originalValues: originalBilingual,
+    errorMessage: t("admin.translate.error"),
+  });
 
   const {
     register,
@@ -63,40 +88,51 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
       intro_text_en: null,
       intro_text_es: null,
       is_active: true,
-      is_builtin: false,
     },
   });
 
   const colorValue = watch("color");
   const isActive = watch("is_active");
-  const isBuiltin = watch("is_builtin");
 
   const onSubmit = async (data: TopicFormData) => {
-    setSaving(true);
-    setError(null);
-    try {
-      // Normalize empty strings to null
-      const normalized: TopicFormData = {
-        ...data,
-        description_en: data.description_en || null,
-        description_es: data.description_es || null,
-        icon: data.icon || null,
-        color: data.color || null,
-        intro_text_en: data.intro_text_en || null,
-        intro_text_es: data.intro_text_es || null,
-      };
+    // Extract bilingual fields for translation check
+    const bilingualValues: Record<string, unknown> = {};
+    for (const key of BILINGUAL_KEYS) bilingualValues[key] = data[key];
 
-      if (mode === "create") {
-        await createTopic(normalized);
-      } else {
-        await updateTopic(topicId!, normalized);
+    interceptSave(bilingualValues, async (finalBilingual) => {
+      setSaving(true);
+      setError(null);
+      try {
+        // Merge translated bilingual fields back into full form data
+        const merged = { ...data };
+        for (const key of BILINGUAL_KEYS) {
+          if (key in finalBilingual) {
+            (merged as Record<string, unknown>)[key] = finalBilingual[key];
+          }
+        }
+
+        const normalized: TopicFormData = {
+          ...merged,
+          description_en: merged.description_en || null,
+          description_es: merged.description_es || null,
+          icon: merged.icon || null,
+          color: merged.color || null,
+          intro_text_en: merged.intro_text_en || null,
+          intro_text_es: merged.intro_text_es || null,
+        };
+
+        if (mode === "create") {
+          await createTopic(normalized);
+        } else {
+          await updateTopic(topicId!, normalized);
+        }
+        router.push("/admin/topics");
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : "Failed to save");
+      } finally {
+        setSaving(false);
       }
-      router.push("/admin/topics");
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Failed to save");
-    } finally {
-      setSaving(false);
-    }
+    });
   };
 
   return (
@@ -215,14 +251,6 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
               onCheckedChange={(v) => setValue("is_active", v)}
             />
           </div>
-          <div className="flex items-center justify-between">
-            <Label htmlFor="is_builtin">Built-in</Label>
-            <Switch
-              id="is_builtin"
-              checked={isBuiltin}
-              onCheckedChange={(v) => setValue("is_builtin", v)}
-            />
-          </div>
         </CardContent>
       </Card>
 
@@ -244,6 +272,8 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
           Cancel
         </Button>
       </div>
+
+      <TranslateDialog {...dialogProps} />
     </form>
   );
 }

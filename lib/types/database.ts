@@ -16,7 +16,7 @@ export interface Theme {
   description_es: string | null;
   icon: string | null;
   color: string | null;
-  is_builtin: boolean;
+  creator_id: string | null;
   intro_text_en: string | null;
   intro_text_es: string | null;
   is_active: boolean;

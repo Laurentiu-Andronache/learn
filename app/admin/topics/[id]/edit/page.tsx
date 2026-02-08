@@ -32,7 +32,6 @@ export default async function EditTopicPage({
           intro_text_en: topic.intro_text_en,
           intro_text_es: topic.intro_text_es,
           is_active: topic.is_active ?? true,
-          is_builtin: topic.is_builtin ?? false,
         }}
       />
     </div>

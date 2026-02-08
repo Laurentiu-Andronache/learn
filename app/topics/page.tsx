@@ -37,10 +37,10 @@ export default async function TopicsPage() {
   const locale = await getLocale();
   const t = await getTranslations("topics");
 
-  // Get all active topics
+  // Get all active topics with creator info
   const { data: topics } = await supabase
     .from("themes")
-    .select("*")
+    .select("*, creator:profiles!creator_id(display_name)")
     .eq("is_active", true)
     .order("created_at");
 
