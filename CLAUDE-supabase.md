@@ -24,19 +24,21 @@ Claude Code is responsible for all schema changes.
 - Update affected TypeScript types after schema changes
 - Update `CLAUDE.md` table count / schema reference if tables added/removed
 
-## Schema Reference (13 tables)
+## Schema Reference (17 tables)
 
-Full schema: `supabase/migrations/20260207000000_initial_schema.sql`
+Full schema: `supabase/migrations/20260207000000_initial_schema.sql` + `20260209000000_split_quiz_flashcard.sql`
 
-**Content** (public read, admin write): `themes`, `categories`, `questions`
+**Content** (public read, admin write): `themes`, `categories`, `questions`, `flashcards`
 
 **User Management**: `profiles`, `admin_users`
 
-**FSRS Spaced Repetition**: `user_card_state`, `review_logs`
+**FSRS Spaced Repetition**: `user_card_state` (FK → flashcards), `review_logs` (FK → flashcards)
 
-**User Preferences**: `suspended_questions`, `hidden_themes`, `reading_progress`
+**Quiz**: `quiz_attempts` (user_id, theme_id, score, total, answers JSONB)
 
-**Feedback & Moderation**: `feedback` (has `question_id` FK for content issue deep-linking), `proposed_questions`, `theme_proposals`
+**User Preferences**: `suspended_flashcards`, `hidden_themes`, `reading_progress`
+
+**Feedback & Moderation**: `feedback` (has `question_id` + `flashcard_id` FKs), `question_reports` (issue_type, status, admin_notes), `proposed_questions` (has `target_type`), `theme_proposals`
 
 ## Admin Access
 

@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 
-/** Shape returned by Supabase when joining questions → categories */
-interface QuestionWithCategory {
+/** Shape returned by Supabase when joining flashcards -> categories */
+interface FlashcardWithCategory {
   id: string;
   category_id: string;
   categories: {
@@ -50,18 +50,18 @@ export async function getTopicProgress(
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  // Get all questions for this theme with their categories
-  const { data: questions } = await supabase
-    .from("questions")
+  // Get all flashcards for this theme with their categories
+  const { data: flashcards } = await supabase
+    .from("flashcards")
     .select(`
       id,
       category_id,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
     .eq("categories.theme_id", themeId)
-    .returns<QuestionWithCategory[]>();
+    .returns<FlashcardWithCategory[]>();
 
-  if (!questions || questions.length === 0) {
+  if (!flashcards || flashcards.length === 0) {
     return {
       topicId: themeId,
       total: 0,
@@ -77,34 +77,34 @@ export async function getTopicProgress(
     };
   }
 
-  // Get user card states for these questions
-  const questionIds = questions.map((q) => q.id);
+  // Get user card states for these flashcards
+  const flashcardIds = flashcards.map((f) => f.id);
   const { data: cardStates } = await supabase
     .from("user_card_state")
-    .select("question_id, state, stability, due, updated_at")
+    .select("flashcard_id, state, stability, due, updated_at")
     .eq("user_id", userId)
-    .in("question_id", questionIds);
+    .in("flashcard_id", flashcardIds);
 
   const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.question_id, cs]),
+    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
   );
 
-  // Get suspended questions to exclude
+  // Get suspended flashcards to exclude
   const { data: suspended } = await supabase
-    .from("suspended_questions")
-    .select("question_id")
+    .from("suspended_flashcards")
+    .select("flashcard_id")
     .eq("user_id", userId)
-    .in("question_id", questionIds);
-  const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
+    .in("flashcard_id", flashcardIds);
+  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
 
   // Build category map
   const categoryMap = new Map<string, CategoryProgress>();
   let lastStudied: string | null = null;
 
-  for (const q of questions) {
-    if (suspendedSet.has(q.id)) continue;
+  for (const f of flashcards) {
+    if (suspendedSet.has(f.id)) continue;
 
-    const { categories: cat } = q;
+    const { categories: cat } = f;
     const catId = cat.id;
     if (!categoryMap.has(catId)) {
       categoryMap.set(catId, {
@@ -123,7 +123,7 @@ export async function getTopicProgress(
     const catProgress = categoryMap.get(catId)!;
     catProgress.total++;
 
-    const cs = stateMap.get(q.id);
+    const cs = stateMap.get(f.id);
     if (!cs) {
       catProgress.newCount++;
     } else {
@@ -136,7 +136,12 @@ export async function getTopicProgress(
       } else {
         catProgress.newCount++;
       }
-      if (cs.due && new Date(cs.due) <= new Date(now)) {
+      // dueToday: only count review and relearning state
+      if (
+        cs.due &&
+        new Date(cs.due) <= new Date(now) &&
+        (cs.state === "review" || cs.state === "relearning")
+      ) {
         catProgress.dueToday++;
       }
       if (cs.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
@@ -189,45 +194,52 @@ export async function getAllTopicsProgress(
 
   if (themeIds.length === 0) return [];
 
-  // 2. Batch-fetch all questions, card states, and suspended in parallel
-  const [{ data: allQuestions }, { data: allCardStates }, { data: allSuspended }] =
-    await Promise.all([
-      supabase
-        .from("questions")
-        .select("id, category_id, categories!inner(id, name_en, name_es, color, theme_id)")
-        .in("categories.theme_id", themeIds)
-        .returns<QuestionWithCategory[]>(),
-      supabase
-        .from("user_card_state")
-        .select("question_id, state, stability, due, updated_at")
-        .eq("user_id", userId),
-      supabase
-        .from("suspended_questions")
-        .select("question_id")
-        .eq("user_id", userId),
-    ]);
+  // 2. Batch-fetch all flashcards, card states, and suspended in parallel
+  const [
+    { data: allFlashcards },
+    { data: allCardStates },
+    { data: allSuspended },
+  ] = await Promise.all([
+    supabase
+      .from("flashcards")
+      .select(
+        "id, category_id, categories!inner(id, name_en, name_es, color, theme_id)",
+      )
+      .in("categories.theme_id", themeIds)
+      .returns<FlashcardWithCategory[]>(),
+    supabase
+      .from("user_card_state")
+      .select("flashcard_id, state, stability, due, updated_at")
+      .eq("user_id", userId),
+    supabase
+      .from("suspended_flashcards")
+      .select("flashcard_id")
+      .eq("user_id", userId),
+  ]);
 
   // 3. Index data for in-memory processing
-  const stateMap = new Map((allCardStates ?? []).map((cs) => [cs.question_id, cs]));
-  const suspendedSet = new Set((allSuspended ?? []).map((s) => s.question_id));
+  const stateMap = new Map(
+    (allCardStates ?? []).map((cs) => [cs.flashcard_id, cs]),
+  );
+  const suspendedSet = new Set((allSuspended ?? []).map((s) => s.flashcard_id));
 
-  // Group questions by theme_id
-  const questionsByTheme = new Map<string, QuestionWithCategory[]>();
-  for (const q of allQuestions ?? []) {
-    const themeId = q.categories.theme_id;
-    if (!questionsByTheme.has(themeId)) questionsByTheme.set(themeId, []);
-    questionsByTheme.get(themeId)!.push(q);
+  // Group flashcards by theme_id
+  const flashcardsByTheme = new Map<string, FlashcardWithCategory[]>();
+  for (const f of allFlashcards ?? []) {
+    const themeId = f.categories.theme_id;
+    if (!flashcardsByTheme.has(themeId)) flashcardsByTheme.set(themeId, []);
+    flashcardsByTheme.get(themeId)!.push(f);
   }
 
   // 4. Compute progress per theme in-memory
   return themeIds.map((themeId) => {
-    const questions = questionsByTheme.get(themeId) || [];
+    const flashcards = flashcardsByTheme.get(themeId) || [];
     const categoryMap = new Map<string, CategoryProgress>();
     let lastStudied: string | null = null;
 
-    for (const q of questions) {
-      if (suspendedSet.has(q.id)) continue;
-      const { categories: cat } = q;
+    for (const f of flashcards) {
+      if (suspendedSet.has(f.id)) continue;
+      const { categories: cat } = f;
       const catId = cat.id;
       if (!categoryMap.has(catId)) {
         categoryMap.set(catId, {
@@ -246,7 +258,7 @@ export async function getAllTopicsProgress(
       const catProgress = categoryMap.get(catId)!;
       catProgress.total++;
 
-      const cs = stateMap.get(q.id);
+      const cs = stateMap.get(f.id);
       if (!cs) {
         catProgress.newCount++;
       } else {
@@ -259,7 +271,12 @@ export async function getAllTopicsProgress(
         } else {
           catProgress.newCount++;
         }
-        if (cs.due && new Date(cs.due) <= new Date(now)) {
+        // dueToday: only count review and relearning state
+        if (
+          cs.due &&
+          new Date(cs.due) <= new Date(now) &&
+          (cs.state === "review" || cs.state === "relearning")
+        ) {
           catProgress.dueToday++;
         }
         if (cs.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
@@ -275,8 +292,10 @@ export async function getAllTopicsProgress(
     const reviewCount = categories.reduce((s, c) => s + c.reviewCount, 0);
     const masteredCount = categories.reduce((s, c) => s + c.masteredCount, 0);
     const dueToday = categories.reduce((s, c) => s + c.dueToday, 0);
-    const fullyMemorized = total > 0 && masteredCount === total && dueToday === 0;
-    const percentComplete = total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+    const fullyMemorized =
+      total > 0 && masteredCount === total && dueToday === 0;
+    const percentComplete =
+      total > 0 ? Math.round((masteredCount / total) * 100) : 0;
 
     return {
       topicId: themeId,
@@ -308,12 +327,12 @@ export async function getCategoryProgress(
 
   if (!category) return null;
 
-  const { data: questions } = await supabase
-    .from("questions")
+  const { data: flashcards } = await supabase
+    .from("flashcards")
     .select("id")
     .eq("category_id", categoryId);
 
-  if (!questions || questions.length === 0) {
+  if (!flashcards || flashcards.length === 0) {
     return {
       categoryId,
       categoryNameEn: category.name_en,
@@ -328,17 +347,17 @@ export async function getCategoryProgress(
     };
   }
 
-  const questionIds = questions.map((q) => q.id);
+  const flashcardIds = flashcards.map((f) => f.id);
   const now = new Date().toISOString();
 
   const { data: cardStates } = await supabase
     .from("user_card_state")
-    .select("question_id, state, stability, due")
+    .select("flashcard_id, state, stability, due")
     .eq("user_id", userId)
-    .in("question_id", questionIds);
+    .in("flashcard_id", flashcardIds);
 
   const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.question_id, cs]),
+    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
   );
 
   const result: CategoryProgress = {
@@ -346,7 +365,7 @@ export async function getCategoryProgress(
     categoryNameEn: category.name_en,
     categoryNameEs: category.name_es,
     categoryColor: category.color,
-    total: questions.length,
+    total: flashcards.length,
     newCount: 0,
     learningCount: 0,
     reviewCount: 0,
@@ -354,8 +373,8 @@ export async function getCategoryProgress(
     dueToday: 0,
   };
 
-  for (const q of questions) {
-    const cs = stateMap.get(q.id);
+  for (const f of flashcards) {
+    const cs = stateMap.get(f.id);
     if (!cs) {
       result.newCount++;
     } else {
@@ -368,7 +387,12 @@ export async function getCategoryProgress(
       } else {
         result.newCount++;
       }
-      if (cs.due && new Date(cs.due) <= new Date(now)) {
+      // dueToday: only count review and relearning state
+      if (
+        cs.due &&
+        new Date(cs.due) <= new Date(now) &&
+        (cs.state === "review" || cs.state === "relearning")
+      ) {
         result.dueToday++;
       }
     }

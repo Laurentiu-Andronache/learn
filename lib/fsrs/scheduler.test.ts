@@ -58,7 +58,7 @@ describe("FSRS scheduler integration", () => {
   it("Review card rated Again goes to Relearning and increments lapses", () => {
     // Create a Review-state card
     const card = createNewCard();
-    const now = new Date();
+    const _now = new Date();
     let current = card;
 
     // Fast-forward through learning to review

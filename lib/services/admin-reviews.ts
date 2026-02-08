@@ -92,7 +92,9 @@ export async function getQuestionById(id: string) {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("questions")
-    .select("*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))")
+    .select(
+      "*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))",
+    )
     .eq("id", id)
     .single();
   if (error) throw new Error(error.message);
@@ -146,6 +148,7 @@ export async function updateQuestion(
     .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/questions");
+  revalidatePath("/admin/quizzes");
 }
 
 export async function deleteQuestion(id: string) {
@@ -153,6 +156,7 @@ export async function deleteQuestion(id: string) {
   const { error } = await supabase.from("questions").delete().eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/questions");
+  revalidatePath("/admin/quizzes");
 }
 
 export async function deleteFeedback(id: string) {
@@ -167,16 +171,80 @@ export async function deleteFeedback(id: string) {
 
 export async function deleteProposedQuestion(id: string) {
   const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("proposed_questions").delete().eq("id", id);
+  const { error } = await supabase
+    .from("proposed_questions")
+    .delete()
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reviews/proposed-questions");
 }
 
 export async function deleteThemeProposal(id: string) {
   const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("theme_proposals").delete().eq("id", id);
+  const { error } = await supabase
+    .from("theme_proposals")
+    .delete()
+    .eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/reviews/theme-proposals");
+}
+
+// Flashcard CRUD
+export async function getFlashcardsList(filters?: {
+  themeId?: string;
+  categoryId?: string;
+  search?: string;
+}) {
+  const { supabase } = await requireAdmin();
+  const selectStr = filters?.themeId
+    ? "*, category:categories!inner(id, name_en, theme_id, theme:themes(id, title_en))"
+    : "*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))";
+  let query = supabase
+    .from("flashcards")
+    .select(selectStr)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (filters?.themeId)
+    query = query.eq("categories.theme_id", filters.themeId);
+  if (filters?.categoryId) query = query.eq("category_id", filters.categoryId);
+  if (filters?.search)
+    query = query.ilike("question_en", `%${filters.search}%`);
+  const { data, error } = await query;
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+
+export async function getFlashcardById(id: string) {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("flashcards")
+    .select(
+      "*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))",
+    )
+    .eq("id", id)
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+export async function updateFlashcard(
+  id: string,
+  updates: Record<string, unknown>,
+) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase
+    .from("flashcards")
+    .update(updates)
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/flashcards");
+}
+
+export async function deleteFlashcard(id: string) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase.from("flashcards").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/flashcards");
 }
 
 // Lookup lists

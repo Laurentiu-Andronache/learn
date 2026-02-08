@@ -4,15 +4,15 @@ import { Loader2, RotateCcw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
-import { unsuspendQuestion } from "@/lib/services/user-preferences";
+import { unsuspendFlashcard } from "@/lib/services/user-preferences";
 
-interface SuspendedQuestionsListProps {
+interface SuspendedFlashcardsListProps {
   userId: string;
   items: Array<{
     id: string;
     reason: string | null;
     suspended_at: string;
-    question: {
+    flashcard: {
       id: string;
       question_en: string;
       question_es: string;
@@ -21,21 +21,21 @@ interface SuspendedQuestionsListProps {
   }>;
 }
 
-export function SuspendedQuestionsList({
+export function SuspendedFlashcardsList({
   userId,
   items: initial,
-}: SuspendedQuestionsListProps) {
+}: SuspendedFlashcardsListProps) {
   const t = useTranslations("settings");
   const locale = useLocale();
   const [items, setItems] = useState(initial);
   const [pending, setPending] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-  const handleUnsuspend = (questionId: string) => {
-    setPending(questionId);
+  const handleUnsuspend = (flashcardId: string) => {
+    setPending(flashcardId);
     startTransition(async () => {
-      await unsuspendQuestion(userId, questionId);
-      setItems((prev) => prev.filter((i) => i.question?.id !== questionId));
+      await unsuspendFlashcard(userId, flashcardId);
+      setItems((prev) => prev.filter((i) => i.flashcard?.id !== flashcardId));
       setPending(null);
     });
   };
@@ -47,13 +47,13 @@ export function SuspendedQuestionsList({
   return (
     <div className="flex flex-col gap-2">
       {items.map((item) => {
-        if (!item.question) return null;
-        const q = item.question;
-        const text = locale === "es" ? q.question_es : q.question_en;
-        const cat = q.category
+        if (!item.flashcard) return null;
+        const fc = item.flashcard;
+        const text = locale === "es" ? fc.question_es : fc.question_en;
+        const cat = fc.category
           ? locale === "es"
-            ? q.category.name_es
-            : q.category.name_en
+            ? fc.category.name_es
+            : fc.category.name_en
           : null;
 
         return (
@@ -68,11 +68,11 @@ export function SuspendedQuestionsList({
             <Button
               variant="ghost"
               size="icon-xs"
-              onClick={() => handleUnsuspend(q.id)}
-              disabled={pending === q.id}
+              onClick={() => handleUnsuspend(fc.id)}
+              disabled={pending === fc.id}
               title={t("unsuspend")}
             >
-              {pending === q.id ? (
+              {pending === fc.id ? (
                 <Loader2 size={12} className="animate-spin" />
               ) : (
                 <RotateCcw size={12} />

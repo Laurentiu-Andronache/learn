@@ -3,6 +3,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { registerTopicTools } from "./tools/topics.js";
 import { registerCategoryTools } from "./tools/categories.js";
 import { registerQuestionTools } from "./tools/questions.js";
+import { registerFlashcardTools } from "./tools/flashcards.js";
 import { registerTranslationTools } from "./tools/translation.js";
 import { registerAnalyticsTools } from "./tools/analytics.js";
 import { registerImportExportTools } from "./tools/import-export.js";
@@ -18,6 +19,7 @@ const server = new McpServer({
 registerTopicTools(server);
 registerCategoryTools(server);
 registerQuestionTools(server);
+registerFlashcardTools(server);
 registerTranslationTools(server);
 registerAnalyticsTools(server);
 registerImportExportTools(server);

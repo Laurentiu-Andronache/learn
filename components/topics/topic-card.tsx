@@ -1,8 +1,8 @@
 "use client";
 
-import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -28,7 +28,7 @@ import { resetAllProgress, resetTodayProgress } from "@/lib/fsrs/actions";
 import type { TopicProgress } from "@/lib/fsrs/progress";
 import {
   hideTopic,
-  unsuspendAllForTopic,
+  unsuspendAllFlashcardsForTopic,
 } from "@/lib/services/user-preferences";
 
 interface TopicData {
@@ -82,7 +82,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
   };
 
   const handleUnsuspendAll = async () => {
-    const count = await unsuspendAllForTopic(userId, topic.id);
+    const count = await unsuspendAllFlashcardsForTopic(userId, topic.id);
     if (count > 0) {
       toast.success(t("unsuspendAllSuccess", { count }));
       router.refresh();
@@ -129,31 +129,42 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
               <span className="text-2xl">{topic.icon}</span>
               <h3 className="font-semibold text-lg leading-tight">{title}</h3>
             </div>
-            <DropdownMenu onOpenChange={(open) => {
-              if (!open) {
-                menuInteracting.current = true;
-                setTimeout(() => { menuInteracting.current = false; }, 0);
-              }
-            }}>
+            <DropdownMenu
+              onOpenChange={(open) => {
+                if (!open) {
+                  menuInteracting.current = true;
+                  setTimeout(() => {
+                    menuInteracting.current = false;
+                  }, 0);
+                }
+              }}
+            >
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 shrink-0"
-                  onPointerDown={() => { menuInteracting.current = true; }}
+                  onPointerDown={() => {
+                    menuInteracting.current = true;
+                  }}
                   onClick={(e) => e.stopPropagation()}
                 >
                   ⋯
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuContent
+                align="end"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <DropdownMenuItem onClick={handleShareLink}>
                   {t("shareLink")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleUnsuspendAll}>
                   {t("unsuspendAll")}
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setConfirmAction("resetToday")}>
+                <DropdownMenuItem
+                  onClick={() => setConfirmAction("resetToday")}
+                >
                   {t("resetToday")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleHide}>
@@ -172,7 +183,9 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-muted-foreground">
-            {t("createdBy", { creator: topic.creator?.display_name || t("anonymous") })}
+            {t("createdBy", {
+              creator: topic.creator?.display_name || t("anonymous"),
+            })}
           </p>
           <p className="text-sm text-muted-foreground line-clamp-2">
             {description}
@@ -201,10 +214,10 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
-                  {total} {t("questionCount")}
+                  {total} {t("flashcardCount")}
                 </span>
                 <span>
-                  {progress?.percentComplete ?? 0}% {t("percentMastered")}
+                  {progress?.percentComplete ?? 0}% {t("recallMastery")}
                 </span>
               </div>
             </div>
@@ -231,7 +244,9 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
           if (!open) {
             setConfirmAction(null);
             menuInteracting.current = true;
-            setTimeout(() => { menuInteracting.current = false; }, 0);
+            setTimeout(() => {
+              menuInteracting.current = false;
+            }, 0);
           }
         }}
       >
@@ -251,9 +266,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
             <AlertDialogAction
-              variant={
-                confirmAction === "resetAll" ? "destructive" : "default"
-              }
+              variant={confirmAction === "resetAll" ? "destructive" : "default"}
               onClick={
                 confirmAction === "resetToday"
                   ? handleResetToday

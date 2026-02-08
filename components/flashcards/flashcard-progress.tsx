@@ -5,15 +5,19 @@ import { Progress } from "@/components/ui/progress";
 interface FlashcardProgressProps {
   current: number;
   total: number;
-  knew: number;
-  didntKnow: number;
+  again: number;
+  hard: number;
+  good: number;
+  easy: number;
 }
 
 export function FlashcardProgress({
   current,
   total,
-  knew,
-  didntKnow,
+  again,
+  hard,
+  good,
+  easy,
 }: FlashcardProgressProps) {
   const percent = total > 0 ? Math.round((current / total) * 100) : 0;
 
@@ -22,11 +26,13 @@ export function FlashcardProgress({
       <Progress value={percent} className="h-2" />
       <div className="flex justify-between text-xs text-muted-foreground">
         <span>
-          {current}/{total} cards
+          {current}/{total}
         </span>
-        <div className="flex gap-3">
-          <span className="text-green-600">Knew: {knew}</span>
-          <span className="text-red-600">Didn&apos;t Know: {didntKnow}</span>
+        <div className="flex gap-2">
+          {again > 0 && <span className="text-red-500">{again}</span>}
+          {hard > 0 && <span className="text-amber-500">{hard}</span>}
+          {good > 0 && <span className="text-green-500">{good}</span>}
+          {easy > 0 && <span className="text-blue-500">{easy}</span>}
         </div>
       </div>
     </div>

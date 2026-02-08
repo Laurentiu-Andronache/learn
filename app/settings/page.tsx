@@ -5,7 +5,7 @@ import { SettingsClient } from "@/components/settings/settings-client";
 import {
   getHiddenTopics,
   getProfile,
-  getSuspendedQuestions,
+  getSuspendedFlashcards,
 } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 
@@ -33,9 +33,9 @@ export default async function SettingsPage() {
 
   const isAnonymous = user.is_anonymous ?? false;
 
-  const [profile, suspendedQuestions, hiddenTopics] = await Promise.all([
+  const [profile, suspendedFlashcards, hiddenTopics] = await Promise.all([
     getProfile(user.id).catch(() => null),
-    getSuspendedQuestions(user.id).catch(() => []),
+    getSuspendedFlashcards(user.id).catch(() => []),
     getHiddenTopics(user.id).catch(() => []),
   ]);
 
@@ -46,7 +46,7 @@ export default async function SettingsPage() {
       isAnonymous={isAnonymous}
       createdAt={user.created_at}
       profile={profile}
-      suspendedQuestions={suspendedQuestions}
+      suspendedFlashcards={suspendedFlashcards}
       hiddenTopics={hiddenTopics}
     />
   );

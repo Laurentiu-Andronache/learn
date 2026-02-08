@@ -17,21 +17,17 @@ function shuffleOptions(options: string[], correctIndex: number) {
 
 // ─── Quiz answer grading logic (mirrors handleNext in quiz-card.tsx) ────────
 
-type Rating = 1 | 2 | 3 | 4;
-const AGAIN = 1 as Rating;
-const GOOD = 3 as Rating;
-
 function gradeAnswer(
   selectedIndex: number | null,
   correctIndex: number,
-): { rating: Rating; wasCorrect: boolean | null } {
+): { wasCorrect: boolean | null } {
   if (selectedIndex === null) {
-    return { rating: AGAIN, wasCorrect: null }; // IDK
+    return { wasCorrect: null }; // IDK
   }
   if (selectedIndex === correctIndex) {
-    return { rating: GOOD, wasCorrect: true }; // Correct
+    return { wasCorrect: true }; // Correct
   }
-  return { rating: AGAIN, wasCorrect: false }; // Wrong
+  return { wasCorrect: false }; // Wrong
 }
 
 // ─── QuizAnswer tracking logic (mirrors handleAnswer in quiz-session.tsx) ───
@@ -42,12 +38,14 @@ interface QuizAnswer {
   wasIdk: boolean;
   selectedIndex: number | null;
   correctIndex: number;
+  timeMs: number;
 }
 
 function buildQuizAnswer(
   questionId: string,
   wasCorrect: boolean | null,
   correctIndex: number,
+  timeMs = 1000,
 ): QuizAnswer {
   return {
     questionId,
@@ -55,6 +53,7 @@ function buildQuizAnswer(
     wasIdk: wasCorrect === null,
     selectedIndex: wasCorrect === null ? null : wasCorrect ? correctIndex : -1,
     correctIndex,
+    timeMs,
   };
 }
 
@@ -108,21 +107,18 @@ describe("shuffleOptions", () => {
 });
 
 describe("gradeAnswer", () => {
-  it("returns AGAIN + null for IDK (selectedIndex = null)", () => {
+  it("returns null for IDK (selectedIndex = null)", () => {
     const result = gradeAnswer(null, 2);
-    expect(result.rating).toBe(AGAIN);
     expect(result.wasCorrect).toBeNull();
   });
 
-  it("returns GOOD + true for correct answer", () => {
+  it("returns true for correct answer", () => {
     const result = gradeAnswer(2, 2);
-    expect(result.rating).toBe(GOOD);
     expect(result.wasCorrect).toBe(true);
   });
 
-  it("returns AGAIN + false for wrong answer", () => {
+  it("returns false for wrong answer", () => {
     const result = gradeAnswer(0, 2);
-    expect(result.rating).toBe(AGAIN);
     expect(result.wasCorrect).toBe(false);
   });
 });
@@ -133,6 +129,7 @@ describe("buildQuizAnswer", () => {
     expect(a.wasCorrect).toBe(true);
     expect(a.wasIdk).toBe(false);
     expect(a.selectedIndex).toBe(2);
+    expect(a.timeMs).toBe(1000);
   });
 
   it("builds incorrect answer entry", () => {
@@ -147,6 +144,11 @@ describe("buildQuizAnswer", () => {
     expect(a.wasCorrect).toBe(false);
     expect(a.wasIdk).toBe(true);
     expect(a.selectedIndex).toBeNull();
+  });
+
+  it("records answer time", () => {
+    const a = buildQuizAnswer("q4", true, 0, 5432);
+    expect(a.timeMs).toBe(5432);
   });
 });
 
@@ -205,8 +207,8 @@ describe("computeResults", () => {
   });
 });
 
-describe("review missed flow", () => {
-  it("filters only missed questions for re-review", () => {
+describe("retry failed flow", () => {
+  it("filters only failed questions for retry", () => {
     const answers: QuizAnswer[] = [
       buildQuizAnswer("q1", true, 0),
       buildQuizAnswer("q2", false, 1),
@@ -214,7 +216,7 @@ describe("review missed flow", () => {
       buildQuizAnswer("q4", true, 0),
     ];
 
-    // Simulates handleReviewMissed logic from quiz-session.tsx
+    // Simulates handleRetryFailed logic from quiz-session.tsx
     const missedIds = new Set(
       answers.filter((a) => !a.wasCorrect).map((a) => a.questionId),
     );

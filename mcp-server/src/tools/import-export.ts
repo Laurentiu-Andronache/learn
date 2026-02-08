@@ -21,9 +21,17 @@ interface ImportQuestion {
   extra_en?: string | null; extra_es?: string | null; difficulty?: number;
 }
 
+interface ImportFlashcard {
+  question_en: string; question_es: string;
+  answer_en: string; answer_es: string;
+  extra_en?: string | null; extra_es?: string | null;
+  difficulty?: number;
+}
+
 interface ImportCategory {
   name_en: string; name_es: string; slug: string; color?: string | null;
   questions: ImportQuestion[];
+  flashcards?: ImportFlashcard[];
 }
 
 interface ImportTheme {
@@ -57,18 +65,25 @@ export async function handleExportTopic(
 
   const catIds = (categories ?? []).map((c: any) => c.id);
 
-  const { data: questions } = await supabase
-    .from("questions")
-    .select("*")
-    .in("category_id", catIds.length > 0 ? catIds : ["__none__"])
-    .order("created_at", { ascending: true });
+  const noneGuard = catIds.length > 0 ? catIds : ["__none__"];
 
-  // Group questions by category_id
+  const [{ data: questions }, { data: flashcards }] = await Promise.all([
+    supabase.from("questions").select("*").in("category_id", noneGuard).order("created_at", { ascending: true }),
+    supabase.from("flashcards").select("*").in("category_id", noneGuard).order("created_at", { ascending: true }),
+  ]);
+
+  // Group by category_id
   const qByCat: Record<string, any[]> = {};
   for (const q of questions ?? []) {
     const cid = (q as any).category_id;
     if (!qByCat[cid]) qByCat[cid] = [];
     qByCat[cid].push(q);
+  }
+  const fByCat: Record<string, any[]> = {};
+  for (const f of flashcards ?? []) {
+    const cid = (f as any).category_id;
+    if (!fByCat[cid]) fByCat[cid] = [];
+    fByCat[cid].push(f);
   }
 
   const exportData: any = {
@@ -97,6 +112,16 @@ export async function handleExportTopic(
         extra_en: q.extra_en ?? null,
         extra_es: q.extra_es ?? null,
         difficulty: q.difficulty ?? 5,
+      })),
+      flashcards: (fByCat[c.id] ?? []).map((f: any) => ({
+        ...(includeIds ? { id: f.id } : {}),
+        question_en: f.question_en,
+        question_es: f.question_es,
+        answer_en: f.answer_en,
+        answer_es: f.answer_es,
+        extra_en: f.extra_en ?? null,
+        extra_es: f.extra_es ?? null,
+        difficulty: f.difficulty ?? 5,
       })),
     })),
   };
@@ -131,6 +156,7 @@ export async function handleImportTopic(
 
   let categoriesCreated = 0;
   let questionsCreated = 0;
+  let flashcardsCreated = 0;
 
   for (const cat of theme.categories) {
     const { data: newCat, error: cErr } = await supabase
@@ -172,13 +198,35 @@ export async function handleImportTopic(
       if (qErr) return err(`Questions in "${cat.name_en}": ${qErr.message}`);
       questionsCreated += (insertedQs ?? []).length;
     }
+
+    if (cat.flashcards && cat.flashcards.length > 0) {
+      const fRows = cat.flashcards.map((f) => ({
+        category_id: newCat.id,
+        question_en: f.question_en,
+        question_es: f.question_es,
+        answer_en: f.answer_en,
+        answer_es: f.answer_es,
+        extra_en: f.extra_en ?? null,
+        extra_es: f.extra_es ?? null,
+        difficulty: f.difficulty ?? 5,
+      }));
+
+      const { data: insertedFs, error: fErr } = await supabase
+        .from("flashcards")
+        .insert(fRows)
+        .select();
+
+      if (fErr) return err(`Flashcards in "${cat.name_en}": ${fErr.message}`);
+      flashcardsCreated += (insertedFs ?? []).length;
+    }
   }
 
-  console.error(`[audit] imported topic ${newTheme.id}: ${theme.title_en} (${categoriesCreated} cats, ${questionsCreated} qs)`);
+  console.error(`[audit] imported topic ${newTheme.id}: ${theme.title_en} (${categoriesCreated} cats, ${questionsCreated} qs, ${flashcardsCreated} fcs)`);
   return ok({
     topic_id: newTheme.id,
     categories_created: categoriesCreated,
     questions_created: questionsCreated,
+    flashcards_created: flashcardsCreated,
   });
 }
 
@@ -195,6 +243,7 @@ export async function handleValidateImport(
 
   const categories = data.categories ?? [];
   let totalQuestions = 0;
+  let totalFlashcards = 0;
 
   for (let ci = 0; ci < categories.length; ci++) {
     const cat = categories[ci];
@@ -224,6 +273,19 @@ export async function handleValidateImport(
         }
       }
     }
+
+    const flashcards = cat.flashcards ?? [];
+    totalFlashcards += flashcards.length;
+
+    for (let fi = 0; fi < flashcards.length; fi++) {
+      const f = flashcards[fi];
+      const prefix = `Category ${ci}, Flashcard ${fi}`;
+
+      if (!f.question_en) errors.push(`${prefix}: missing question_en`);
+      if (!f.question_es) errors.push(`${prefix}: missing question_es`);
+      if (!f.answer_en) errors.push(`${prefix}: missing answer_en`);
+      if (!f.answer_es) errors.push(`${prefix}: missing answer_es`);
+    }
   }
 
   return ok({
@@ -233,6 +295,7 @@ export async function handleValidateImport(
       title_en: data.title_en || "(missing)",
       categories: categories.length,
       questions: totalQuestions,
+      flashcards: totalFlashcards,
     },
   });
 }
@@ -265,6 +328,7 @@ export async function handleDuplicateTopic(
     new_topic_id: imported.topic_id,
     categories_created: imported.categories_created,
     questions_created: imported.questions_created,
+    flashcards_created: imported.flashcards_created ?? 0,
   });
 }
 
@@ -284,12 +348,23 @@ const importQuestionSchema = z.object({
   difficulty: z.number().optional(),
 });
 
+const importFlashcardSchema = z.object({
+  question_en: z.string(),
+  question_es: z.string(),
+  answer_en: z.string(),
+  answer_es: z.string(),
+  extra_en: z.string().nullable().optional(),
+  extra_es: z.string().nullable().optional(),
+  difficulty: z.number().optional(),
+});
+
 const importCategorySchema = z.object({
   name_en: z.string(),
   name_es: z.string(),
   slug: z.string(),
   color: z.string().nullable().optional(),
   questions: z.array(importQuestionSchema),
+  flashcards: z.array(importFlashcardSchema).optional(),
 });
 
 const importThemeSchema = z.object({
@@ -317,7 +392,7 @@ export function registerImportExportTools(server: McpServer): void {
 
   server.tool(
     "learn_import_topic",
-    "Import a full topic from ImportTheme JSON (creates theme + categories + questions)",
+    "Import a full topic from ImportTheme JSON (creates theme + categories + questions + flashcards)",
     {
       data: importThemeSchema.describe("ImportTheme JSON object"),
     },
@@ -335,7 +410,7 @@ export function registerImportExportTools(server: McpServer): void {
 
   server.tool(
     "learn_duplicate_topic",
-    "Clone an existing topic with all categories and questions",
+    "Clone an existing topic with all categories, questions, and flashcards",
     {
       topic_id: z.string().describe("Source topic UUID"),
       new_title_en: z.string().optional().describe("Title for clone (English)"),

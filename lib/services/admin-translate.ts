@@ -27,7 +27,8 @@ export async function translateFields({
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return { data: null, error: "ANTHROPIC_API_KEY not configured" };
-  const model = process.env.ANTHROPIC_TRANSLATE_MODEL || "claude-3-5-haiku-20241022";
+  const model =
+    process.env.ANTHROPIC_TRANSLATE_MODEL || "claude-3-5-haiku-20241022";
 
   // Filter out null/empty fields
   const toTranslate: TranslatableFields = {};
@@ -69,7 +70,10 @@ Return ONLY valid JSON matching the exact input structure — no extra keys, no 
       }),
     });
   } catch (err) {
-    return { data: null, error: `Network error: ${err instanceof Error ? err.message : "unknown"}` };
+    return {
+      data: null,
+      error: `Network error: ${err instanceof Error ? err.message : "unknown"}`,
+    };
   }
 
   if (!res.ok) {
@@ -77,7 +81,10 @@ Return ONLY valid JSON matching the exact input structure — no extra keys, no 
     // Extract just the message from the Anthropic error JSON if possible
     try {
       const parsed = JSON.parse(body);
-      return { data: null, error: parsed?.error?.message ?? `API error ${res.status}` };
+      return {
+        data: null,
+        error: parsed?.error?.message ?? `API error ${res.status}`,
+      };
     } catch {
       return { data: null, error: `API error ${res.status}` };
     }

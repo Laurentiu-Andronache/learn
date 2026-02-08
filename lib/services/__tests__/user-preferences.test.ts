@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Supabase server client
 const mockSupabase = {
@@ -10,35 +10,35 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 
 import {
-  suspendQuestion,
-  unsuspendQuestion,
-  getSuspendedQuestions,
-  hideTopic,
-  unhideTopic,
   getHiddenTopics,
-  updateReadingProgress,
-  getReadingProgress,
-  updateProfile,
   getProfile,
+  getReadingProgress,
+  getSuspendedFlashcards,
+  hideTopic,
+  suspendFlashcard,
+  unhideTopic,
+  unsuspendFlashcard,
+  updateProfile,
+  updateReadingProgress,
 } from "../user-preferences";
 
 beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ─── SUSPENDED QUESTIONS ────────────────────────────────────────────
+// ─── SUSPENDED FLASHCARDS ────────────────────────────────────────────
 
-describe("suspendQuestion", () => {
-  it("upserts a suspended question with reason", async () => {
+describe("suspendFlashcard", () => {
+  it("upserts a suspended flashcard with reason", async () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await suspendQuestion("user-1", "q-1", "too_easy");
+    await suspendFlashcard("user-1", "f-1", "too_easy");
 
-    expect(mockSupabase.from).toHaveBeenCalledWith("suspended_questions");
+    expect(mockSupabase.from).toHaveBeenCalledWith("suspended_flashcards");
     expect(upsertMock).toHaveBeenCalledWith(
-      { user_id: "user-1", question_id: "q-1", reason: "too_easy" },
-      { onConflict: "user_id,question_id" },
+      { user_id: "user-1", flashcard_id: "f-1", reason: "too_easy" },
+      { onConflict: "user_id,flashcard_id" },
     );
   });
 
@@ -46,11 +46,11 @@ describe("suspendQuestion", () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await suspendQuestion("user-1", "q-1");
+    await suspendFlashcard("user-1", "f-1");
 
     expect(upsertMock).toHaveBeenCalledWith(
-      { user_id: "user-1", question_id: "q-1", reason: null },
-      { onConflict: "user_id,question_id" },
+      { user_id: "user-1", flashcard_id: "f-1", reason: null },
+      { onConflict: "user_id,flashcard_id" },
     );
   });
 
@@ -60,14 +60,14 @@ describe("suspendQuestion", () => {
       .mockResolvedValue({ error: { message: "Constraint" } });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await expect(suspendQuestion("user-1", "q-1")).rejects.toThrow(
+    await expect(suspendFlashcard("user-1", "f-1")).rejects.toThrow(
       "Constraint",
     );
   });
 });
 
-describe("unsuspendQuestion", () => {
-  it("deletes by user_id and question_id", async () => {
+describe("unsuspendFlashcard", () => {
+  it("deletes by user_id and flashcard_id", async () => {
     const deleteMock = vi.fn();
     const eq1Mock = vi.fn();
     const eq2Mock = vi.fn();
@@ -77,23 +77,23 @@ describe("unsuspendQuestion", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ error: null });
 
-    await unsuspendQuestion("user-1", "q-1");
+    await unsuspendFlashcard("user-1", "f-1");
 
-    expect(mockSupabase.from).toHaveBeenCalledWith("suspended_questions");
+    expect(mockSupabase.from).toHaveBeenCalledWith("suspended_flashcards");
     expect(eq1Mock).toHaveBeenCalledWith("user_id", "user-1");
-    expect(eq2Mock).toHaveBeenCalledWith("question_id", "q-1");
+    expect(eq2Mock).toHaveBeenCalledWith("flashcard_id", "f-1");
   });
 });
 
-describe("getSuspendedQuestions", () => {
-  it("returns suspended questions with nested question/category data", async () => {
+describe("getSuspendedFlashcards", () => {
+  it("returns suspended flashcards with nested flashcard/category data", async () => {
     const mockData = [
       {
-        id: "sq-1",
+        id: "sf-1",
         reason: "too_hard",
         suspended_at: "2026-01-01T00:00:00Z",
-        question: {
-          id: "q-1",
+        flashcard: {
+          id: "f-1",
           question_en: "Q?",
           question_es: "P?",
           category: { name_en: "Cat", name_es: "Cat" },
@@ -108,9 +108,11 @@ describe("getSuspendedQuestions", () => {
     mockSupabase.from.mockReturnValue({ select: selectMock });
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockReturnValue({ order: orderMock });
-    orderMock.mockReturnValue({ returns: vi.fn().mockResolvedValue({ data: mockData, error: null }) });
+    orderMock.mockReturnValue({
+      returns: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+    });
 
-    const result = await getSuspendedQuestions("user-1");
+    const result = await getSuspendedFlashcards("user-1");
     expect(result).toEqual(mockData);
     expect(eqMock).toHaveBeenCalledWith("user_id", "user-1");
   });
@@ -123,9 +125,11 @@ describe("getSuspendedQuestions", () => {
     mockSupabase.from.mockReturnValue({ select: selectMock });
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockReturnValue({ order: orderMock });
-    orderMock.mockReturnValue({ returns: vi.fn().mockResolvedValue({ data: null, error: null }) });
+    orderMock.mockReturnValue({
+      returns: vi.fn().mockResolvedValue({ data: null, error: null }),
+    });
 
-    const result = await getSuspendedQuestions("user-1");
+    const result = await getSuspendedFlashcards("user-1");
     expect(result).toEqual([]);
   });
 });
@@ -171,7 +175,13 @@ describe("getHiddenTopics", () => {
       {
         id: "ht-1",
         hidden_at: "2026-01-01",
-        theme: { id: "t1", title_en: "T", title_es: "T", icon: null, color: null },
+        theme: {
+          id: "t1",
+          title_en: "T",
+          title_es: "T",
+          icon: null,
+          color: null,
+        },
       },
     ];
 
@@ -182,7 +192,9 @@ describe("getHiddenTopics", () => {
     mockSupabase.from.mockReturnValue({ select: selectMock });
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockReturnValue({ order: orderMock });
-    orderMock.mockReturnValue({ returns: vi.fn().mockResolvedValue({ data: mockData, error: null }) });
+    orderMock.mockReturnValue({
+      returns: vi.fn().mockResolvedValue({ data: mockData, error: null }),
+    });
 
     const result = await getHiddenTopics("user-1");
     expect(result).toEqual(mockData);
@@ -197,9 +209,7 @@ describe("updateReadingProgress", () => {
     const eq1Mock = vi.fn();
     const eq2Mock = vi.fn();
     const eq3Mock = vi.fn();
-    const maybeSingleMock = vi
-      .fn()
-      .mockResolvedValue({ data: { id: "rp-1" } });
+    const maybeSingleMock = vi.fn().mockResolvedValue({ data: { id: "rp-1" } });
 
     // First call: SELECT to check existing
     mockSupabase.from.mockReturnValueOnce({ select: selectMock });
@@ -283,7 +293,9 @@ describe("updateReadingProgress", () => {
 
 describe("getReadingProgress", () => {
   it("returns reading progress for user/theme", async () => {
-    const mockData = [{ id: "rp-1", current_section: 2, completion_percent: 50 }];
+    const mockData = [
+      { id: "rp-1", current_section: 2, completion_percent: 50 },
+    ];
 
     const selectMock = vi.fn();
     const eq1Mock = vi.fn();

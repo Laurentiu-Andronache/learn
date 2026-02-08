@@ -2,12 +2,11 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { QuestionReportForm } from "@/components/feedback/question-report-form";
-import { Rating } from "@/lib/fsrs/scheduler";
-import type { FSRSRating, Language, Question } from "@/lib/types/database";
+import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -19,12 +18,7 @@ export interface QuizCardProps {
   locale: Language;
   categoryName: string;
   categoryColor: string | null;
-  onAnswer: (
-    rating: FSRSRating,
-    wasCorrect: boolean | null,
-    timeMs: number,
-  ) => void;
-  onSuspend: () => void;
+  onAnswer: (wasCorrect: boolean | null, timeMs: number) => void;
 }
 
 // ─── Fisher-Yates Shuffle (skip for true/false) ─────────────────────────────
@@ -49,7 +43,6 @@ export function QuizCard({
   categoryName,
   categoryColor,
   onAnswer,
-  onSuspend,
 }: QuizCardProps) {
   const t = useTranslations("quiz");
   const tCommon = useTranslations("common");
@@ -108,21 +101,21 @@ export function QuizCard({
     const timeMs = Date.now() - startTime.current;
     if (selectedIndex === null) {
       // IDK
-      onAnswer(Rating.Again as FSRSRating, null, timeMs);
+      onAnswer(null, timeMs);
     } else if (selectedIndex === shuffled.correctIndex) {
-      // Correct → Good
-      onAnswer(Rating.Good as FSRSRating, true, timeMs);
+      // Correct
+      onAnswer(true, timeMs);
     } else {
-      // Incorrect → Again
-      onAnswer(Rating.Again as FSRSRating, false, timeMs);
+      // Incorrect
+      onAnswer(false, timeMs);
     }
   }, [selectedIndex, shuffled.correctIndex, onAnswer]);
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardContent className="pt-6 space-y-6">
-        {/* Header: category + suspend */}
-        <div className="flex items-center justify-between">
+        {/* Header: category */}
+        <div className="flex items-center">
           <Badge
             variant="outline"
             className="text-xs"
@@ -134,15 +127,6 @@ export function QuizCard({
           >
             {categoryName}
           </Badge>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onSuspend}
-            title={t("suspend")}
-            className="text-muted-foreground hover:text-destructive h-8 w-8"
-          >
-            <span className="text-lg leading-none">&#8856;</span>
-          </Button>
         </div>
 
         {/* Question text */}
@@ -263,7 +247,11 @@ export function QuizCard({
             </div>
             <QuestionReportForm
               questionId={question.id}
-              questionText={locale === "es" && question.question_es ? question.question_es : question.question_en}
+              questionText={
+                locale === "es" && question.question_es
+                  ? question.question_es
+                  : question.question_en
+              }
               open={reportOpen}
               onOpenChange={setReportOpen}
             />

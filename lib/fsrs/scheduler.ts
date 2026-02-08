@@ -14,7 +14,7 @@ import {
 } from "ts-fsrs";
 
 // Initialize FSRS with default parameters
-const params = generatorParameters();
+const params = generatorParameters({ enable_fuzz: true });
 const fsrs = new FSRS(params);
 
 export { fsrs, Rating, State, createEmptyCard };

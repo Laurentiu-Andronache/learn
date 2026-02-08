@@ -22,21 +22,33 @@ type EditTarget =
   | { type: "question"; questionId: string }
   | { type: "reading"; themeId: string };
 
-function parseStudyUrl(url: string | null): { themeId: string; mode: string } | null {
+function parseStudyUrl(
+  url: string | null,
+): { themeId: string; mode: string } | null {
   if (!url) return null;
-  const match = url.match(/\/topics\/([0-9a-f-]{36})\/(quiz|flashcards|reading)/);
+  const match = url.match(
+    /\/topics\/([0-9a-f-]{36})\/(quiz|flashcards|reading)/,
+  );
   if (!match) return null;
   return { themeId: match[1], mode: match[2] };
 }
 
-function getEditTarget(item: FeedbackItem): { target: EditTarget; label: string } | null {
+function getEditTarget(
+  item: FeedbackItem,
+): { target: EditTarget; label: string } | null {
   const parsed = parseStudyUrl(item.url);
 
   if (item.question_id) {
-    return { target: { type: "question", questionId: item.question_id }, label: "admin.editQuestion" };
+    return {
+      target: { type: "question", questionId: item.question_id },
+      label: "admin.editQuestion",
+    };
   }
   if (parsed?.mode === "reading") {
-    return { target: { type: "reading", themeId: parsed.themeId }, label: "admin.editReading" };
+    return {
+      target: { type: "reading", themeId: parsed.themeId },
+      label: "admin.editReading",
+    };
   }
   // Legacy quiz/flashcard without question_id — no inline edit possible
   return null;
@@ -62,7 +74,9 @@ export function FeedbackClient({ items }: { items: FeedbackItem[] }) {
         <QuestionEditDialog
           questionId={editTarget.questionId}
           open
-          onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+          onOpenChange={(open) => {
+            if (!open) setEditTarget(null);
+          }}
           onSaved={() => router.refresh()}
         />
       )}
@@ -70,7 +84,9 @@ export function FeedbackClient({ items }: { items: FeedbackItem[] }) {
         <ReadingEditDialog
           themeId={editTarget.themeId}
           open
-          onOpenChange={(open) => { if (!open) setEditTarget(null); }}
+          onOpenChange={(open) => {
+            if (!open) setEditTarget(null);
+          }}
           onSaved={() => router.refresh()}
         />
       )}
@@ -114,9 +130,7 @@ export function FeedbackClient({ items }: { items: FeedbackItem[] }) {
                   </Button>
                 </div>
               </div>
-              {item.name && (
-                <p className="text-sm font-medium">{item.name}</p>
-              )}
+              {item.name && <p className="text-sm font-medium">{item.name}</p>}
               {item.email && (
                 <p className="text-xs text-muted-foreground">{item.email}</p>
               )}

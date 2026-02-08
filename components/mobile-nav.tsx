@@ -14,7 +14,13 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-export function MobileNav({ isLoggedIn, isAdmin }: { isLoggedIn: boolean; isAdmin: boolean }) {
+export function MobileNav({
+  isLoggedIn,
+  isAdmin,
+}: {
+  isLoggedIn: boolean;
+  isAdmin: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("nav");
 

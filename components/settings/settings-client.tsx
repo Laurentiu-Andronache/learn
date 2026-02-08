@@ -23,7 +23,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { HiddenTopicsList } from "./hidden-topics-list";
 import { ProfileEditor } from "./profile-editor";
-import { SuspendedQuestionsList } from "./suspended-questions-list";
+import { SuspendedFlashcardsList } from "./suspended-flashcards-list";
 
 interface SettingsClientProps {
   userId: string;
@@ -34,11 +34,11 @@ interface SettingsClientProps {
     display_name: string | null;
     preferred_language: string;
   } | null;
-  suspendedQuestions: Array<{
+  suspendedFlashcards: Array<{
     id: string;
     reason: string | null;
     suspended_at: string;
-    question: {
+    flashcard: {
       id: string;
       question_en: string;
       question_es: string;
@@ -64,7 +64,7 @@ export function SettingsClient({
   isAnonymous,
   createdAt,
   profile,
-  suspendedQuestions,
+  suspendedFlashcards,
   hiddenTopics,
 }: SettingsClientProps) {
   const t = useTranslations("settings");
@@ -135,7 +135,7 @@ export function SettingsClient({
         </CardContent>
       </Card>
 
-      {/* Suspended Questions */}
+      {/* Suspended Flashcards */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -143,16 +143,16 @@ export function SettingsClient({
             {t("suspendedQuestions")}
           </CardTitle>
           <CardDescription>
-            {suspendedQuestions.length === 0
+            {suspendedFlashcards.length === 0
               ? t("noSuspended")
-              : `${suspendedQuestions.length} ${suspendedQuestions.length === 1 ? "question" : "questions"}`}
+              : `${suspendedFlashcards.length} ${t("suspendedQuestions").toLowerCase()}`}
           </CardDescription>
         </CardHeader>
-        {suspendedQuestions.length > 0 && (
+        {suspendedFlashcards.length > 0 && (
           <CardContent>
-            <SuspendedQuestionsList
+            <SuspendedFlashcardsList
               userId={userId}
-              items={suspendedQuestions}
+              items={suspendedFlashcards}
             />
           </CardContent>
         )}

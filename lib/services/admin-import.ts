@@ -17,12 +17,23 @@ export interface ImportQuestion {
   difficulty?: number;
 }
 
+export interface ImportFlashcard {
+  question_en: string;
+  question_es: string;
+  answer_en: string;
+  answer_es: string;
+  extra_en?: string | null;
+  extra_es?: string | null;
+  difficulty?: number;
+}
+
 export interface ImportCategory {
   name_en: string;
   name_es: string;
   slug: string;
   color?: string | null;
   questions: ImportQuestion[];
+  flashcards?: ImportFlashcard[];
 }
 
 export interface ImportTheme {
@@ -39,6 +50,7 @@ export interface ImportSummary {
   themeTitle: string;
   categoryCount: number;
   questionCount: number;
+  flashcardCount: number;
   errors: string[];
 }
 
@@ -53,6 +65,7 @@ export async function validateImportJson(
       themeTitle: "",
       categoryCount: 0,
       questionCount: 0,
+      flashcardCount: 0,
       errors: ["Invalid JSON object"],
     };
   }
@@ -64,10 +77,17 @@ export async function validateImportJson(
   const cats = data.categories;
   if (!Array.isArray(cats) || cats.length === 0) {
     errors.push("Missing or empty categories array");
-    return { themeTitle: title, categoryCount: 0, questionCount: 0, errors };
+    return {
+      themeTitle: title,
+      categoryCount: 0,
+      questionCount: 0,
+      flashcardCount: 0,
+      errors,
+    };
   }
 
   let totalQuestions = 0;
+  let totalFlashcards = 0;
   cats.forEach((cat, ci) => {
     if (!cat.name_en) errors.push(`Category ${ci}: missing name_en`);
     if (!cat.name_es) errors.push(`Category ${ci}: missing name_es`);
@@ -82,12 +102,24 @@ export async function validateImportJson(
       if (!q.type) errors.push(`Cat ${ci} Q${qi}: missing type`);
       totalQuestions++;
     });
+    if (Array.isArray(cat.flashcards)) {
+      cat.flashcards.forEach((f: Record<string, unknown>, fi: number) => {
+        if (!f.question_en)
+          errors.push(`Cat ${ci} F${fi}: missing question_en`);
+        if (!f.question_es)
+          errors.push(`Cat ${ci} F${fi}: missing question_es`);
+        if (!f.answer_en) errors.push(`Cat ${ci} F${fi}: missing answer_en`);
+        if (!f.answer_es) errors.push(`Cat ${ci} F${fi}: missing answer_es`);
+        totalFlashcards++;
+      });
+    }
   });
 
   return {
     themeTitle: title,
     categoryCount: cats.length,
     questionCount: totalQuestions,
+    flashcardCount: totalFlashcards,
     errors,
   };
 }
@@ -118,7 +150,8 @@ export async function importThemeJson(json: ImportTheme) {
 
   if (themeErr) throw new Error(`Theme insert failed: ${themeErr.message}`);
 
-  let totalInserted = 0;
+  let totalQuestionsInserted = 0;
+  let totalFlashcardsInserted = 0;
 
   for (const cat of json.categories) {
     const { data: category, error: catErr } = await supabase
@@ -159,11 +192,37 @@ export async function importThemeJson(json: ImportTheme) {
         throw new Error(
           `Questions insert for "${cat.name_en}" failed: ${qErr.message}`,
         );
-      totalInserted += rows.length;
+      totalQuestionsInserted += rows.length;
+    }
+
+    if (cat.flashcards && cat.flashcards.length > 0) {
+      const fRows = cat.flashcards.map((f) => ({
+        category_id: category.id,
+        question_en: f.question_en,
+        question_es: f.question_es,
+        answer_en: f.answer_en,
+        answer_es: f.answer_es,
+        extra_en: f.extra_en || null,
+        extra_es: f.extra_es || null,
+        difficulty: f.difficulty ?? 5,
+      }));
+
+      const { error: fErr } = await supabase.from("flashcards").insert(fRows);
+      if (fErr)
+        throw new Error(
+          `Flashcards insert for "${cat.name_en}" failed: ${fErr.message}`,
+        );
+      totalFlashcardsInserted += fRows.length;
     }
   }
 
   revalidatePath("/admin/topics");
   revalidatePath("/admin/questions");
-  return { themeId: theme.id, questionsInserted: totalInserted };
+  revalidatePath("/admin/quizzes");
+  revalidatePath("/admin/flashcards");
+  return {
+    themeId: theme.id,
+    questionsInserted: totalQuestionsInserted,
+    flashcardsInserted: totalFlashcardsInserted,
+  };
 }

@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,9 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { useAutoTranslate } from "@/hooks/use-auto-translate";
-import { getTopicById, updateTopicIntroText } from "@/lib/services/admin-topics";
+import {
+  getTopicById,
+  updateTopicIntroText,
+} from "@/lib/services/admin-topics";
 
 interface ReadingEditDialogProps {
   themeId: string;
@@ -102,7 +105,9 @@ export function ReadingEditDialog({
         </DialogHeader>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground py-4">{t("common.loading")}</p>
+          <p className="text-sm text-muted-foreground py-4">
+            {t("common.loading")}
+          </p>
         ) : error ? (
           <p className="text-sm text-red-500 py-4">{error}</p>
         ) : (

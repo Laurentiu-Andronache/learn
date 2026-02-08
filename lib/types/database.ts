@@ -1,6 +1,5 @@
-// Database types for all 15 tables
-// Auto-mirrors: supabase/migrations/20260207000000_initial_schema.sql
-//             + supabase/migrations/20260207020000_schema_additions.sql
+// Database types for all tables
+// Auto-mirrors: supabase/migrations/20260209000000_split_quiz_flashcard.sql
 
 // ============================================================================
 // CONTENT TABLES
@@ -34,6 +33,7 @@ export interface Category {
   created_at: string;
 }
 
+/** Quiz questions (multiple choice / true-false recognition tests) */
 export interface Question {
   id: string;
   category_id: string;
@@ -45,6 +45,21 @@ export interface Question {
   correct_index: number | null;
   explanation_en: string | null;
   explanation_es: string | null;
+  extra_en: string | null;
+  extra_es: string | null;
+  difficulty: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Flashcards (recall-based FSRS items) */
+export interface Flashcard {
+  id: string;
+  category_id: string;
+  question_en: string;
+  question_es: string;
+  answer_en: string;
+  answer_es: string;
   extra_en: string | null;
   extra_es: string | null;
   difficulty: number;
@@ -76,17 +91,16 @@ export interface AdminUser {
 }
 
 // ============================================================================
-// SPACED REPETITION (FSRS)
+// SPACED REPETITION (FSRS) — flashcards only
 // ============================================================================
 
 export type CardState = "new" | "learning" | "review" | "relearning";
 export type FSRSRating = 1 | 2 | 3 | 4; // Again, Hard, Good, Easy
-export type ReviewMode = "quiz" | "flashcard";
 
 export interface UserCardState {
   id: string;
   user_id: string;
-  question_id: string;
+  flashcard_id: string;
   stability: number;
   difficulty: number;
   elapsed_days: number;
@@ -106,10 +120,9 @@ export interface UserCardState {
 export interface ReviewLog {
   id: string;
   user_id: string;
-  question_id: string;
+  flashcard_id: string;
   card_state_id: string;
   rating: FSRSRating;
-  mode: ReviewMode;
   answer_time_ms: number | null;
   was_correct: boolean | null;
   stability_before: number | null;
@@ -118,13 +131,34 @@ export interface ReviewLog {
 }
 
 // ============================================================================
+// QUIZ ATTEMPTS
+// ============================================================================
+
+export interface QuizAttemptAnswer {
+  question_id: string;
+  selected_index: number | null;
+  was_correct: boolean;
+  time_ms: number;
+}
+
+export interface QuizAttempt {
+  id: string;
+  user_id: string;
+  theme_id: string;
+  score: number;
+  total: number;
+  answers: QuizAttemptAnswer[];
+  completed_at: string;
+}
+
+// ============================================================================
 // USER PREFERENCES
 // ============================================================================
 
-export interface SuspendedQuestion {
+export interface SuspendedFlashcard {
   id: string;
   user_id: string;
-  question_id: string;
+  flashcard_id: string;
   reason: string | null;
   suspended_at: string;
 }
@@ -161,6 +195,7 @@ export interface Feedback {
   name: string | null;
   email: string | null;
   question_id: string | null;
+  flashcard_id: string | null;
   url: string | null;
   user_agent: string | null;
   created_at: string;
@@ -178,6 +213,7 @@ export interface ProposedQuestion {
   correct_index: number | null;
   explanation_en: string | null;
   explanation_es: string | null;
+  target_type: "question" | "flashcard";
   status: ProposalStatus;
   admin_notes: string | null;
   created_at: string;
@@ -214,12 +250,19 @@ export type QuestionInsert = Omit<
   Question,
   "id" | "created_at" | "updated_at"
 > & { id?: string };
+export type FlashcardInsert = Omit<
+  Flashcard,
+  "id" | "created_at" | "updated_at"
+> & { id?: string };
 export type ProfileInsert = Omit<Profile, "created_at" | "updated_at">;
 export type UserCardStateInsert = Omit<
   UserCardState,
   "id" | "created_at" | "updated_at"
 > & { id?: string };
 export type ReviewLogInsert = Omit<ReviewLog, "id" | "reviewed_at"> & {
+  id?: string;
+};
+export type QuizAttemptInsert = Omit<QuizAttempt, "id" | "completed_at"> & {
   id?: string;
 };
 
@@ -233,12 +276,15 @@ export type ThemeUpdate = Partial<
 export type QuestionUpdate = Partial<
   Omit<Question, "id" | "created_at" | "updated_at">
 >;
+export type FlashcardUpdate = Partial<
+  Omit<Flashcard, "id" | "created_at" | "updated_at">
+>;
 export type ProfileUpdate = Partial<
   Omit<Profile, "id" | "created_at" | "updated_at">
 >;
 export type UserCardStateUpdate = Partial<
   Omit<
     UserCardState,
-    "id" | "user_id" | "question_id" | "created_at" | "updated_at"
+    "id" | "user_id" | "flashcard_id" | "created_at" | "updated_at"
   >
 >;

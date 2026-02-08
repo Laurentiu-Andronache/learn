@@ -1,6 +1,11 @@
-import { describe, expect, it } from "vitest";
 import { State } from "ts-fsrs";
-import { toCard, fromCard, createNewCard, type DbCardState } from "../card-mapper";
+import { describe, expect, it } from "vitest";
+import {
+  createNewCard,
+  type DbCardState,
+  fromCard,
+  toCard,
+} from "../card-mapper";
 
 const makeDbState = (overrides: Partial<DbCardState> = {}): DbCardState => ({
   stability: 5.0,
@@ -34,7 +39,9 @@ describe("card-mapper", () => {
     });
 
     it("converts last_review string to Date", () => {
-      const card = toCard(makeDbState({ last_review: "2026-01-10T08:00:00.000Z" }));
+      const card = toCard(
+        makeDbState({ last_review: "2026-01-10T08:00:00.000Z" }),
+      );
       expect(card.last_review).toEqual(new Date("2026-01-10T08:00:00.000Z"));
     });
 
@@ -55,7 +62,9 @@ describe("card-mapper", () => {
 
     it("defaults unknown state to State.New", () => {
       // Force an unknown state string through the mapper
-      const card = toCard(makeDbState({ state: "bogus" as DbCardState["state"] }));
+      const card = toCard(
+        makeDbState({ state: "bogus" as DbCardState["state"] }),
+      );
       expect(card.state).toBe(State.New);
     });
 
@@ -84,7 +93,9 @@ describe("card-mapper", () => {
     });
 
     it("converts last_review Date to ISO string", () => {
-      const card = toCard(makeDbState({ last_review: "2026-01-10T08:00:00.000Z" }));
+      const card = toCard(
+        makeDbState({ last_review: "2026-01-10T08:00:00.000Z" }),
+      );
       const db = fromCard(card);
       expect(db.last_review).toBe("2026-01-10T08:00:00.000Z");
     });
@@ -109,22 +120,24 @@ describe("card-mapper", () => {
   });
 
   describe("roundtrip: toCard → fromCard", () => {
-    it.each(["new", "learning", "review", "relearning"] as const)(
-      "roundtrips state '%s' without loss",
-      (state) => {
-        const original = makeDbState({ state });
-        const roundtripped = fromCard(toCard(original));
-        expect(roundtripped.stability).toBe(original.stability);
-        expect(roundtripped.difficulty).toBe(original.difficulty);
-        expect(roundtripped.elapsed_days).toBe(original.elapsed_days);
-        expect(roundtripped.scheduled_days).toBe(original.scheduled_days);
-        expect(roundtripped.reps).toBe(original.reps);
-        expect(roundtripped.lapses).toBe(original.lapses);
-        expect(roundtripped.state).toBe(original.state);
-        expect(roundtripped.due).toBe(original.due);
-        expect(roundtripped.last_review).toBe(original.last_review);
-      },
-    );
+    it.each([
+      "new",
+      "learning",
+      "review",
+      "relearning",
+    ] as const)("roundtrips state '%s' without loss", (state) => {
+      const original = makeDbState({ state });
+      const roundtripped = fromCard(toCard(original));
+      expect(roundtripped.stability).toBe(original.stability);
+      expect(roundtripped.difficulty).toBe(original.difficulty);
+      expect(roundtripped.elapsed_days).toBe(original.elapsed_days);
+      expect(roundtripped.scheduled_days).toBe(original.scheduled_days);
+      expect(roundtripped.reps).toBe(original.reps);
+      expect(roundtripped.lapses).toBe(original.lapses);
+      expect(roundtripped.state).toBe(original.state);
+      expect(roundtripped.due).toBe(original.due);
+      expect(roundtripped.last_review).toBe(original.last_review);
+    });
 
     it("roundtrips with null last_review", () => {
       const original = makeDbState({ last_review: null });

@@ -2,10 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
-import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import {
   createTopic,
@@ -43,9 +43,12 @@ interface TopicFormProps {
 }
 
 const BILINGUAL_KEYS = [
-  "title_en", "title_es",
-  "description_en", "description_es",
-  "intro_text_en", "intro_text_es",
+  "title_en",
+  "title_es",
+  "description_en",
+  "description_es",
+  "intro_text_en",
+  "intro_text_es",
 ] as const;
 
 export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
@@ -56,9 +59,12 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
 
   const originalBilingual = useMemo(() => {
     const vals = defaultValues ?? {
-      title_en: "", title_es: "",
-      description_en: null, description_es: null,
-      intro_text_en: null, intro_text_es: null,
+      title_en: "",
+      title_es: "",
+      description_en: null,
+      description_es: null,
+      intro_text_en: null,
+      intro_text_es: null,
     };
     const result: Record<string, unknown> = {};
     for (const key of BILINGUAL_KEYS) result[key] = vals[key];

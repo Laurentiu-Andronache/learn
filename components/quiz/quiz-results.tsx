@@ -18,20 +18,23 @@ export interface QuizAnswer {
   wasIdk: boolean;
   categoryName: string;
   categoryColor: string | null;
+  timeMs: number;
 }
 
 interface QuizResultsProps {
   answers: QuizAnswer[];
   totalTimeMs: number;
   themeId: string;
-  onReviewMissed: () => void;
+  onRetryFailed: () => void;
+  saving?: boolean;
 }
 
 export function QuizResults({
   answers,
   totalTimeMs,
   themeId,
-  onReviewMissed,
+  onRetryFailed,
+  saving = false,
 }: QuizResultsProps) {
   const t = useTranslations("quiz.results");
 
@@ -96,6 +99,11 @@ export function QuizResults({
           <p className="text-sm text-muted-foreground">
             {t("time")}: {minutes}m {seconds}s
           </p>
+          {saving && (
+            <p className="text-xs text-muted-foreground animate-pulse">
+              Saving results...
+            </p>
+          )}
         </CardContent>
       </Card>
 
@@ -191,8 +199,8 @@ export function QuizResults({
       {/* Actions */}
       <div className="flex gap-3 pb-4">
         {missed.length > 0 && (
-          <Button onClick={onReviewMissed} variant="outline" className="flex-1">
-            {t("reviewMissed")}
+          <Button onClick={onRetryFailed} variant="outline" className="flex-1">
+            {t("retryFailed")}
           </Button>
         )}
         <Button asChild className="flex-1">

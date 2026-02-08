@@ -10,18 +10,31 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 - **Authentication**: Supabase Auth (email/password + anonymous)
 - **Deployment**: Vercel
 - **Spaced Repetition**: FSRS (Free Spaced Repetition Scheduler)
+- **i18n**: next-intl (English/Spanish)
 
 ## Features
 
-- 🌐 **Bilingual**: Full English/Spanish support
-- 🎯 **Quiz Mode**: Multiple choice, true/false, with immediate feedback
-- 🃏 **Flashcard Mode**: 3D flip animation, self-grading
-- 🧠 **FSRS Scheduling**: Optimized review timing based on forgetting curves
-- 📊 **Progress Tracking**: Per-question statistics and difficulty adjustment
-- 🎨 **Topics**: Organized content by topic (e.g., Vaccines, Grammar)
-- 👥 **Profiles**: Independent progress for multiple users
-- 🔒 **RLS Security**: Row-level security for all user data
-- 📱 **Responsive**: Works on mobile, tablet, and desktop
+- **Bilingual**: Full English/Spanish support with language switcher
+- **Flashcard Mode**: 4-point FSRS rating (Again/Hard/Good/Easy), interval previews, keyboard hotkeys
+- **Quiz Mode**: Multiple choice recognition test with score tracking and retry
+- **Reading Mode**: Markdown-based educational content with progress tracking
+- **FSRS Scheduling**: Optimized review timing based on forgetting curves with fuzz
+- **Progress Tracking**: Recall mastery via flashcards, recognition scores via quizzes
+- **Topics**: Organized content by topic with category breakdowns
+- **Admin Panel**: Separate management for flashcards and quiz questions, topic CRUD, content moderation
+- **MCP Server**: 41 tools for programmatic content management
+- **Profiles**: Independent progress for multiple users
+- **RLS Security**: Row-level security for all user data
+- **SEO**: Dynamic OG images, structured data, sitemap, canonical URLs
+- **Responsive**: Works on mobile, tablet, and desktop
+
+## Architecture
+
+**Flashcards** are the primary study mode — recall-based, using FSRS 4-point rating. Content stored in `flashcards` table. Progress tracked via `user_card_state` and `review_logs`.
+
+**Quizzes** are optional recognition tests — multiple choice, no FSRS. Content stored in `questions` table. Results stored in `quiz_attempts` table.
+
+Progress shown throughout the app reflects **flashcard recall mastery** only.
 
 ## Project Structure
 
@@ -30,40 +43,61 @@ learn-app/
 ├── app/                    # Next.js App Router pages
 │   ├── auth/              # Authentication pages
 │   ├── topics/            # Topic browse, detail, quiz, flashcard, reading
-│   ├── admin/             # Admin panel (topics, questions, reviews)
+│   ├── admin/             # Admin panel (topics, flashcards, quizzes, reviews)
 │   ├── settings/          # User preferences
-│   └── test-db/           # Database connection test
+│   └── about/             # About page
 ├── components/            # React components
 │   ├── topics/            # TopicCard, TopicGrid
-│   ├── admin/             # TopicForm, AdminTopicActions
+│   ├── flashcards/        # FlashcardSession, FlashcardStack, FlashcardResults
+│   ├── quiz/              # QuizSession, QuizCard, QuizResults
+│   ├── admin/             # TopicForm, FlashcardEditForm, QuestionEditForm
 │   ├── reading/           # ReadingProgress
-│   └── settings/          # HiddenTopicsList
+│   ├── settings/          # HiddenTopicsList, SuspendedFlashcardsList
+│   ├── feedback/          # FeedbackModal, QuestionReportForm
+│   ├── session/           # SessionToolbar (edit/delete during study)
+│   └── seo/               # StructuredData components
 ├── lib/
 │   ├── supabase/          # Supabase client utilities
-│   ├── services/          # Server actions (admin-topics, user-preferences)
-│   └── fsrs/              # FSRS spaced repetition logic
+│   ├── services/          # Server actions (admin-topics, quiz-attempts, user-preferences)
+│   ├── fsrs/              # FSRS spaced repetition (ordering, actions, progress, interval-preview)
+│   ├── seo/               # Metadata helpers, structured data generators
+│   └── types/             # TypeScript interfaces
 ├── messages/              # i18n translations (en.json, es.json)
+├── mcp-server/            # MCP content management server (41 tools)
 ├── supabase/
 │   └── migrations/        # Database migrations
 └── .env.local             # Local environment variables (not in git)
 ```
 
-## Database Schema
+## Database Schema (17 tables)
 
-### Content Tables (13 total)
-1. **themes** - Top-level content groupings (displayed as "Topics" in UI)
-2. **categories** - Subject subdivisions
-3. **questions** - Quiz/flashcard items
-4. **profiles** - User profiles
-5. **admin_users** - Admin permissions
-6. **user_card_state** - FSRS scheduling data
-7. **review_logs** - Review history
-8. **suspended_questions** - Hidden questions
-9. **hidden_themes** - Hidden topics
-10. **reading_progress** - Reading mode tracking
-11. **feedback** - User feedback (includes content issue reports with question_id)
-12. **proposed_questions** - Community contributions
-13. **theme_proposals** - New topic suggestions
+**Content** (public read, admin write):
+- `themes` — Top-level content groupings (displayed as "Topics" in UI)
+- `categories` — Subject subdivisions within topics
+- `questions` — Quiz items (multiple choice, true/false)
+- `flashcards` — Recall cards (question/answer pairs for FSRS)
+
+**User Management**:
+- `profiles` — User profiles with display names
+- `admin_users` — Admin permissions
+
+**FSRS Spaced Repetition**:
+- `user_card_state` — FSRS scheduling data (FK → flashcards)
+- `review_logs` — Review history (FK → flashcards)
+
+**Quiz**:
+- `quiz_attempts` — Quiz results (user_id, theme_id, score, total, answers JSONB)
+
+**User Preferences**:
+- `suspended_flashcards` — User-hidden flashcards
+- `hidden_themes` — User-hidden topics
+- `reading_progress` — Reading mode tracking
+
+**Feedback & Moderation**:
+- `feedback` — User feedback (has `question_id` + `flashcard_id` FKs)
+- `question_reports` — Content issue reports with admin review workflow
+- `proposed_questions` — Community-proposed questions/flashcards (has `target_type`)
+- `theme_proposals` — Community topic suggestions
 
 All tables have RLS policies for secure data access.
 
@@ -109,9 +143,7 @@ Get these values from:
 
 ### 4. Database Migration
 
-The database schema is managed automatically. All migrations in `supabase/migrations/` are applied automatically to the Supabase project.
-
-**Note**: Claude Code manages all database migrations. You don't need to manually run SQL - migrations are applied automatically as needed.
+The database schema is managed via migration files in `supabase/migrations/`. All migrations are applied automatically to the linked Supabase project.
 
 ### 5. Run Development Server
 
@@ -123,11 +155,6 @@ Visit:
 - **Homepage**: http://localhost:3000
 - **Database Test**: http://localhost:3000/test-db
 
-The test page should show:
-- ✓ Connected to Supabase successfully!
-- Found 0 topics (until you seed data)
-- Found 1 admin users
-
 ### 6. Build for Production
 
 ```bash
@@ -135,68 +162,28 @@ npm run build
 npm run start
 ```
 
+## Testing
+
+Vitest configured with jsdom + @testing-library/react. Run:
+
+```bash
+npm run test
+```
+
+131 tests across 9 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, and flashcard grading.
+
 ## Deployment
 
 ### Vercel Deployment
 
 The app is deployed to Vercel at:
-- **Production**: https://learn-app-theta-ten.vercel.app
-- **Test Database**: https://learn-app-theta-ten.vercel.app/test-db
+- **Production**: https://learn-seven-peach.vercel.app
 
-Environment variables are already configured in Vercel. Any code pushed to the `main` branch automatically deploys to production.
+Environment variables are configured in Vercel. Code pushed to `main` auto-deploys.
 
-## Development Status
+## MCP Server
 
-### Completed
-- Auth (email/password + anonymous sign-in)
-- FSRS spaced repetition scheduling
-- Quiz mode (multiple choice, true/false, immediate feedback)
-- Flashcard mode (3D flip, self-grading)
-- Reading mode with progress tracking
-- Topic browse and selection
-- Admin panel (topic/question CRUD, content reviews)
-- i18n (English/Spanish via next-intl)
-- Content seeding (vaccine questions)
-- User preferences (hidden topics, suspended questions)
-
-### Next
-- Analytics integration
-- Community features
-- Additional content topics
-
-## Testing
-
-### Test Database Connection
-
-Visit `/test-db` in both local and production to verify:
-1. Environment variables are set
-2. Database connection works
-3. All tables exist
-4. Admin user is configured
-
-### Test Authentication
-
-Visit `/auth/login` to test authentication flow (when implemented).
-
-## Troubleshooting
-
-### Build Errors
-
-If you get prerendering errors:
-- Check that async components use `export const dynamic = "force-dynamic"`
-- Verify environment variables are set in Vercel
-
-### Database Connection Fails
-
-1. Check `.env.local` has correct Supabase credentials
-2. Verify migration was applied (check table list in Supabase dashboard)
-3. Check RLS policies allow access (admin_users table must have your email)
-
-### Vercel Deployment Issues
-
-1. Ensure all environment variables are set in Vercel dashboard
-2. Redeploy after adding environment variables
-3. Check build logs in Vercel dashboard
+The `mcp-server/` directory contains a Model Context Protocol server with 41 tools for programmatic content management: CRUD for topics, categories, questions, flashcards; import/export; translation management; analytics; and admin operations.
 
 ## Contributing
 
@@ -209,15 +196,6 @@ This is a personal project. If you want to contribute:
 
 Private project - all rights reserved.
 
-## Support
-
-For issues or questions:
-- Check the troubleshooting section above
-- Review Supabase logs for database errors
-- Check Vercel logs for deployment errors
-
 ---
 
-**Project Status**: Core features complete ✓ | Quiz, Flashcard, Reading modes live
-
-**Prototype Reference**: `../learn.html` - Original single-file prototype with 53 vaccine questions
+**Project Status**: Core features complete | Flashcard (FSRS 4-point), Quiz (recognition test), Reading modes live

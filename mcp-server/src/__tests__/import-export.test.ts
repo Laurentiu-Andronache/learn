@@ -54,12 +54,14 @@ describe("handleExportTopic", () => {
     sb.from.mockReturnValueOnce(chainable({ data: topic, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: questions, error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // flashcards
 
     const result = await handleExportTopic(sb as any, { topic_id: "t1" });
     const json = extractJson(result) as any;
     expect(json.title_en).toBe("Bio");
     expect(json.categories).toHaveLength(1);
     expect(json.categories[0].questions).toHaveLength(1);
+    expect(json.categories[0].flashcards).toHaveLength(0);
     // By default, no IDs included
     expect(json.categories[0].questions[0].id).toBeUndefined();
   });
@@ -79,6 +81,7 @@ describe("handleExportTopic", () => {
     sb.from.mockReturnValueOnce(chainable({ data: topic, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: questions, error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // flashcards
 
     const result = await handleExportTopic(sb as any, { topic_id: "t1", include_ids: true });
     const json = extractJson(result) as any;
@@ -97,7 +100,8 @@ describe("handleExportTopic", () => {
     const sb = mockSupabase();
     sb.from.mockReturnValueOnce(chainable({ data: { id: "t1", title_en: "E", title_es: "E" }, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: [], error: null }));
-    sb.from.mockReturnValueOnce(chainable({ data: [], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // questions
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // flashcards
 
     const result = await handleExportTopic(sb as any, { topic_id: "t1" });
     const json = extractJson(result) as any;
@@ -246,10 +250,11 @@ describe("handleDuplicateTopic", () => {
       extra_en: null, extra_es: null, difficulty: 5,
     }];
 
-    // Fetch source
+    // Fetch source (export)
     sb.from.mockReturnValueOnce(chainable({ data: topic, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null }));
-    sb.from.mockReturnValueOnce(chainable({ data: questions, error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: questions, error: null })); // questions
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // flashcards
     // Insert new theme
     sb.from.mockReturnValueOnce(chainable({ data: { id: "t-dup" }, error: null }));
     // Insert category
@@ -275,8 +280,9 @@ describe("handleDuplicateTopic", () => {
     };
 
     sb.from.mockReturnValueOnce(chainable({ data: topic, error: null }));
-    sb.from.mockReturnValueOnce(chainable({ data: [], error: null }));
-    sb.from.mockReturnValueOnce(chainable({ data: [], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // categories
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // questions
+    sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // flashcards
     sb.from.mockReturnValueOnce(chainable({ data: { id: "t-dup" }, error: null }));
 
     const result = await handleDuplicateTopic(sb as any, { topic_id: "t1" });

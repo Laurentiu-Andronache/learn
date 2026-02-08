@@ -3,14 +3,16 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { FeedbackModal } from "./feedback-modal";
 import { createClient } from "@/lib/supabase/client";
+import { FeedbackModal } from "./feedback-modal";
 
 export function FeedbackButton() {
   const [open, setOpen] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
   const pathname = usePathname();
-  const isStudyPage = /\/topics\/[^/]+\/(quiz|flashcards|reading)/.test(pathname);
+  const isStudyPage = /\/topics\/[^/]+\/(quiz|flashcards|reading)/.test(
+    pathname,
+  );
 
   useEffect(() => {
     const supabase = createClient();
@@ -31,7 +33,11 @@ export function FeedbackButton() {
       >
         Feedback
       </Button>
-      <FeedbackModal open={open} onOpenChange={setOpen} defaultType={isStudyPage ? "content" : "bug"} />
+      <FeedbackModal
+        open={open}
+        onOpenChange={setOpen}
+        defaultType={isStudyPage ? "content" : "bug"}
+      />
     </>
   );
 }

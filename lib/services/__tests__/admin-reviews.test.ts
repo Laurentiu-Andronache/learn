@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Supabase server client
 const mockUser = { id: "admin-uuid", email: "admin@test.com" };
@@ -39,19 +39,18 @@ function chainable(finalResult: { data?: unknown; error?: unknown }) {
 }
 
 import {
-  getFeedbackList,
-  getProposedQuestionsList,
-  updateProposedQuestionStatus,
-  getThemeProposalsList,
-  updateThemeProposalStatus,
-  getQuestionsList,
-  updateQuestion,
-  deleteQuestion,
   deleteFeedback,
   deleteProposedQuestion,
+  deleteQuestion,
   deleteThemeProposal,
-  getThemesList,
   getCategoriesList,
+  getFeedbackList,
+  getProposedQuestionsList,
+  getQuestionsList,
+  getThemeProposalsList,
+  getThemesList,
+  updateProposedQuestionStatus,
+  updateThemeProposalStatus,
 } from "../admin-reviews";
 
 beforeEach(() => {
@@ -104,7 +103,6 @@ describe("getFeedbackList", () => {
 
 describe("updateProposedQuestionStatus", () => {
   it("updates proposed question with admin notes", async () => {
-
     const updateMock = vi.fn();
     const eqMock = vi.fn();
     mockSupabase.from.mockReturnValue({ update: updateMock });
@@ -128,7 +126,6 @@ describe("updateProposedQuestionStatus", () => {
 
 describe("updateThemeProposalStatus", () => {
   it("updates theme proposal status", async () => {
-
     const updateMock = vi.fn();
     const eqMock = vi.fn();
     mockSupabase.from.mockReturnValue({ update: updateMock });
@@ -187,7 +184,12 @@ describe("getQuestionsList", () => {
     const mockData = [
       {
         id: "q1",
-        category: { id: "c1", name_en: "Cat", theme_id: "t1", theme: { id: "t1", title_en: "Topic" } },
+        category: {
+          id: "c1",
+          name_en: "Cat",
+          theme_id: "t1",
+          theme: { id: "t1", title_en: "Topic" },
+        },
       },
     ];
     mockSupabase.from.mockReturnValue(
@@ -199,9 +201,7 @@ describe("getQuestionsList", () => {
   });
 
   it("filters by themeId at DB level via !inner join", async () => {
-    const mockData = [
-      { id: "q1", category: { theme_id: "t1" } },
-    ];
+    const mockData = [{ id: "q1", category: { theme_id: "t1" } }];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );

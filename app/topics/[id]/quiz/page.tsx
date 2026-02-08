@@ -1,23 +1,24 @@
 import { redirect } from "next/navigation";
 import { QuizSession } from "@/components/quiz/quiz-session";
-import type { SubMode } from "@/lib/fsrs/question-ordering";
-import {
-  getOrderedQuestions,
-  getSubModeCounts,
-} from "@/lib/fsrs/question-ordering";
+import { getLatestQuizAttempt } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ subMode?: string; category?: string }>;
 }
 
-export default async function QuizPage({
-  params,
-  searchParams,
-}: QuizPageProps) {
+// Fisher-Yates shuffle
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+export default async function QuizPage({ params }: QuizPageProps) {
   const { id } = await params;
-  const { subMode: subModeParam, category } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -40,32 +41,20 @@ export default async function QuizPage({
 
   if (!topic) redirect("/topics");
 
-  // Fetch all questions (full set for sub-mode filtering on client)
-  const subMode = (subModeParam as SubMode) || "full";
-  const questions = await getOrderedQuestions(user.id, id, {
-    subMode,
-    categoryId: category,
-  });
+  // Fetch all questions for this topic via categories join
+  const { data: questionsRaw } = await supabase
+    .from("questions")
+    .select(
+      "*, category:categories!inner(id, name_en, name_es, color, theme_id)",
+    )
+    .eq("category.theme_id", id);
 
-  if (questions.length === 0 && subModeParam) redirect(`/topics/${id}`);
+  const questions = shuffleArray(questionsRaw || []);
 
-  // Get counts for sub-mode selector
-  const counts = await getSubModeCounts(user.id, id);
+  if (questions.length === 0) redirect(`/topics/${id}`);
 
-  // Get categories for category focus picker
-  const { data: categoriesRaw } = await supabase
-    .from("categories")
-    .select("id, name_en, name_es, color")
-    .eq("theme_id", id)
-    .order("name_en");
-
-  const categories = (categoriesRaw || []).map((c) => ({
-    id: c.id,
-    nameEn: c.name_en,
-    nameEs: c.name_es,
-    color: c.color,
-    count: questions.filter((q) => q.question.category_id === c.id).length,
-  }));
+  // Get last attempt for display
+  const lastAttempt = await getLatestQuizAttempt(user.id, id);
 
   return (
     <QuizSession
@@ -73,15 +62,37 @@ export default async function QuizPage({
       themeId={id}
       themeTitleEn={topic.title_en}
       themeTitleEs={topic.title_es}
-      questions={questions.map((q) => ({
-        question: q.question,
-        categoryNameEn: q.categoryNameEn,
-        categoryNameEs: q.categoryNameEs,
-        categoryColor: q.categoryColor,
-      }))}
-      counts={counts}
-      categories={categories}
-      initialSubMode={subModeParam ? subMode : undefined}
+      questions={questions.map((q) => {
+        const cat = q.category as unknown as {
+          id: string;
+          name_en: string;
+          name_es: string;
+          color: string | null;
+        };
+        return {
+          question: {
+            id: q.id,
+            category_id: q.category_id,
+            type: q.type,
+            question_en: q.question_en,
+            question_es: q.question_es,
+            options_en: q.options_en,
+            options_es: q.options_es,
+            correct_index: q.correct_index,
+            explanation_en: q.explanation_en,
+            explanation_es: q.explanation_es,
+            extra_en: q.extra_en,
+            extra_es: q.extra_es,
+            difficulty: q.difficulty,
+            created_at: q.created_at,
+            updated_at: q.updated_at,
+          },
+          categoryNameEn: cat.name_en,
+          categoryNameEs: cat.name_es,
+          categoryColor: cat.color,
+        };
+      })}
+      lastAttempt={lastAttempt}
       isAdmin={isAdmin}
     />
   );

@@ -21,13 +21,28 @@ export default async function AdminDashboard() {
     { count: contentCount },
     { count: otherCount },
   ] = await Promise.all([
-    supabase.from("themes").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase
+      .from("themes")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true),
     supabase.from("questions").select("*", { count: "exact", head: true }),
     supabase.from("profiles").select("*", { count: "exact", head: true }),
-    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "bug"),
-    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "feature"),
-    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "content"),
-    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "other"),
+    supabase
+      .from("feedback")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "bug"),
+    supabase
+      .from("feedback")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "feature"),
+    supabase
+      .from("feedback")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "content"),
+    supabase
+      .from("feedback")
+      .select("*", { count: "exact", head: true })
+      .eq("type", "other"),
   ]);
 
   return (
@@ -60,19 +75,31 @@ export default async function AdminDashboard() {
       <div className="space-y-4">
         <h2 className="text-lg font-semibold">Feedback</h2>
         <div className="grid gap-3 sm:grid-cols-2">
-          <Link href="/admin/reviews/bug-reports" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+          <Link
+            href="/admin/reviews/bug-reports"
+            className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
+          >
             <span>Bug Reports</span>
             <Badge variant="secondary">{bugCount ?? 0}</Badge>
           </Link>
-          <Link href="/admin/reviews/feature-requests" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+          <Link
+            href="/admin/reviews/feature-requests"
+            className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
+          >
             <span>Feature Requests</span>
             <Badge variant="secondary">{featureCount ?? 0}</Badge>
           </Link>
-          <Link href="/admin/reviews/content-issues" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+          <Link
+            href="/admin/reviews/content-issues"
+            className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
+          >
             <span>Content Issues</span>
             <Badge variant="secondary">{contentCount ?? 0}</Badge>
           </Link>
-          <Link href="/admin/reviews/other-feedback" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+          <Link
+            href="/admin/reviews/other-feedback"
+            className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors"
+          >
             <span>Other</span>
             <Badge variant="secondary">{otherCount ?? 0}</Badge>
           </Link>

@@ -3,13 +3,16 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  QuestionEditForm,
+  type QuestionEditFormData,
+} from "@/components/admin/question-edit-form";
+import { TranslateDialog } from "@/components/admin/translate-dialog";
+import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { QuestionEditForm, type QuestionEditFormData } from "@/components/admin/question-edit-form";
-import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import { getQuestionById, updateQuestion } from "@/lib/services/admin-reviews";
 
@@ -118,7 +121,9 @@ export function QuestionEditDialog({
         </DialogHeader>
 
         {loading ? (
-          <p className="text-sm text-muted-foreground py-4">{t("common.loading")}</p>
+          <p className="text-sm text-muted-foreground py-4">
+            {t("common.loading")}
+          </p>
         ) : error ? (
           <p className="text-sm text-red-500 py-4">{error}</p>
         ) : question ? (

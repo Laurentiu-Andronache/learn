@@ -2,40 +2,40 @@
 
 import { createClient } from "@/lib/supabase/server";
 
-// ============ SUSPENDED QUESTIONS ============
+// ============ SUSPENDED FLASHCARDS ============
 
-export async function suspendQuestion(
+export async function suspendFlashcard(
   userId: string,
-  questionId: string,
+  flashcardId: string,
   reason?: string,
 ) {
   const supabase = await createClient();
-  const { error } = await supabase.from("suspended_questions").upsert(
+  const { error } = await supabase.from("suspended_flashcards").upsert(
     {
       user_id: userId,
-      question_id: questionId,
+      flashcard_id: flashcardId,
       reason: reason || null,
     },
-    { onConflict: "user_id,question_id" },
+    { onConflict: "user_id,flashcard_id" },
   );
   if (error) throw new Error(error.message);
 }
 
-export async function unsuspendQuestion(userId: string, questionId: string) {
+export async function unsuspendFlashcard(userId: string, flashcardId: string) {
   const supabase = await createClient();
   const { error } = await supabase
-    .from("suspended_questions")
+    .from("suspended_flashcards")
     .delete()
     .eq("user_id", userId)
-    .eq("question_id", questionId);
+    .eq("flashcard_id", flashcardId);
   if (error) throw new Error(error.message);
 }
 
-export interface SuspendedQuestionDetail {
+export interface SuspendedFlashcardDetail {
   id: string;
   reason: string | null;
   suspended_at: string;
-  question: {
+  flashcard: {
     id: string;
     question_en: string;
     question_es: string;
@@ -43,44 +43,52 @@ export interface SuspendedQuestionDetail {
   } | null;
 }
 
-export async function getSuspendedQuestions(userId: string): Promise<SuspendedQuestionDetail[]> {
+export async function getSuspendedFlashcards(
+  userId: string,
+): Promise<SuspendedFlashcardDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("suspended_questions")
+    .from("suspended_flashcards")
     .select(`
       id,
       reason,
       suspended_at,
-      question:questions(id, question_en, question_es, category:categories(name_en, name_es))
+      flashcard:flashcards(id, question_en, question_es, category:categories(name_en, name_es))
     `)
     .eq("user_id", userId)
     .order("suspended_at", { ascending: false })
-    .returns<SuspendedQuestionDetail[]>();
+    .returns<SuspendedFlashcardDetail[]>();
   if (error) throw new Error(error.message);
   return data || [];
 }
 
-export async function unsuspendAllForTopic(
+export async function unsuspendAllFlashcardsForTopic(
   userId: string,
   themeId: string,
 ): Promise<number> {
   const supabase = await createClient();
-  // Get question IDs for this topic
+  // Get flashcard IDs for this topic
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
     .eq("theme_id", themeId);
   if (!cats?.length) return 0;
-  const { data: questions } = await supabase
-    .from("questions")
+  const { data: flashcards } = await supabase
+    .from("flashcards")
     .select("id")
-    .in("category_id", cats.map((c) => c.id));
-  if (!questions?.length) return 0;
+    .in(
+      "category_id",
+      cats.map((c) => c.id),
+    );
+  if (!flashcards?.length) return 0;
   const { data: deleted } = await supabase
-    .from("suspended_questions")
+    .from("suspended_flashcards")
     .delete()
     .eq("user_id", userId)
-    .in("question_id", questions.map((q) => q.id))
+    .in(
+      "flashcard_id",
+      flashcards.map((f) => f.id),
+    )
     .select("id");
   return deleted?.length ?? 0;
 }
@@ -121,7 +129,9 @@ export interface HiddenTopicDetail {
   } | null;
 }
 
-export async function getHiddenTopics(userId: string): Promise<HiddenTopicDetail[]> {
+export async function getHiddenTopics(
+  userId: string,
+): Promise<HiddenTopicDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("hidden_themes")
@@ -188,7 +198,10 @@ export interface ReadingProgressDetail {
   completion_percent: number;
 }
 
-export async function getReadingProgress(userId: string, themeId: string): Promise<ReadingProgressDetail[]> {
+export async function getReadingProgress(
+  userId: string,
+  themeId: string,
+): Promise<ReadingProgressDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reading_progress")

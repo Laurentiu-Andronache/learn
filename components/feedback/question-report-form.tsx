@@ -23,7 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 
 interface QuestionReportFormProps {
-  questionId: string;
+  questionId?: string;
+  flashcardId?: string;
   questionText?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,6 +32,7 @@ interface QuestionReportFormProps {
 
 export function QuestionReportForm({
   questionId,
+  flashcardId,
   questionText,
   open,
   onOpenChange,
@@ -48,7 +50,9 @@ export function QuestionReportForm({
     if (!open) return;
     const fetchEmail = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserEmail(user?.email ?? null);
     };
     fetchEmail();
@@ -64,14 +68,18 @@ export function QuestionReportForm({
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-      const questionRef = questionText ? `\n\n[Question: ${questionText}]` : `\n\n[Question ID: ${questionId}]`;
+      const itemId = questionId || flashcardId;
+      const questionRef = questionText
+        ? `\n\n[Question: ${questionText}]`
+        : `\n\n[Item ID: ${itemId}]`;
       await supabase.from("feedback").insert({
         user_id: user.id,
         type: "content",
         message: `[${issueType}] ${description.trim()}${questionRef}`,
         name: name.trim() || null,
         email: includeEmail && userEmail ? userEmail : null,
-        question_id: questionId,
+        question_id: questionId || null,
+        flashcard_id: flashcardId || null,
         url: window.location.href,
         user_agent: navigator.userAgent,
       });
@@ -144,9 +152,14 @@ export function QuestionReportForm({
                 <Checkbox
                   id="includeEmailReport"
                   checked={includeEmail}
-                  onCheckedChange={(checked) => setIncludeEmail(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setIncludeEmail(checked === true)
+                  }
                 />
-                <Label htmlFor="includeEmailReport" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="includeEmailReport"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   {t("feedback.includeEmail")} ({userEmail})
                 </Label>
               </div>

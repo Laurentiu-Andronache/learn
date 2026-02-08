@@ -1,28 +1,33 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
-import { buryCard, scheduleReview, undoLastReview } from "@/lib/fsrs/actions";
-import { Rating } from "@/lib/fsrs/scheduler";
-import { deleteQuestion } from "@/lib/services/admin-reviews";
-import { suspendQuestion } from "@/lib/services/user-preferences";
-import type { FSRSRating } from "@/lib/types/database";
+import {
+  buryFlashcard,
+  scheduleFlashcardReview,
+  undoLastReview,
+} from "@/lib/fsrs/actions";
+import { getIntervalPreviews } from "@/lib/fsrs/interval-preview";
+import { deleteFlashcard } from "@/lib/services/admin-reviews";
+import { suspendFlashcard } from "@/lib/services/user-preferences";
+import type { UserCardState } from "@/lib/types/database";
 import { FlashcardResults } from "./flashcard-results";
 import { FlashcardStack } from "./flashcard-stack";
 
-interface FlashcardQuestionData {
+interface FlashcardItemData {
   id: string;
   question_en: string;
   question_es: string;
-  explanation_en: string | null;
-  explanation_es: string | null;
+  answer_en: string;
+  answer_es: string;
   extra_en: string | null;
   extra_es: string | null;
   categoryNameEn: string;
   categoryNameEs: string;
   categoryColor: string | null;
+  cardState: UserCardState | null;
 }
 
 interface FlashcardSessionProps {
@@ -30,7 +35,7 @@ interface FlashcardSessionProps {
   themeId: string;
   themeTitleEn: string;
   themeTitleEs: string;
-  questions: FlashcardQuestionData[];
+  flashcards: FlashcardItemData[];
   isAdmin?: boolean;
 }
 
@@ -39,120 +44,151 @@ export function FlashcardSession({
   themeId,
   themeTitleEn,
   themeTitleEs,
-  questions: initialQuestions,
+  flashcards: initialFlashcards,
   isAdmin = false,
 }: FlashcardSessionProps) {
   const locale = useLocale();
   const tq = useTranslations("quiz");
   const ts = useTranslations("session");
   const [sessionKey, setSessionKey] = useState(0);
-  const [questions, setQuestions] = useState(initialQuestions);
-  const [results, setResults] = useState<{
-    knew: string[];
-    didntKnow: string[];
-  } | null>(null);
+  const [flashcards, setFlashcards] = useState(initialFlashcards);
+  const [results, setResults] = useState<Map<string, 1 | 2 | 3 | 4> | null>(
+    null,
+  );
   const startTime = useRef(Date.now());
   const [currentIdx, setCurrentIdx] = useState(0);
   const [skipSignal, setSkipSignal] = useState(0);
   const [undoSignal, setUndoSignal] = useState(0);
 
+  // Compute interval previews for all flashcards (client-side, no server call)
+  const intervalPreviews = useMemo(() => {
+    const map = new Map<string, Record<1 | 2 | 3 | 4, string>>();
+    for (const fc of flashcards) {
+      map.set(fc.id, getIntervalPreviews(fc.cardState));
+    }
+    return map;
+  }, [flashcards]);
+
   const handleGrade = useCallback(
-    (questionId: string, knew: boolean) => {
+    (flashcardId: string, rating: 1 | 2 | 3 | 4) => {
       const timeMs = Date.now() - startTime.current;
-      const rating = knew
-        ? (Rating.Good as FSRSRating)
-        : (Rating.Again as FSRSRating);
-      scheduleReview(userId, questionId, rating, "flashcard", knew, timeMs)
-        .catch(() => toast.error("Failed to save progress. Your answer was recorded locally but may not persist."));
+      scheduleFlashcardReview(userId, flashcardId, rating, timeMs).catch(() =>
+        toast.error(
+          "Failed to save progress. Your answer was recorded locally but may not persist.",
+        ),
+      );
       startTime.current = Date.now();
     },
     [userId],
   );
 
   const handleSuspend = useCallback(
-    (questionId: string) => {
-      suspendQuestion(userId, questionId, "Suspended from flashcard session")
-        .catch(() => toast.error("Failed to suspend question."));
+    (flashcardId: string) => {
+      suspendFlashcard(
+        userId,
+        flashcardId,
+        "Suspended from flashcard session",
+      ).catch(() => toast.error("Failed to suspend flashcard."));
       toast.success(tq("questionSuspended"), { duration: 3000 });
     },
     [userId, tq],
   );
 
   const handleComplete = useCallback(
-    (finalResults: { knew: string[]; didntKnow: string[] }) => {
+    (finalResults: Map<string, 1 | 2 | 3 | 4>) => {
       setResults(finalResults);
     },
     [],
   );
 
-  const handleReviewDidntKnow = useCallback(() => {
+  const handleReviewAgain = useCallback(() => {
+    if (!results) return;
+    const againIds = new Set(
+      [...results.entries()].filter(([, r]) => r === 1).map(([id]) => id),
+    );
+    const againCards = flashcards.filter((fc) => againIds.has(fc.id));
+    setFlashcards(againCards);
     setResults(null);
     setSessionKey((k) => k + 1);
     setCurrentIdx(0);
-  }, []);
+  }, [results, flashcards]);
 
   const handleIndexChange = useCallback((index: number) => {
     setCurrentIdx(index);
   }, []);
 
   const handleBury = useCallback(() => {
-    const q = questions[currentIdx];
-    if (!q) return;
-    buryCard(userId, q.id).catch(() => {});
+    const fc = flashcards[currentIdx];
+    if (!fc) return;
+    buryFlashcard(userId, fc.id).catch(() => {});
     toast.success(ts("cardBuried"), { duration: 3000 });
     setSkipSignal((s) => s + 1);
-  }, [questions, currentIdx, userId, ts]);
+  }, [flashcards, currentIdx, userId, ts]);
 
   const handleUndo = useCallback(() => {
     if (currentIdx === 0) return;
-    const prevQ = questions[currentIdx - 1];
-    undoLastReview(userId, prevQ.id).catch(() => {});
+    const prevFc = flashcards[currentIdx - 1];
+    undoLastReview(userId, prevFc.id).catch(() => {});
     toast.success(ts("undone"), { duration: 3000 });
     setUndoSignal((s) => s + 1);
-  }, [questions, currentIdx, userId, ts]);
+  }, [flashcards, currentIdx, userId, ts]);
 
   const handleDeleteQuestion = useCallback(() => {
-    const q = questions[currentIdx];
-    if (!q) return;
-    deleteQuestion(q.id).catch(() => {});
+    const fc = flashcards[currentIdx];
+    if (!fc) return;
+    deleteFlashcard(fc.id).catch(() => {});
     toast.success(ts("questionDeleted"), { duration: 3000 });
 
-    const remaining = questions.filter((_, i) => i !== currentIdx);
-    setQuestions(remaining);
+    const remaining = flashcards.filter((_, i) => i !== currentIdx);
+    setFlashcards(remaining);
     if (remaining.length === 0 || currentIdx >= remaining.length) {
-      setResults({ knew: [], didntKnow: [] });
+      setResults(new Map());
     }
     setSessionKey((k) => k + 1);
-  }, [questions, currentIdx, ts]);
+  }, [flashcards, currentIdx, ts]);
 
   if (results) {
     const categoryMap = new Map<
       string,
-      { name: string; knew: number; didntKnow: number }
+      { name: string; again: number; hard: number; good: number; easy: number }
     >();
-    for (const q of questions) {
-      const catName = locale === "es" ? q.categoryNameEs : q.categoryNameEn;
+    for (const fc of flashcards) {
+      const catName = locale === "es" ? fc.categoryNameEs : fc.categoryNameEn;
       if (!categoryMap.has(catName)) {
-        categoryMap.set(catName, { name: catName, knew: 0, didntKnow: 0 });
+        categoryMap.set(catName, {
+          name: catName,
+          again: 0,
+          hard: 0,
+          good: 0,
+          easy: 0,
+        });
       }
       const cat = categoryMap.get(catName)!;
-      if (results.knew.includes(q.id)) cat.knew++;
-      else if (results.didntKnow.includes(q.id)) cat.didntKnow++;
+      const rating = results.get(fc.id);
+      if (rating === 1) cat.again++;
+      else if (rating === 2) cat.hard++;
+      else if (rating === 3) cat.good++;
+      else if (rating === 4) cat.easy++;
     }
+
+    const againCount = [...results.values()].filter((r) => r === 1).length;
+    const hardCount = [...results.values()].filter((r) => r === 2).length;
+    const goodCount = [...results.values()].filter((r) => r === 3).length;
+    const easyCount = [...results.values()].filter((r) => r === 4).length;
 
     return (
       <FlashcardResults
-        knew={results.knew.length}
-        didntKnow={results.didntKnow.length}
+        again={againCount}
+        hard={hardCount}
+        good={goodCount}
+        easy={easyCount}
         categories={Array.from(categoryMap.values())}
-        onReviewDidntKnow={
-          results.didntKnow.length > 0 ? handleReviewDidntKnow : undefined
-        }
+        onReviewAgain={againCount > 0 ? handleReviewAgain : undefined}
       />
     );
   }
 
-  const currentQ = questions[currentIdx];
+  const currentFc = flashcards[currentIdx];
 
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-8 pb-16 space-y-6">
@@ -162,8 +198,9 @@ export function FlashcardSession({
 
       <FlashcardStack
         key={sessionKey}
-        questions={questions}
+        flashcards={flashcards}
         locale={locale as "en" | "es"}
+        intervalPreviews={intervalPreviews}
         onGrade={handleGrade}
         onSuspend={handleSuspend}
         onComplete={handleComplete}
@@ -172,24 +209,20 @@ export function FlashcardSession({
         onIndexChange={handleIndexChange}
       />
 
-      {currentQ && (
+      {currentFc && (
         <SessionToolbar
           userId={userId}
           themeId={themeId}
           mode="flashcard"
           isAdmin={isAdmin}
-          currentQuestion={{
-            id: currentQ.id,
-            question_en: currentQ.question_en,
-            question_es: currentQ.question_es,
-            options_en: null,
-            options_es: null,
-            correct_index: null,
-            explanation_en: currentQ.explanation_en,
-            explanation_es: currentQ.explanation_es,
-            extra_en: currentQ.extra_en,
-            extra_es: currentQ.extra_es,
-            type: "multiple_choice",
+          currentFlashcard={{
+            id: currentFc.id,
+            question_en: currentFc.question_en,
+            question_es: currentFc.question_es,
+            answer_en: currentFc.answer_en,
+            answer_es: currentFc.answer_es,
+            extra_en: currentFc.extra_en,
+            extra_es: currentFc.extra_es,
             difficulty: 5,
           }}
           onBury={handleBury}

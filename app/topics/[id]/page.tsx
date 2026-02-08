@@ -1,13 +1,13 @@
-import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
+import { cache } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTopicProgress } from "@/lib/fsrs/progress";
-import { getSubModeCounts } from "@/lib/fsrs/question-ordering";
+import { getLatestQuizAttempt } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
 
 const getTopicById = cache(async (id: string) => {
@@ -85,8 +85,18 @@ export default async function TopicDetailPage({ params }: Props) {
 
   if (!topic) redirect("/topics");
 
-  const progress = await getTopicProgress(user.id, id);
-  const counts = await getSubModeCounts(user.id, id);
+  const [progress, latestQuizAttempt, { count: quizQuestionCount }] =
+    await Promise.all([
+      getTopicProgress(user.id, id),
+      getLatestQuizAttempt(user.id, id),
+      supabase
+        .from("questions")
+        .select("id, categories!inner(theme_id)", {
+          count: "exact",
+          head: true,
+        })
+        .eq("categories.theme_id", id),
+    ]);
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
@@ -109,7 +119,9 @@ export default async function TopicDetailPage({ params }: Props) {
             <h1 className="text-3xl font-bold">{title}</h1>
             <p className="text-muted-foreground">{description}</p>
             <p className="text-xs text-muted-foreground mt-1">
-              {tTopics("createdBy", { creator: topic.creator?.display_name || tTopics("anonymous") })}
+              {tTopics("createdBy", {
+                creator: topic.creator?.display_name || tTopics("anonymous"),
+              })}
             </p>
           </div>
         </div>
@@ -127,7 +139,7 @@ export default async function TopicDetailPage({ params }: Props) {
               {tTopics("masteredAll")}
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link href={`/topics/${id}/quiz?subMode=full`}>
+              <Link href={`/topics/${id}/flashcards?subMode=full`}>
                 {tTopics("reviewAnyway")}
               </Link>
             </Button>
@@ -138,7 +150,7 @@ export default async function TopicDetailPage({ params }: Props) {
       {/* Progress summary */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">{tTopics("progressTitle")}</CardTitle>
+          <CardTitle className="text-lg">{tTopics("recallProgress")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="flex h-3 rounded-full overflow-hidden bg-muted">
@@ -210,35 +222,80 @@ export default async function TopicDetailPage({ params }: Props) {
       </Card>
 
       {/* Study Modes */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Link href={`/topics/${id}/quiz`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Flashcards — Primary CTA */}
+        <Link href={`/topics/${id}/flashcards`} className="sm:col-span-2">
+          <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/30">
             <CardContent className="pt-6 text-center space-y-2">
+              <div className="text-4xl">🃏</div>
+              <h3 className="text-lg font-semibold">{tModes("flashcard")}</h3>
+              <p className="text-sm text-muted-foreground">
+                {tModes("flashcardDescription")}
+              </p>
+              <Badge variant="outline">
+                {progress.total} {tTopics("flashcardCount")}
+              </Badge>
+              {progress.total > 0 && progress.newCount === progress.total && (
+                <p className="text-xs font-medium text-primary">
+                  {tTopics("startStudying")}
+                </p>
+              )}
+            </CardContent>
+          </Card>
+        </Link>
+
+        {/* Quiz — Recognition Test */}
+        <Card className="hover:shadow-md transition-shadow">
+          <CardContent className="pt-6 space-y-3">
+            <div className="text-center space-y-1">
               <div className="text-3xl">📝</div>
-              <h3 className="font-semibold">{tModes("quiz")}</h3>
+              <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
               <p className="text-xs text-muted-foreground">
                 {tModes("quizDescription")}
               </p>
               <Badge variant="outline">
-                {counts.full} {tTopics("questionCount")}
+                {quizQuestionCount ?? 0} {tTopics("questionCount")}
               </Badge>
-            </CardContent>
-          </Card>
-        </Link>
-        <Link href={`/topics/${id}/flashcards`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
-            <CardContent className="pt-6 text-center space-y-2">
-              <div className="text-3xl">🃏</div>
-              <h3 className="font-semibold">{tModes("flashcard")}</h3>
-              <p className="text-xs text-muted-foreground">
-                {tModes("flashcardDescription")}
-              </p>
-              <Badge variant="outline">
-                {counts.full} {tTopics("cardCount")}
-              </Badge>
-            </CardContent>
-          </Card>
-        </Link>
+            </div>
+            {latestQuizAttempt ? (
+              <div className="text-center space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {tTopics("lastAttempt")}:{" "}
+                  {Math.round(
+                    (latestQuizAttempt.score / latestQuizAttempt.total) * 100,
+                  )}
+                  %
+                  <span className="ml-1 text-xs">
+                    (
+                    {new Date(
+                      latestQuizAttempt.completed_at,
+                    ).toLocaleDateString(locale === "es" ? "es" : "en", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                    )
+                  </span>
+                </p>
+                <Button asChild size="sm">
+                  <Link href={`/topics/${id}/quiz`}>
+                    {tTopics("retakeTest")}
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  {tTopics("noAttempts")}
+                </p>
+                <Button asChild size="sm" variant="outline">
+                  <Link href={`/topics/${id}/quiz`}>{tTopics("takeTest")}</Link>
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Reading */}
         <Link href={`/topics/${id}/reading`}>
           <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
             <CardContent className="pt-6 text-center space-y-2">

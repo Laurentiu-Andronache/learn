@@ -1,6 +1,11 @@
 import { State } from "ts-fsrs";
 import { describe, expect, it } from "vitest";
-import { createNewCard, fromCard, toCard, type DbCardState } from "./card-mapper";
+import {
+  createNewCard,
+  type DbCardState,
+  fromCard,
+  toCard,
+} from "./card-mapper";
 
 describe("card-mapper", () => {
   const sampleDbState: DbCardState = {
@@ -31,9 +36,15 @@ describe("card-mapper", () => {
 
     it("maps all four state strings correctly", () => {
       expect(toCard({ ...sampleDbState, state: "new" }).state).toBe(State.New);
-      expect(toCard({ ...sampleDbState, state: "learning" }).state).toBe(State.Learning);
-      expect(toCard({ ...sampleDbState, state: "review" }).state).toBe(State.Review);
-      expect(toCard({ ...sampleDbState, state: "relearning" }).state).toBe(State.Relearning);
+      expect(toCard({ ...sampleDbState, state: "learning" }).state).toBe(
+        State.Learning,
+      );
+      expect(toCard({ ...sampleDbState, state: "review" }).state).toBe(
+        State.Review,
+      );
+      expect(toCard({ ...sampleDbState, state: "relearning" }).state).toBe(
+        State.Relearning,
+      );
     });
 
     it("handles null last_review", () => {
@@ -43,7 +54,10 @@ describe("card-mapper", () => {
 
     it("defaults unknown state to New", () => {
       // Force an unknown string via type assertion
-      const card = toCard({ ...sampleDbState, state: "unknown" as DbCardState["state"] });
+      const card = toCard({
+        ...sampleDbState,
+        state: "unknown" as DbCardState["state"],
+      });
       expect(card.state).toBe(State.New);
     });
   });

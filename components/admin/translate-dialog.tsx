@@ -1,7 +1,7 @@
 "use client";
 
-import { useTranslations } from "next-intl";
 import { Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,12 +26,17 @@ export function TranslateDialog({
   const t = useTranslations("admin.translate");
 
   return (
-    <AlertDialog open={open} onOpenChange={(v) => !v && !translating && onDecline()}>
+    <AlertDialog
+      open={open}
+      onOpenChange={(v) => !v && !translating && onDecline()}
+    >
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{t("title")}</AlertDialogTitle>
           <AlertDialogDescription>
-            {t("description", { targetLang: targetLang ? langNames[targetLang] : "" })}
+            {t("description", {
+              targetLang: targetLang ? langNames[targetLang] : "",
+            })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

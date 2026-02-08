@@ -1,204 +1,73 @@
 import { createClient } from "@/lib/supabase/server";
-import type { Question, UserCardState } from "@/lib/types/database";
+import type { Question } from "@/lib/types/database";
 
 /** Question row with joined category (PostgREST returns single object for FK) */
 type QuestionWithCategoryJoin = Question & {
-  categories: { id: string; name_en: string; name_es: string; color: string | null; theme_id: string };
+  categories: {
+    id: string;
+    name_en: string;
+    name_es: string;
+    color: string | null;
+    theme_id: string;
+  };
 };
-
-export type SubMode =
-  | "full"
-  | "quick_review"
-  | "category_focus"
-  | "spaced_repetition";
 
 export interface OrderedQuestion {
   question: Question;
-  cardState: UserCardState | null;
   categoryNameEn: string;
   categoryNameEs: string;
   categoryColor: string | null;
 }
 
-export interface OrderingOptions {
-  subMode: SubMode;
-  categoryId?: string;
-  limit?: number;
-}
-
+/**
+ * Get all quiz questions for a theme, shuffled randomly.
+ * Quiz mode is a simple recognition test with no FSRS or sub-modes.
+ */
 export async function getOrderedQuestions(
-  userId: string,
+  _userId: string,
   themeId: string,
-  options: OrderingOptions,
 ): Promise<OrderedQuestion[]> {
   const supabase = await createClient();
-  const now = new Date();
 
-  // 1. Fetch all questions for theme with category info
-  let questionsQuery = supabase
+  const { data: questions, error: qError } = await supabase
     .from("questions")
     .select(`
       *,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
-    .eq("categories.theme_id", themeId);
+    .eq("categories.theme_id", themeId)
+    .returns<QuestionWithCategoryJoin[]>();
 
-  // Category focus filter
-  if (options.subMode === "category_focus" && options.categoryId) {
-    questionsQuery = questionsQuery.eq("category_id", options.categoryId);
-  }
-
-  const { data: questions, error: qError } = await questionsQuery.returns<QuestionWithCategoryJoin[]>();
   if (qError || !questions || questions.length === 0) return [];
 
-  // 2. Fetch suspended questions and card states in parallel
-  const questionIds = questions.map((q) => q.id);
-  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
-    supabase
-      .from("suspended_questions")
-      .select("question_id")
-      .eq("user_id", userId)
-      .in("question_id", questionIds),
-    supabase
-      .from("user_card_state")
-      .select("*")
-      .eq("user_id", userId)
-      .in("question_id", questionIds),
-  ]);
-  const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
-  const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.question_id, cs]),
-  );
-
-  // 4. Build ordered list
-  let orderedQuestions: OrderedQuestion[] = questions
-    .filter((q) => !suspendedSet.has(q.id))
-    .map((q) => {
-      const { categories: cat, ...questionFields } = q;
-      return {
-        question: questionFields,
-        cardState: stateMap.get(q.id) || null,
-        categoryNameEn: cat.name_en,
-        categoryNameEs: cat.name_es,
-        categoryColor: cat.color,
-      };
-    });
-
-  // 5. Apply sub-mode filters
-  switch (options.subMode) {
-    case "quick_review":
-      // Only cards already seen, limit 20
-      orderedQuestions = orderedQuestions.filter((oq) => oq.cardState !== null);
-      break;
-    case "spaced_repetition":
-      // Only genuinely due review/relearning cards (not short-term learning steps)
-      orderedQuestions = orderedQuestions.filter((oq) => {
-        if (!oq.cardState) return false;
-        if (new Date(oq.cardState.due) > now) return false;
-        return oq.cardState.state === "review" || oq.cardState.state === "relearning";
-      });
-      break;
-    // 'full' and 'category_focus' use all questions
-  }
-
-  // 6. Sort: genuine review due → new cards → learning due → future
-  // Categorize cards into priority buckets:
-  // 0 = genuine review due (review/relearning state, due now)
-  // 1 = new/unseen cards
-  // 2 = learning cards due (short-term learning steps, recently answered)
-  // 3 = future cards (not yet due)
-  const getBucket = (oq: OrderedQuestion): number => {
-    const cs = oq.cardState;
-    if (!cs) return 1; // new/unseen
-    const isDue = new Date(cs.due) <= now;
-    if (isDue) {
-      // Genuine review: review or relearning state
-      if (cs.state === "review" || cs.state === "relearning") return 0;
-      // Learning state with due date = short-term learning step
-      return 2;
-    }
-    return 3; // future
-  };
-
-  orderedQuestions.sort((a, b) => {
-    const aBucket = getBucket(a);
-    const bBucket = getBucket(b);
-
-    if (aBucket !== bBucket) return aBucket - bBucket;
-
-    // Within genuine review bucket: most overdue first
-    if (aBucket === 0) {
-      return new Date(a.cardState!.due).getTime() - new Date(b.cardState!.due).getTime();
-    }
-
-    // Within learning due bucket: most overdue first
-    if (aBucket === 2) {
-      return new Date(a.cardState!.due).getTime() - new Date(b.cardState!.due).getTime();
-    }
-
-    // Within new or future: randomize
-    return Math.random() - 0.5;
+  const orderedQuestions: OrderedQuestion[] = questions.map((q) => {
+    const { categories: cat, ...questionFields } = q;
+    return {
+      question: questionFields,
+      categoryNameEn: cat.name_en,
+      categoryNameEs: cat.name_es,
+      categoryColor: cat.color,
+    };
   });
 
-  // 7. Apply limit
-  if (options.limit && options.limit > 0) {
-    orderedQuestions = orderedQuestions.slice(0, options.limit);
-  }
-
-  // Quick review default limit
-  if (options.subMode === "quick_review" && !options.limit) {
-    orderedQuestions = orderedQuestions.slice(0, 20);
+  // Shuffle (Fisher-Yates)
+  for (let i = orderedQuestions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [orderedQuestions[i], orderedQuestions[j]] = [
+      orderedQuestions[j],
+      orderedQuestions[i],
+    ];
   }
 
   return orderedQuestions;
 }
 
-// Get counts for sub-mode selection UI
-export async function getSubModeCounts(userId: string, themeId: string) {
+/** Get total quiz question count for a theme */
+export async function getQuizQuestionCount(themeId: string): Promise<number> {
   const supabase = await createClient();
-  const now = new Date();
-
-  const { data: questions } = await supabase
+  const { count } = await supabase
     .from("questions")
-    .select("id, categories!inner(theme_id)")
-    .eq("categories.theme_id", themeId)
-    .returns<{ id: string; categories: { theme_id: string } }[]>();
-
-  if (!questions || questions.length === 0) {
-    return { full: 0, quickReview: 0, spacedRepetition: 0 };
-  }
-
-  const questionIds = questions.map((q) => q.id);
-
-  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
-    supabase
-      .from("suspended_questions")
-      .select("question_id")
-      .eq("user_id", userId)
-      .in("question_id", questionIds),
-    supabase
-      .from("user_card_state")
-      .select("question_id, due, state")
-      .eq("user_id", userId)
-      .in("question_id", questionIds),
-  ]);
-  const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
-  const activeIds = questionIds.filter((id) => !suspendedSet.has(id));
-
-  const activeCardStates = (cardStates || []).filter(
-    (cs) => !suspendedSet.has(cs.question_id),
-  );
-  const seen = activeCardStates.length;
-  // Only count genuinely due review/relearning cards (not short-term learning steps)
-  const dueNow = activeCardStates.filter(
-    (cs) =>
-      new Date(cs.due) <= now &&
-      (cs.state === "review" || cs.state === "relearning"),
-  ).length;
-
-  return {
-    full: activeIds.length,
-    quickReview: Math.min(seen, 20),
-    spacedRepetition: dueNow,
-  };
+    .select("id, categories!inner(theme_id)", { count: "exact", head: true })
+    .eq("categories.theme_id", themeId);
+  return count ?? 0;
 }

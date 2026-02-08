@@ -63,7 +63,15 @@ export default async function AdminLayout({
             className="w-full justify-start"
             size="sm"
           >
-            <Link href="/admin/questions">Questions</Link>
+            <Link href="/admin/flashcards">Flashcards</Link>
+          </Button>
+          <Button
+            asChild
+            variant="ghost"
+            className="w-full justify-start"
+            size="sm"
+          >
+            <Link href="/admin/quizzes">Quizzes</Link>
           </Button>
           <Button
             asChild

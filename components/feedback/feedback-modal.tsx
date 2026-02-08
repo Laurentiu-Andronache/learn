@@ -29,7 +29,11 @@ interface FeedbackModalProps {
   defaultType?: string;
 }
 
-export function FeedbackModal({ open, onOpenChange, defaultType }: FeedbackModalProps) {
+export function FeedbackModal({
+  open,
+  onOpenChange,
+  defaultType,
+}: FeedbackModalProps) {
   const [type, setType] = useState<string>(defaultType ?? "bug");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -49,7 +53,9 @@ export function FeedbackModal({ open, onOpenChange, defaultType }: FeedbackModal
     if (!open) return;
     const fetchEmail = async () => {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       setUserEmail(user?.email ?? null);
     };
     fetchEmail();
@@ -142,9 +148,14 @@ export function FeedbackModal({ open, onOpenChange, defaultType }: FeedbackModal
                 <Checkbox
                   id="includeEmail"
                   checked={includeEmail}
-                  onCheckedChange={(checked) => setIncludeEmail(checked === true)}
+                  onCheckedChange={(checked) =>
+                    setIncludeEmail(checked === true)
+                  }
                 />
-                <Label htmlFor="includeEmail" className="text-sm font-normal cursor-pointer">
+                <Label
+                  htmlFor="includeEmail"
+                  className="text-sm font-normal cursor-pointer"
+                >
                   {t("feedback.includeEmail")} ({userEmail})
                 </Label>
               </div>

@@ -48,9 +48,7 @@ export default async function AboutPage() {
       <div className="container max-w-3xl mx-auto py-8 px-4 space-y-8">
         <div className="space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">{t("title")}</h1>
-          <p className="text-lg text-muted-foreground">
-            {t("intro")}
-          </p>
+          <p className="text-lg text-muted-foreground">{t("intro")}</p>
         </div>
 
         <Card>
@@ -63,10 +61,18 @@ export default async function AboutPage() {
             <p>{t("fsrsIntro")}</p>
             <p>{t("fsrsCoreIdea")}</p>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground">
-              <li><strong>{t("newCards")}</strong></li>
-              <li><strong>{t("difficultCards")}</strong></li>
-              <li><strong>{t("easyCards")}</strong></li>
-              <li><strong>{t("masteredCards")}</strong></li>
+              <li>
+                <strong>{t("newCards")}</strong>
+              </li>
+              <li>
+                <strong>{t("difficultCards")}</strong>
+              </li>
+              <li>
+                <strong>{t("easyCards")}</strong>
+              </li>
+              <li>
+                <strong>{t("masteredCards")}</strong>
+              </li>
             </ul>
             <p>{t("fsrsEfficiency")}</p>
           </CardContent>
@@ -111,48 +117,28 @@ export default async function AboutPage() {
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="what-is-fsrs">
-                <AccordionTrigger>
-                  {t("faqFsrsQuestion")}
-                </AccordionTrigger>
-                <AccordionContent>
-                  {t("faqFsrsAnswer")}
-                </AccordionContent>
+                <AccordionTrigger>{t("faqFsrsQuestion")}</AccordionTrigger>
+                <AccordionContent>{t("faqFsrsAnswer")}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="anonymous">
-                <AccordionTrigger>
-                  {t("faqAnonymousQuestion")}
-                </AccordionTrigger>
-                <AccordionContent>
-                  {t("faqAnonymousAnswer")}
-                </AccordionContent>
+                <AccordionTrigger>{t("faqAnonymousQuestion")}</AccordionTrigger>
+                <AccordionContent>{t("faqAnonymousAnswer")}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="bilingual">
-                <AccordionTrigger>
-                  {t("faqBilingualQuestion")}
-                </AccordionTrigger>
-                <AccordionContent>
-                  {t("faqBilingualAnswer")}
-                </AccordionContent>
+                <AccordionTrigger>{t("faqBilingualQuestion")}</AccordionTrigger>
+                <AccordionContent>{t("faqBilingualAnswer")}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="progress">
                 <AccordionTrigger>{t("faqProgressQuestion")}</AccordionTrigger>
-                <AccordionContent>
-                  {t("faqProgressAnswer")}
-                </AccordionContent>
+                <AccordionContent>{t("faqProgressAnswer")}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="suspend">
-                <AccordionTrigger>
-                  {t("faqSuspendQuestion")}
-                </AccordionTrigger>
-                <AccordionContent>
-                  {t("faqSuspendAnswer")}
-                </AccordionContent>
+                <AccordionTrigger>{t("faqSuspendQuestion")}</AccordionTrigger>
+                <AccordionContent>{t("faqSuspendAnswer")}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="data">
                 <AccordionTrigger>{t("faqDataQuestion")}</AccordionTrigger>
-                <AccordionContent>
-                  {t("faqDataAnswer")}
-                </AccordionContent>
+                <AccordionContent>{t("faqDataAnswer")}</AccordionContent>
               </AccordionItem>
             </Accordion>
           </CardContent>

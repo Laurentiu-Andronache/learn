@@ -25,7 +25,12 @@ interface ReadingViewProps {
   isAdmin?: boolean;
 }
 
-export function ReadingView({ userId, theme, progress, isAdmin }: ReadingViewProps) {
+export function ReadingView({
+  userId,
+  theme,
+  progress,
+  isAdmin,
+}: ReadingViewProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
 

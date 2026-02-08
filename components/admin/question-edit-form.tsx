@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -71,7 +71,13 @@ export function QuestionEditForm({
 
   const handleSave = () => {
     const updates: Record<string, unknown> = { ...editData };
-    for (const key of ["question_es", "explanation_en", "explanation_es", "extra_en", "extra_es"]) {
+    for (const key of [
+      "question_es",
+      "explanation_en",
+      "explanation_es",
+      "extra_en",
+      "extra_es",
+    ]) {
       if (updates[key] === "") updates[key] = null;
     }
     onSave(updates);
@@ -103,7 +109,10 @@ export function QuestionEditForm({
         <Textarea
           value={(editData[`question_${editTab}`] as string) ?? ""}
           onChange={(e) =>
-            setEditData({ ...editData, [`question_${editTab}`]: e.target.value })
+            setEditData({
+              ...editData,
+              [`question_${editTab}`]: e.target.value,
+            })
           }
           rows={2}
         />
@@ -114,13 +123,17 @@ export function QuestionEditForm({
         <Label>Options ({editTab.toUpperCase()})</Label>
         {((editData[`options_${editTab}`] as string[]) || []).map((opt, i) => (
           <div key={i} className="flex gap-2 items-center">
-            <span className="text-xs font-mono w-5">{String.fromCharCode(65 + i)}</span>
+            <span className="text-xs font-mono w-5">
+              {String.fromCharCode(65 + i)}
+            </span>
             <Input
               value={opt}
               onChange={(e) => updateOption(editTab, i, e.target.value)}
             />
             {i === (editData.correct_index as number) && (
-              <span className="text-green-600 text-sm font-bold shrink-0">✓</span>
+              <span className="text-green-600 text-sm font-bold shrink-0">
+                ✓
+              </span>
             )}
           </div>
         ))}
@@ -135,7 +148,10 @@ export function QuestionEditForm({
           max={((editData.options_en as string[]) || []).length - 1}
           value={editData.correct_index as number}
           onChange={(e) =>
-            setEditData({ ...editData, correct_index: parseInt(e.target.value) || 0 })
+            setEditData({
+              ...editData,
+              correct_index: parseInt(e.target.value, 10) || 0,
+            })
           }
           className="w-20"
         />
@@ -147,7 +163,10 @@ export function QuestionEditForm({
         <Textarea
           value={(editData[`explanation_${editTab}`] as string) ?? ""}
           onChange={(e) =>
-            setEditData({ ...editData, [`explanation_${editTab}`]: e.target.value })
+            setEditData({
+              ...editData,
+              [`explanation_${editTab}`]: e.target.value,
+            })
           }
           rows={2}
         />
@@ -175,7 +194,10 @@ export function QuestionEditForm({
             max={10}
             value={editData.difficulty as number}
             onChange={(e) =>
-              setEditData({ ...editData, difficulty: parseInt(e.target.value) || 1 })
+              setEditData({
+                ...editData,
+                difficulty: parseInt(e.target.value, 10) || 1,
+              })
             }
           />
         </div>

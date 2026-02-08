@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
-import type { SubMode } from "@/lib/fsrs/question-ordering";
-import { getOrderedQuestions } from "@/lib/fsrs/question-ordering";
+import type { SubMode } from "@/lib/fsrs/flashcard-ordering";
+import { getOrderedFlashcards } from "@/lib/fsrs/flashcard-ordering";
 import { createClient } from "@/lib/supabase/server";
 
 interface FlashcardsPageProps {
@@ -38,12 +38,12 @@ export default async function FlashcardsPage({
   if (!topic) redirect("/topics");
 
   const subMode = (mode as SubMode) || "full";
-  const questions = await getOrderedQuestions(user.id, id, {
+  const ordered = await getOrderedFlashcards(user.id, id, {
     subMode,
     categoryId: category,
   });
 
-  if (questions.length === 0) redirect("/topics");
+  if (ordered.length === 0) redirect("/topics");
 
   return (
     <FlashcardSession
@@ -52,17 +52,18 @@ export default async function FlashcardsPage({
       themeTitleEn={topic.title_en}
       themeTitleEs={topic.title_es}
       isAdmin={isAdmin}
-      questions={questions.map((q) => ({
-        id: q.question.id,
-        question_en: q.question.question_en,
-        question_es: q.question.question_es,
-        explanation_en: q.question.explanation_en,
-        explanation_es: q.question.explanation_es,
-        extra_en: q.question.extra_en,
-        extra_es: q.question.extra_es,
-        categoryNameEn: q.categoryNameEn,
-        categoryNameEs: q.categoryNameEs,
-        categoryColor: q.categoryColor,
+      flashcards={ordered.map((o) => ({
+        id: o.flashcard.id,
+        question_en: o.flashcard.question_en,
+        question_es: o.flashcard.question_es,
+        answer_en: o.flashcard.answer_en,
+        answer_es: o.flashcard.answer_es,
+        extra_en: o.flashcard.extra_en,
+        extra_es: o.flashcard.extra_es,
+        categoryNameEn: o.categoryNameEn,
+        categoryNameEs: o.categoryNameEs,
+        categoryColor: o.categoryColor,
+        cardState: o.cardState,
       }))}
     />
   );
