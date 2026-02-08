@@ -1,0 +1,144 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+import { useCallback, useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { getTopicById, updateTopicIntroText } from "@/lib/services/admin-topics";
+
+interface ReadingEditDialogProps {
+  themeId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSaved?: () => void;
+}
+
+export function ReadingEditDialog({
+  themeId,
+  open,
+  onOpenChange,
+  onSaved,
+}: ReadingEditDialogProps) {
+  const t = useTranslations();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [editTab, setEditTab] = useState<"en" | "es">("en");
+  const [topicTitle, setTopicTitle] = useState("");
+  const [introTextEn, setIntroTextEn] = useState("");
+  const [introTextEs, setIntroTextEs] = useState("");
+
+  const loadTopic = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const topic = await getTopicById(themeId);
+      setTopicTitle(topic.title_en);
+      setIntroTextEn(topic.intro_text_en ?? "");
+      setIntroTextEs(topic.intro_text_es ?? "");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load topic");
+    } finally {
+      setLoading(false);
+    }
+  }, [themeId]);
+
+  useEffect(() => {
+    if (open) loadTopic();
+  }, [open, loadTopic]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await updateTopicIntroText(
+        themeId,
+        introTextEn.trim() || null,
+        introTextEs.trim() || null,
+      );
+      onSaved?.();
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to save");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{t("admin.editReading")}</DialogTitle>
+          {topicTitle && (
+            <p className="text-xs text-muted-foreground">{topicTitle}</p>
+          )}
+        </DialogHeader>
+
+        {loading ? (
+          <p className="text-sm text-muted-foreground py-4">{t("common.loading")}</p>
+        ) : error ? (
+          <p className="text-sm text-red-500 py-4">{error}</p>
+        ) : (
+          <div className="space-y-4">
+            {/* EN/ES tabs */}
+            <div className="flex gap-2">
+              <Button
+                variant={editTab === "en" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setEditTab("en")}
+              >
+                EN
+              </Button>
+              <Button
+                variant={editTab === "es" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setEditTab("es")}
+              >
+                ES
+              </Button>
+            </div>
+
+            {/* Intro text */}
+            <div className="space-y-2">
+              <Label>Intro Text ({editTab.toUpperCase()}) — Markdown</Label>
+              <Textarea
+                value={editTab === "en" ? introTextEn : introTextEs}
+                onChange={(e) =>
+                  editTab === "en"
+                    ? setIntroTextEn(e.target.value)
+                    : setIntroTextEs(e.target.value)
+                }
+                rows={16}
+                placeholder="Markdown supported"
+              />
+            </div>
+
+            {error && <p className="text-sm text-red-500">{error}</p>}
+
+            {/* Actions */}
+            <div className="flex gap-2 pt-2">
+              <Button onClick={handleSave} disabled={saving} size="sm">
+                {saving ? t("common.loading") : t("common.save")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onOpenChange(false)}
+              >
+                {t("admin.cancelEdit")}
+              </Button>
+            </div>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}

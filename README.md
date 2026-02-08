@@ -50,7 +50,7 @@ learn-app/
 
 ## Database Schema
 
-### Content Tables (15 total)
+### Content Tables (13 total)
 1. **themes** - Top-level content groupings (displayed as "Topics" in UI)
 2. **categories** - Subject subdivisions
 3. **questions** - Quiz/flashcard items
@@ -61,10 +61,9 @@ learn-app/
 8. **suspended_questions** - Hidden questions
 9. **hidden_themes** - Hidden topics
 10. **reading_progress** - Reading mode tracking
-11. **feedback** - User feedback
-12. **question_reports** - Content quality reports
-13. **proposed_questions** - Community contributions
-14. **theme_proposals** - New topic suggestions
+11. **feedback** - User feedback (includes content issue reports with question_id)
+12. **proposed_questions** - Community contributions
+13. **theme_proposals** - New topic suggestions
 
 All tables have RLS policies for secure data access.
 

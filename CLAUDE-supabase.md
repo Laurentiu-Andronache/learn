@@ -24,7 +24,7 @@ Claude Code is responsible for all schema changes.
 - Update affected TypeScript types after schema changes
 - Update `CLAUDE.md` table count / schema reference if tables added/removed
 
-## Schema Reference (14 tables)
+## Schema Reference (13 tables)
 
 Full schema: `supabase/migrations/20260207000000_initial_schema.sql`
 
@@ -36,7 +36,7 @@ Full schema: `supabase/migrations/20260207000000_initial_schema.sql`
 
 **User Preferences**: `suspended_questions`, `hidden_themes`, `reading_progress`
 
-**Feedback & Moderation**: `feedback`, `question_reports`, `proposed_questions`, `theme_proposals`
+**Feedback & Moderation**: `feedback` (has `question_id` FK for content issue deep-linking), `proposed_questions`, `theme_proposals`
 
 ## Admin Access
 

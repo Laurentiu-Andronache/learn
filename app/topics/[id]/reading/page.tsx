@@ -16,6 +16,13 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
+  const { data: adminRow } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("email", user.email!)
+    .maybeSingle();
+  const isAdmin = !!adminRow;
+
   const { data: topic } = await supabase
     .from("themes")
     .select("id, title_en, title_es, intro_text_en, intro_text_es")
@@ -31,6 +38,7 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
       userId={user.id}
       theme={topic}
       progress={progress}
+      isAdmin={isAdmin}
     />
   );
 }

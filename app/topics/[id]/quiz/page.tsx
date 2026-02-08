@@ -25,6 +25,13 @@ export default async function QuizPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
+  const { data: adminRow } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("email", user.email!)
+    .maybeSingle();
+  const isAdmin = !!adminRow;
+
   const { data: topic } = await supabase
     .from("themes")
     .select("id, title_en, title_es")
@@ -75,6 +82,7 @@ export default async function QuizPage({
       counts={counts}
       categories={categories}
       initialSubMode={subModeParam ? subMode : undefined}
+      isAdmin={isAdmin}
     />
   );
 }

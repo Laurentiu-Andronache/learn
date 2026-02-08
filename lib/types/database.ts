@@ -151,17 +151,6 @@ export interface ReadingProgress {
 // ============================================================================
 
 export type FeedbackType = "bug" | "feature" | "content" | "other";
-export type IssueType =
-  | "incorrect_answer"
-  | "typo"
-  | "unclear"
-  | "outdated"
-  | "other";
-export type ModerationStatus =
-  | "pending"
-  | "reviewing"
-  | "resolved"
-  | "dismissed";
 export type ProposalStatus = "pending" | "approved" | "rejected";
 
 export interface Feedback {
@@ -169,22 +158,12 @@ export interface Feedback {
   user_id: string | null;
   type: FeedbackType | null;
   message: string;
+  name: string | null;
+  email: string | null;
+  question_id: string | null;
   url: string | null;
   user_agent: string | null;
   created_at: string;
-}
-
-export interface QuestionReport {
-  id: string;
-  question_id: string;
-  user_id: string | null;
-  issue_type: IssueType;
-  description: string;
-  status: ModerationStatus;
-  admin_notes: string | null;
-  created_at: string;
-  resolved_at: string | null;
-  resolved_by: string | null;
 }
 
 export interface ProposedQuestion {

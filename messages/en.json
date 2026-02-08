@@ -138,6 +138,7 @@
     "score": "Score",
     "idk": "I Don't Know",
     "suspend": "Suspend Question",
+    "questionSuspended": "Question suspended.",
     "learnMore": "Learn More",
     "correct": "Correct!",
     "incorrect": "Incorrect",
@@ -235,6 +236,7 @@
     "allTypes": "All Types",
     "searchQuestions": "Search questions...",
     "editQuestion": "Edit Question",
+    "editReading": "Edit Reading",
     "saveQuestion": "Save",
     "cancelEdit": "Cancel"
   },
@@ -271,6 +273,22 @@
     "message": "Message",
     "description": "Description",
     "issueType": "Issue Type"
+  },
+  "session": {
+    "stop": "Stop",
+    "nextTopic": "Next Topic",
+    "bury": "Bury",
+    "buryTooltip": "Postpone this card until tomorrow. It won't appear again today.",
+    "noMoreDueTopics": "No more topics with cards due today.",
+    "finding": "Finding...",
+    "cardBuried": "Card buried until tomorrow.",
+    "undo": "Undo",
+    "undone": "Last answer undone.",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this question permanently?",
+    "questionDeleted": "Question deleted.",
+    "questionUpdated": "Question updated."
   },
   "footer": {
     "tagline": "Science-backed learning"

@@ -1,12 +1,14 @@
 "use client";
 
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
-import { scheduleReview } from "@/lib/fsrs/actions";
+import { buryCard, scheduleReview, undoLastReview } from "@/lib/fsrs/actions";
 import type { SubMode } from "@/lib/fsrs/question-ordering";
+import { deleteQuestion } from "@/lib/services/admin-reviews";
 import { suspendQuestion } from "@/lib/services/user-preferences";
 import type { FSRSRating, Language, Question } from "@/lib/types/database";
+import { SessionToolbar } from "@/components/session/session-toolbar";
 import { QuizCard } from "./quiz-card";
 import { QuizProgress } from "./quiz-progress";
 import { type QuizAnswer, QuizResults } from "./quiz-results";
@@ -38,6 +40,7 @@ export interface QuizSessionProps {
   counts: { full: number; quickReview: number; spacedRepetition: number };
   categories: CategoryOption[];
   initialSubMode?: SubMode;
+  isAdmin?: boolean;
 }
 
 type SessionPhase = "select_mode" | "quiz" | "results";
@@ -53,8 +56,11 @@ export function QuizSession({
   counts,
   categories,
   initialSubMode,
+  isAdmin = false,
 }: QuizSessionProps) {
   const locale = useLocale() as Language;
+  const tq = useTranslations("quiz");
+  const ts = useTranslations("session");
   const themeTitle = locale === "es" ? themeTitleEs : themeTitleEn;
 
   const [phase, setPhase] = useState<SessionPhase>(
@@ -131,13 +137,15 @@ export function QuizSession({
     suspendQuestion(userId, q.question.id, "Suspended from quiz session")
       .catch(() => toast.error("Failed to suspend question."));
 
+    toast.success(tq("questionSuspended"), { duration: 3000 });
+
     // Skip to next question
     if (currentIndex + 1 >= questions.length) {
       setPhase("results");
     } else {
       setCurrentIndex((prev) => prev + 1);
     }
-  }, [questions, currentIndex, userId]);
+  }, [questions, currentIndex, userId, tq]);
 
   // ── Review missed ──
   const handleReviewMissed = useCallback(() => {
@@ -153,6 +161,42 @@ export function QuizSession({
     sessionStartTime.current = Date.now();
     setPhase("quiz");
   }, [answers, allQuestions]);
+
+  // ── Bury card ──
+  const handleBury = useCallback(() => {
+    const q = questions[currentIndex];
+    buryCard(userId, q.question.id).catch(() => {});
+    toast.success(ts("cardBuried"), { duration: 3000 });
+
+    if (currentIndex + 1 >= questions.length) {
+      setPhase("results");
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  }, [questions, currentIndex, userId, ts]);
+
+  // ── Undo last answer ──
+  const handleUndo = useCallback(() => {
+    if (currentIndex === 0 || answers.length === 0) return;
+    const prevQ = questions[currentIndex - 1];
+    undoLastReview(userId, prevQ.question.id).catch(() => {});
+    toast.success(ts("undone"), { duration: 3000 });
+    setAnswers((prev) => prev.slice(0, -1));
+    setCurrentIndex((prev) => prev - 1);
+  }, [questions, currentIndex, answers.length, userId, ts]);
+
+  // ── Delete question (admin) ──
+  const handleDeleteQuestion = useCallback(() => {
+    const q = questions[currentIndex];
+    deleteQuestion(q.question.id).catch(() => {});
+    toast.success(ts("questionDeleted"), { duration: 3000 });
+
+    const remaining = questions.filter((_, i) => i !== currentIndex);
+    setQuestions(remaining);
+    if (remaining.length === 0 || currentIndex >= remaining.length) {
+      setPhase("results");
+    }
+  }, [questions, currentIndex, ts]);
 
   // ── Render ──
 
@@ -186,7 +230,7 @@ export function QuizSession({
     locale === "es" ? currentQ.categoryNameEs : currentQ.categoryNameEn;
 
   return (
-    <div className="w-full">
+    <div className="w-full pb-16">
       <QuizProgress
         current={currentIndex + 1}
         total={questions.length}
@@ -205,6 +249,17 @@ export function QuizSession({
           onSuspend={handleSuspend}
         />
       </div>
+      <SessionToolbar
+        userId={userId}
+        themeId={themeId}
+        mode="quiz"
+        isAdmin={isAdmin}
+        currentQuestion={currentQ.question}
+        onBury={handleBury}
+        onUndo={handleUndo}
+        onDeleteQuestion={handleDeleteQuestion}
+        canUndo={currentIndex > 0 && answers.length > 0}
+      />
     </div>
   );
 }

@@ -1,12 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { QuestionEditForm } from "@/components/admin/question-edit-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -14,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import {
   getQuestionsList,
   updateQuestion,
@@ -66,11 +65,15 @@ export function QuestionsClient({
   categories,
 }: QuestionsClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations();
   const [isPending, startTransition] = useTransition();
 
+  const editParam = searchParams.get("edit");
+  const themeParam = searchParams.get("theme");
+
   // Filters
-  const [themeId, setThemeId] = useState<string>("all");
+  const [themeId, setThemeId] = useState<string>(themeParam || "all");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -81,9 +84,10 @@ export function QuestionsClient({
 
   // Editing
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTab, setEditTab] = useState<"en" | "es">("en");
-  const [editData, setEditData] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);
+
+  // Deep-link tracking
+  const deepLinked = useRef(false);
 
   // Debounce search
   useEffect(() => {
@@ -121,31 +125,25 @@ export function QuestionsClient({
 
   const startEditing = (q: QuestionItem) => {
     setEditingId(q.id);
-    setEditTab("en");
-    setEditData({
-      question_en: q.question_en,
-      question_es: q.question_es ?? "",
-      options_en: q.options_en ?? [],
-      options_es: q.options_es ?? [],
-      correct_index: q.correct_index ?? 0,
-      explanation_en: q.explanation_en ?? "",
-      explanation_es: q.explanation_es ?? "",
-      extra_en: q.extra_en ?? "",
-      extra_es: q.extra_es ?? "",
-      difficulty: q.difficulty,
-      type: q.type,
-    });
   };
 
-  const handleSave = async () => {
+  // Deep-link: auto-expand question from ?edit= param
+  useEffect(() => {
+    if (!editParam || deepLinked.current) return;
+    const target = questions.find((q) => q.id === editParam);
+    if (target) {
+      deepLinked.current = true;
+      startEditing(target);
+      setTimeout(() => {
+        document.getElementById(`question-${editParam}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 100);
+    }
+  }, [editParam, questions]);
+
+  const handleSave = async (updates: Record<string, unknown>) => {
     if (!editingId) return;
     setSaving(true);
     try {
-      const updates: Record<string, unknown> = { ...editData };
-      // Clean empty strings to null
-      for (const key of ["question_es", "explanation_en", "explanation_es", "extra_en", "extra_es"]) {
-        if (updates[key] === "") updates[key] = null;
-      }
       await updateQuestion(editingId, updates);
       setEditingId(null);
       fetchQuestions();
@@ -157,13 +155,6 @@ export function QuestionsClient({
   const handleDelete = async (id: string) => {
     await deleteQuestion(id);
     fetchQuestions();
-  };
-
-  const updateOption = (lang: "en" | "es", index: number, value: string) => {
-    const key = lang === "en" ? "options_en" : "options_es";
-    const options = [...((editData[key] as string[]) || [])];
-    options[index] = value;
-    setEditData({ ...editData, [key]: options });
   };
 
   return (
@@ -223,7 +214,7 @@ export function QuestionsClient({
       {/* Question list */}
       <div className="space-y-2">
         {questions.map((q) => (
-          <div key={q.id} className="rounded-lg border p-4 space-y-2">
+          <div key={q.id} id={`question-${q.id}`} className="rounded-lg border p-4 space-y-2">
             <div
               className="flex items-start justify-between gap-4 cursor-pointer"
               onClick={() => editingId === q.id ? setEditingId(null) : startEditing(q)}
@@ -245,147 +236,14 @@ export function QuestionsClient({
 
             {/* Inline edit form */}
             {editingId === q.id && (
-              <div className="mt-3 space-y-4 border-t pt-3">
-                {/* EN/ES tabs */}
-                <div className="flex gap-2">
-                  <Button
-                    variant={editTab === "en" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setEditTab("en")}
-                  >
-                    EN
-                  </Button>
-                  <Button
-                    variant={editTab === "es" ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setEditTab("es")}
-                  >
-                    ES
-                  </Button>
-                </div>
-
-                {/* Question text */}
-                <div className="space-y-2">
-                  <Label>{editTab === "en" ? "Question (EN)" : "Question (ES)"}</Label>
-                  <Textarea
-                    value={(editData[`question_${editTab}`] as string) ?? ""}
-                    onChange={(e) =>
-                      setEditData({ ...editData, [`question_${editTab}`]: e.target.value })
-                    }
-                    rows={2}
-                  />
-                </div>
-
-                {/* Options */}
-                <div className="space-y-2">
-                  <Label>Options ({editTab.toUpperCase()})</Label>
-                  {((editData[`options_${editTab}`] as string[]) || []).map((opt, i) => (
-                    <div key={i} className="flex gap-2 items-center">
-                      <span className="text-xs font-mono w-5">{String.fromCharCode(65 + i)}</span>
-                      <Input
-                        value={opt}
-                        onChange={(e) => updateOption(editTab, i, e.target.value)}
-                      />
-                      {i === (editData.correct_index as number) && (
-                        <Badge variant="outline" className="text-green-600 border-green-600 shrink-0">
-                          ✓
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Correct index */}
-                <div className="space-y-2">
-                  <Label>Correct Index</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={((editData.options_en as string[]) || []).length - 1}
-                    value={editData.correct_index as number}
-                    onChange={(e) =>
-                      setEditData({ ...editData, correct_index: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-20"
-                  />
-                </div>
-
-                {/* Explanation */}
-                <div className="space-y-2">
-                  <Label>Explanation ({editTab.toUpperCase()})</Label>
-                  <Textarea
-                    value={(editData[`explanation_${editTab}`] as string) ?? ""}
-                    onChange={(e) =>
-                      setEditData({ ...editData, [`explanation_${editTab}`]: e.target.value })
-                    }
-                    rows={2}
-                  />
-                </div>
-
-                {/* Extra */}
-                <div className="space-y-2">
-                  <Label>Extra / Learn More ({editTab.toUpperCase()})</Label>
-                  <Textarea
-                    value={(editData[`extra_${editTab}`] as string) ?? ""}
-                    onChange={(e) =>
-                      setEditData({ ...editData, [`extra_${editTab}`]: e.target.value })
-                    }
-                    rows={2}
-                  />
-                </div>
-
-                {/* Shared fields */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-2">
-                    <Label>Difficulty (1-10)</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={10}
-                      value={editData.difficulty as number}
-                      onChange={(e) =>
-                        setEditData({ ...editData, difficulty: parseInt(e.target.value) || 1 })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Type</Label>
-                    <Select
-                      value={editData.type as string}
-                      onValueChange={(v) => setEditData({ ...editData, type: v })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="multiple_choice">MC</SelectItem>
-                        <SelectItem value="true_false">T/F</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex gap-2">
-                  <Button onClick={handleSave} disabled={saving} size="sm">
-                    {saving ? t("common.loading") : t("admin.saveQuestion")}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setEditingId(null)}
-                  >
-                    {t("admin.cancelEdit")}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive ml-auto"
-                    onClick={() => handleDelete(q.id)}
-                  >
-                    {t("admin.delete")}
-                  </Button>
-                </div>
+              <div className="mt-3 border-t pt-3">
+                <QuestionEditForm
+                  question={q}
+                  onSave={handleSave}
+                  onCancel={() => setEditingId(null)}
+                  onDelete={() => handleDelete(q.id)}
+                  saving={saving}
+                />
               </div>
             )}
           </div>

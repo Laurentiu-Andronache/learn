@@ -18,9 +18,9 @@ learn-app/
 
 ## Dev Workflow
 
-- Dev server: `npm run dev` on `:4000`
-- Tests: `npm run test` (Vitest, 123 tests across 8 files)
-- Deploy: push to main → Vercel auto-deploys to https://learn-seven-peach.vercel.app
+- Dev server: `npm run dev` on `:4000` (it should already be running)
+- Tests: `npm run test` (Vitest, 118 tests across 8 files)
+- Deploy: `npm run build`; if it succeeds, then push to main → Vercel auto-deploys to https://learn-seven-peach.vercel.app
 - All env vars must be configured in Vercel dashboard
 
 ## SEO Implementation
@@ -98,6 +98,12 @@ Components and services use "Topic" naming, DB queries use "theme" table names:
 - `lib/services/user-preferences.ts` — `hideTopic`, `unhideTopic`, `getHiddenTopics`
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress`
 
+## Admin Editing (shared components)
+
+- **Question editing form**: `components/admin/question-edit-form.tsx` — single source of truth, used inline in Admin > Questions (`questions-client.tsx`), in Admin > Content Issues (`question-edit-dialog.tsx`), and in the session toolbar's Edit dialog during quiz/flashcard sessions.
+- **Reading/intro text editing**: `components/admin/topic-form.tsx` for full topic editing (Admin > Topics > Edit), `components/admin/reading-edit-dialog.tsx` for lightweight intro text editing from Admin > Content Issues. The `intro_text_en`/`intro_text_es` fields on `themes` table hold the markdown rendered in Reading Mode.
+
+
 ## FSRS Question Ordering (4-Bucket System)
 
 In "full" quiz/flashcard mode, questions sort by priority buckets:
@@ -120,7 +126,7 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `lib/fsrs/__tests__/card-mapper.test.ts` | 26 | toCard/fromCard roundtrips, state mapping |
 | `lib/fsrs/scheduler.test.ts` | 5 | FSRS scheduling integration |
 | `lib/fsrs/card-mapper.test.ts` | 9 | Card mapping basics |
-| `lib/services/__tests__/admin-reviews.test.ts` | 21 | CRUD, status updates, error handling |
+| `lib/services/__tests__/admin-reviews.test.ts` | 16 | CRUD, status updates, error handling |
 | `lib/services/__tests__/user-preferences.test.ts` | 18 | Suspend/hide, reading progress, profiles |
 | `components/quiz/quiz-logic.test.ts` | 17 | Shuffle, grading, results, review-missed |
 | `components/flashcards/flashcard-logic.test.ts` | 11 | Grading, stack advance, categories |

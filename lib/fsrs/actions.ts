@@ -2,6 +2,7 @@
 
 import type { Grade } from "ts-fsrs";
 import { createNewCard, fromCard, toCard } from "@/lib/fsrs/card-mapper";
+import { getAllTopicsProgress } from "@/lib/fsrs/progress";
 import { fsrs, Rating } from "@/lib/fsrs/scheduler";
 import { createClient } from "@/lib/supabase/server";
 
@@ -96,4 +97,110 @@ export async function scheduleReview(
   }
 
   return { cardStateId, newState: dbFields };
+}
+
+export async function buryCard(userId: string, questionId: string) {
+  const supabase = await createClient();
+
+  const tomorrow = new Date();
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  tomorrow.setUTCHours(0, 0, 0, 0);
+  const dueStr = tomorrow.toISOString();
+
+  const { data: existing } = await supabase
+    .from("user_card_state")
+    .select("id")
+    .eq("user_id", userId)
+    .eq("question_id", questionId)
+    .single();
+
+  if (existing) {
+    const { error } = await supabase
+      .from("user_card_state")
+      .update({ due: dueStr, updated_at: new Date().toISOString() })
+      .eq("id", existing.id);
+    if (error) throw new Error(`Failed to bury card: ${error.message}`);
+  } else {
+    const card = createNewCard();
+    const dbFields = fromCard(card);
+    const { error } = await supabase.from("user_card_state").insert({
+      user_id: userId,
+      question_id: questionId,
+      ...dbFields,
+      due: dueStr,
+    });
+    if (error) throw new Error(`Failed to bury card: ${error.message}`);
+  }
+}
+
+export async function undoLastReview(userId: string, questionId: string) {
+  const supabase = await createClient();
+
+  // Find the most recent review log
+  const { data: lastLog } = await supabase
+    .from("review_logs")
+    .select("id, stability_before, difficulty_before")
+    .eq("user_id", userId)
+    .eq("question_id", questionId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  if (!lastLog) return;
+
+  // Delete the review log
+  await supabase.from("review_logs").delete().eq("id", lastLog.id);
+
+  // Restore or delete card state
+  if (lastLog.stability_before === null || lastLog.difficulty_before === null) {
+    // Card was newly created — remove it entirely
+    await supabase
+      .from("user_card_state")
+      .delete()
+      .eq("user_id", userId)
+      .eq("question_id", questionId);
+  } else {
+    // Find the previous review log to restore full state
+    const { data: prevLog } = await supabase
+      .from("review_logs")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("question_id", questionId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (prevLog) {
+      // Reconstruct card state from the previous review's outcome
+      // Use stability_before/difficulty_before from the now-latest log
+      // as those represent what the card looked like BEFORE that review
+      await supabase
+        .from("user_card_state")
+        .update({
+          stability: lastLog.stability_before,
+          difficulty: lastLog.difficulty_before,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("question_id", questionId);
+    } else {
+      // No more review logs — remove card state
+      await supabase
+        .from("user_card_state")
+        .delete()
+        .eq("user_id", userId)
+        .eq("question_id", questionId);
+    }
+  }
+}
+
+export async function findNextTopic(
+  userId: string,
+  excludeThemeId: string,
+): Promise<string | null> {
+  const allProgress = await getAllTopicsProgress(userId);
+  const next = allProgress.find(
+    (p) => p.topicId !== excludeThemeId && p.dueToday > 0,
+  );
+  return next?.topicId ?? null;
 }

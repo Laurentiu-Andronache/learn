@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,6 +24,9 @@ interface FlashcardStackProps {
   onGrade: (questionId: string, knew: boolean) => void;
   onSuspend: (questionId: string) => void;
   onComplete: (results: { knew: string[]; didntKnow: string[] }) => void;
+  skipSignal?: number;
+  undoSignal?: number;
+  onIndexChange?: (index: number) => void;
 }
 
 export function FlashcardStack({
@@ -32,6 +35,9 @@ export function FlashcardStack({
   onGrade,
   onSuspend,
   onComplete,
+  skipSignal,
+  undoSignal,
+  onIndexChange,
 }: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -41,6 +47,40 @@ export function FlashcardStack({
   const t = useTranslations("feedback");
   const tf = useTranslations("flashcard");
   const tq = useTranslations("quiz");
+  const prevSkipSignal = useRef(skipSignal ?? 0);
+  const prevUndoSignal = useRef(undoSignal ?? 0);
+
+  // Skip signal — advance without grading
+  useEffect(() => {
+    if (skipSignal !== undefined && skipSignal > prevSkipSignal.current) {
+      prevSkipSignal.current = skipSignal;
+      if (currentIndex + 1 >= questions.length) {
+        onComplete({ knew, didntKnow });
+      } else {
+        const next = currentIndex + 1;
+        setCurrentIndex(next);
+        setIsFlipped(false);
+        onIndexChange?.(next);
+      }
+    }
+  }, [skipSignal, currentIndex, questions.length, knew, didntKnow, onComplete, onIndexChange]);
+
+  // Undo signal — go back to previous card
+  useEffect(() => {
+    if (undoSignal !== undefined && undoSignal > prevUndoSignal.current) {
+      prevUndoSignal.current = undoSignal;
+      if (currentIndex > 0) {
+        const prev = currentIndex - 1;
+        const prevQ = questions[prev];
+        // Remove from knew or didntKnow
+        setKnew((k) => k.filter((id) => id !== prevQ.id));
+        setDidntKnow((dk) => dk.filter((id) => id !== prevQ.id));
+        setCurrentIndex(prev);
+        setIsFlipped(false);
+        onIndexChange?.(prev);
+      }
+    }
+  }, [undoSignal, currentIndex, questions, onIndexChange]);
 
   const advance = useCallback(
     (knewIt: boolean) => {
@@ -64,6 +104,7 @@ export function FlashcardStack({
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
         setIsFlipped(false);
+        onIndexChange?.(nextIndex);
       }
     },
     [
@@ -73,6 +114,7 @@ export function FlashcardStack({
       didntKnow,
       onGrade,
       onComplete,
+      onIndexChange,
     ],
   );
 
@@ -159,6 +201,13 @@ export function FlashcardStack({
                 onClick={(e) => {
                   e.stopPropagation();
                   onSuspend(current.id);
+                  // Advance to next card (without recording a grade)
+                  if (currentIndex + 1 >= questions.length) {
+                    onComplete({ knew, didntKnow });
+                  } else {
+                    setCurrentIndex(currentIndex + 1);
+                    setIsFlipped(false);
+                  }
                 }}
               >
                 ⊘ {tq("suspend")}

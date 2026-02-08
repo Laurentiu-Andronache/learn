@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/supabase/server";
 
-type AdminTable = "question_reports" | "proposed_questions" | "theme_proposals";
+type AdminTable = "proposed_questions" | "theme_proposals";
 
 // Generic status update — now uses requireAdmin's user for resolved_by/reviewed_by
 async function updateStatus(
@@ -47,26 +47,6 @@ export async function getFeedbackList(type?: string) {
   return data;
 }
 
-// Question reports
-export async function getReportsList() {
-  const { supabase } = await requireAdmin();
-  const { data, error } = await supabase
-    .from("question_reports")
-    .select("*, question:questions(question_en, question_es)")
-    .order("created_at", { ascending: false });
-  if (error) throw new Error(error.message);
-  return data;
-}
-
-export async function updateReportStatus(
-  id: string,
-  status: string,
-  adminNotes?: string,
-) {
-  await updateStatus("question_reports", id, status, adminNotes);
-  revalidatePath("/admin/reviews/reports");
-}
-
 // Proposed questions
 export async function getProposedQuestionsList() {
   const { supabase } = await requireAdmin();
@@ -105,6 +85,18 @@ export async function updateThemeProposalStatus(
 ) {
   await updateStatus("theme_proposals", id, status, adminNotes);
   revalidatePath("/admin/reviews/theme-proposals");
+}
+
+// Single question fetch (for inline editing)
+export async function getQuestionById(id: string) {
+  const { supabase } = await requireAdmin();
+  const { data, error } = await supabase
+    .from("questions")
+    .select("*, category:categories(id, name_en, theme_id, theme:themes(id, title_en))")
+    .eq("id", id)
+    .single();
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 // Questions CRUD
@@ -171,13 +163,6 @@ export async function deleteFeedback(id: string) {
   revalidatePath("/admin/reviews/feature-requests");
   revalidatePath("/admin/reviews/content-issues");
   revalidatePath("/admin/reviews/other-feedback");
-}
-
-export async function deleteReport(id: string) {
-  const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("question_reports").delete().eq("id", id);
-  if (error) throw new Error(error.message);
-  revalidatePath("/admin/reviews/reports");
 }
 
 export async function deleteProposedQuestion(id: string) {

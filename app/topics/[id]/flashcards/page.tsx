@@ -22,6 +22,13 @@ export default async function FlashcardsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
+  const { data: adminRow } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("email", user.email!)
+    .maybeSingle();
+  const isAdmin = !!adminRow;
+
   const { data: topic } = await supabase
     .from("themes")
     .select("id, title_en, title_es")
@@ -44,6 +51,7 @@ export default async function FlashcardsPage({
       themeId={id}
       themeTitleEn={topic.title_en}
       themeTitleEs={topic.title_es}
+      isAdmin={isAdmin}
       questions={questions.map((q) => ({
         id: q.question.id,
         question_en: q.question.question_en,

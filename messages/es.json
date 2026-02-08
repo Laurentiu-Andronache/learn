@@ -138,6 +138,7 @@
     "score": "Puntuación",
     "idk": "No lo sé",
     "suspend": "Suspender Pregunta",
+    "questionSuspended": "Pregunta suspendida.",
     "learnMore": "Saber Más",
     "correct": "¡Correcto!",
     "incorrect": "Incorrecto",
@@ -235,6 +236,7 @@
     "allTypes": "Todos los Tipos",
     "searchQuestions": "Buscar preguntas...",
     "editQuestion": "Editar Pregunta",
+    "editReading": "Editar Lectura",
     "saveQuestion": "Guardar",
     "cancelEdit": "Cancelar"
   },
@@ -271,6 +273,22 @@
     "message": "Mensaje",
     "description": "Descripción",
     "issueType": "Tipo de Problema"
+  },
+  "session": {
+    "stop": "Detener",
+    "nextTopic": "Siguiente Tema",
+    "bury": "Enterrar",
+    "buryTooltip": "Posponer esta tarjeta hasta mañana. No aparecerá de nuevo hoy.",
+    "noMoreDueTopics": "No hay más temas con tarjetas pendientes hoy.",
+    "finding": "Buscando...",
+    "cardBuried": "Tarjeta enterrada hasta mañana.",
+    "undo": "Deshacer",
+    "undone": "Última respuesta deshecha.",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "deleteConfirm": "¿Eliminar esta pregunta permanentemente?",
+    "questionDeleted": "Pregunta eliminada.",
+    "questionUpdated": "Pregunta actualizada."
   },
   "footer": {
     "tagline": "Aprendizaje respaldado por la ciencia"

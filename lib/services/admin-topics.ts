@@ -67,6 +67,22 @@ export async function getTopicById(id: string) {
   return data;
 }
 
+export async function updateTopicIntroText(
+  id: string,
+  introTextEn: string | null,
+  introTextEs: string | null,
+) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase
+    .from("themes")
+    .update({ intro_text_en: introTextEn, intro_text_es: introTextEs })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/topics");
+  revalidatePath(`/admin/topics/${id}/edit`);
+  revalidatePath("/admin/reviews/content-issues");
+}
+
 export async function getAllTopics() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase

@@ -40,8 +40,6 @@ function chainable(finalResult: { data?: unknown; error?: unknown }) {
 
 import {
   getFeedbackList,
-  getReportsList,
-  updateReportStatus,
   getProposedQuestionsList,
   updateProposedQuestionStatus,
   getThemeProposalsList,
@@ -50,7 +48,6 @@ import {
   updateQuestion,
   deleteQuestion,
   deleteFeedback,
-  deleteReport,
   deleteProposedQuestion,
   deleteThemeProposal,
   getThemesList,
@@ -100,77 +97,6 @@ describe("getFeedbackList", () => {
     );
 
     await expect(getFeedbackList()).rejects.toThrow("DB error");
-  });
-});
-
-// ─── getReportsList ─────────────────────────────────────────────────
-
-describe("getReportsList", () => {
-  it("returns reports with joined question data", async () => {
-    const mockData = [
-      { id: "1", question: { question_en: "Q1", question_es: "P1" } },
-    ];
-    mockSupabase.from.mockReturnValue(
-      chainable({ data: mockData, error: null }),
-    );
-
-    const result = await getReportsList();
-    expect(mockSupabase.from).toHaveBeenCalledWith("question_reports");
-    expect(result).toEqual(mockData);
-  });
-});
-
-// ─── updateReportStatus ─────────────────────────────────────────────
-
-describe("updateReportStatus", () => {
-  it("updates status and sets resolved_at for terminal statuses", async () => {
-
-    const updateMock = vi.fn();
-    const eqMock = vi.fn();
-    mockSupabase.from.mockReturnValue({ update: updateMock });
-    updateMock.mockReturnValue({ eq: eqMock });
-    eqMock.mockResolvedValue({ error: null });
-
-    await updateReportStatus("report-1", "resolved", "Fixed it");
-
-    expect(updateMock).toHaveBeenCalledWith(
-      expect.objectContaining({
-        status: "resolved",
-        admin_notes: "Fixed it",
-        resolved_by: "admin-uuid",
-        reviewed_by: "admin-uuid",
-      }),
-    );
-    // resolved_at and reviewed_at should be ISO date strings
-    const arg = updateMock.mock.calls[0][0];
-    expect(arg.resolved_at).toBeDefined();
-    expect(arg.reviewed_at).toBeDefined();
-  });
-
-  it("does not set resolved_at for non-terminal statuses", async () => {
-
-    const updateMock = vi.fn();
-    const eqMock = vi.fn();
-    mockSupabase.from.mockReturnValue({ update: updateMock });
-    updateMock.mockReturnValue({ eq: eqMock });
-    eqMock.mockResolvedValue({ error: null });
-
-    await updateReportStatus("report-1", "reviewing");
-
-    expect(updateMock).toHaveBeenCalledWith({ status: "reviewing" });
-  });
-
-  it("throws on error", async () => {
-
-    const updateMock = vi.fn();
-    const eqMock = vi.fn();
-    mockSupabase.from.mockReturnValue({ update: updateMock });
-    updateMock.mockReturnValue({ eq: eqMock });
-    eqMock.mockResolvedValue({ error: { message: "Not found" } });
-
-    await expect(
-      updateReportStatus("bad-id", "resolved"),
-    ).rejects.toThrow("Not found");
   });
 });
 
@@ -322,19 +248,6 @@ describe("deleteFeedback", () => {
 
     await deleteFeedback("f-1");
     expect(mockSupabase.from).toHaveBeenCalledWith("feedback");
-  });
-});
-
-describe("deleteReport", () => {
-  it("deletes report", async () => {
-    const deleteMock = vi.fn();
-    const eqMock = vi.fn();
-    mockSupabase.from.mockReturnValue({ delete: deleteMock });
-    deleteMock.mockReturnValue({ eq: eqMock });
-    eqMock.mockResolvedValue({ error: null });
-
-    await deleteReport("r-1");
-    expect(mockSupabase.from).toHaveBeenCalledWith("question_reports");
   });
 });
 

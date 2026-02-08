@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getQuestionsList, getThemesList, getCategoriesList } from "@/lib/services/admin-reviews";
 import { QuestionsClient } from "./questions-client";
 
@@ -11,11 +12,13 @@ export default async function AdminQuestionsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Questions</h1>
-      <QuestionsClient
-        initialQuestions={questions}
-        themes={themes}
-        categories={categories}
-      />
+      <Suspense>
+        <QuestionsClient
+          initialQuestions={questions}
+          themes={themes}
+          categories={categories}
+        />
+      </Suspense>
     </div>
   );
 }

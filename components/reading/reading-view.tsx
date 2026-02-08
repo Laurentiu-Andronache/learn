@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pencil } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import ReactMarkdown from "react-markdown";
@@ -22,9 +22,10 @@ interface ReadingViewProps {
     current_section: number;
     completion_percent: number;
   }>;
+  isAdmin?: boolean;
 }
 
-export function ReadingView({ userId, theme, progress }: ReadingViewProps) {
+export function ReadingView({ userId, theme, progress, isAdmin }: ReadingViewProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
 
@@ -56,6 +57,13 @@ export function ReadingView({ userId, theme, progress }: ReadingViewProps) {
             </Link>
           </Button>
           <h1 className="text-2xl font-bold">{title}</h1>
+          {isAdmin && (
+            <Button variant="ghost" size="icon-sm" asChild className="ml-auto">
+              <Link href={`/admin/topics/${theme.id}/edit`}>
+                <Pencil size={16} />
+              </Link>
+            </Button>
+          )}
         </div>
 
         {content ? (
