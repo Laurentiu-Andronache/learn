@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +8,6 @@ import { createClient } from "@/lib/supabase/client";
 export function AnonymousLoginButton() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
   const t = useTranslations();
 
   const handleAnonymousLogin = async () => {
@@ -20,8 +18,7 @@ export function AnonymousLoginButton() {
     try {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) throw error;
-      router.refresh();
-      router.push("/topics");
+      window.location.href = "/topics";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {

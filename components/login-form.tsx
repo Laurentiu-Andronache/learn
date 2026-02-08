@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { AnonymousLoginButton } from "@/components/anonymous-login-button";
@@ -26,7 +25,6 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const t = useTranslations();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -41,8 +39,7 @@ export function LoginForm({
         password,
       });
       if (error) throw error;
-      router.refresh();
-      router.push("/topics");
+      window.location.href = "/topics";
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : t("common.error"));
     } finally {

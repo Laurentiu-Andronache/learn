@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -20,7 +19,6 @@ export function UpgradeAccountForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const t = useTranslations();
 
   const handleUpgrade = async (e: React.FormEvent) => {
@@ -47,7 +45,7 @@ export function UpgradeAccountForm() {
           .eq("id", user.id);
       }
 
-      router.push("/topics");
+      window.location.href = "/topics";
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : t("common.error"));
     } finally {
