@@ -20,7 +20,6 @@ learn-app/
 
 - Dev server: `npm run dev` on `:4000`
 - Tests: `npm run test` (Vitest, 123 tests across 8 files)
-- Test page: `/test-db` (local only — **SECURITY: must gate behind dev check or remove before prod**)
 - Deploy: push to main → Vercel auto-deploys to https://learn-seven-peach.vercel.app
 - All env vars must be configured in Vercel dashboard
 
@@ -133,9 +132,7 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
 ### Critical — Fix Before Production
-- **Open redirect** in `app/auth/confirm/route.ts:10` — `next` param passed to `redirect()` unvalidated
-- **`/test-db` exposes data** via service role key — gate behind dev check or remove
-- **No middleware.ts** — `proxy.ts` exists but is dead code; auth/session refresh not centralized
+- ~~**No middleware.ts** — `proxy.ts` exists but is dead code~~ **RESOLVED**: `proxy.ts` is the correct Next.js 16 convention (replaces `middleware.ts`). Cleaned up to session-refresh-only; auth checks stay in layouts per Next.js 16 security guidance.
 - **Server actions lack app-layer auth** — admin actions in `admin-topics.ts`, `admin-reviews.ts` rely solely on RLS
 - **Fire-and-forget `scheduleReview()`** — errors silently lost in quiz/flashcard sessions
 

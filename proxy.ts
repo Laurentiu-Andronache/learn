@@ -1,14 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/", "/auth", "/test-db", "/about"];
-
-function isPublic(pathname: string) {
-  return PUBLIC_PATHS.some(
-    (p) => pathname === p || pathname.startsWith(`${p}/`),
-  );
-}
-
 export async function proxy(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -33,55 +25,9 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  // Refresh session — must happen before any auth checks
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  // Public routes — no auth needed
-  if (isPublic(pathname)) {
-    return supabaseResponse;
-  }
-
-  // All other routes require auth
-  if (!user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
-  }
-
-  // Admin routes — verify admin_users membership
-  if (pathname.startsWith("/admin")) {
-    const { data } = await supabase
-      .from("admin_users")
-      .select("id")
-      .eq("email", user.email!)
-      .maybeSingle();
-
-    if (!data) {
-      const url = request.nextUrl.clone();
-      url.pathname = "/";
-      return NextResponse.redirect(url);
-    }
-  }
-
-  // Auto-create profile on first authenticated request
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  if (!profile) {
-    await supabase.from("profiles").insert({
-      id: user.id,
-      display_name: user.user_metadata?.full_name ?? null,
-      preferred_language: "en",
-      is_anonymous: user.is_anonymous ?? false,
-    });
-  }
+  // Refresh session — must run before any rendering.
+  // Uses getUser() (server-validated) instead of getSession() (local JWT only).
+  await supabase.auth.getUser();
 
   return supabaseResponse;
 }
