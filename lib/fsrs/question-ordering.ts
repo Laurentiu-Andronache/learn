@@ -108,37 +108,52 @@ export async function getOrderedQuestions(
       orderedQuestions = orderedQuestions.filter((oq) => oq.cardState !== null);
       break;
     case "spaced_repetition":
-      // Only due/overdue cards
+      // Only genuinely due review/relearning cards (not short-term learning steps)
       orderedQuestions = orderedQuestions.filter((oq) => {
         if (!oq.cardState) return false;
-        return new Date(oq.cardState.due) <= now;
+        if (new Date(oq.cardState.due) > now) return false;
+        return oq.cardState.state === "review" || oq.cardState.state === "relearning";
       });
       break;
     // 'full' and 'category_focus' use all questions
   }
 
-  // 6. Sort: due now (overdue first) → new cards (randomized) → future
+  // 6. Sort: genuine review due → new cards → learning due → future
+  // Categorize cards into priority buckets:
+  // 0 = genuine review due (review/relearning state, due now)
+  // 1 = new/unseen cards
+  // 2 = learning cards due (short-term learning steps, recently answered)
+  // 3 = future cards (not yet due)
+  const getBucket = (oq: OrderedQuestion): number => {
+    const cs = oq.cardState;
+    if (!cs) return 1; // new/unseen
+    const isDue = new Date(cs.due) <= now;
+    if (isDue) {
+      // Genuine review: review or relearning state
+      if (cs.state === "review" || cs.state === "relearning") return 0;
+      // Learning state with due date = short-term learning step
+      return 2;
+    }
+    return 3; // future
+  };
+
   orderedQuestions.sort((a, b) => {
-    const aState = a.cardState;
-    const bState = b.cardState;
+    const aBucket = getBucket(a);
+    const bBucket = getBucket(b);
 
-    // Due/overdue cards first (sorted by most overdue)
-    const aIsDue = aState && new Date(aState.due) <= now;
-    const bIsDue = bState && new Date(bState.due) <= now;
+    if (aBucket !== bBucket) return aBucket - bBucket;
 
-    if (aIsDue && !bIsDue) return -1;
-    if (!aIsDue && bIsDue) return 1;
-    if (aIsDue && bIsDue) {
-      return new Date(aState!.due).getTime() - new Date(bState!.due).getTime();
+    // Within genuine review bucket: most overdue first
+    if (aBucket === 0) {
+      return new Date(a.cardState!.due).getTime() - new Date(b.cardState!.due).getTime();
     }
 
-    // New cards (no state) before future cards
-    const aIsNew = !aState;
-    const bIsNew = !bState;
-    if (aIsNew && !bIsNew) return -1;
-    if (!aIsNew && bIsNew) return 1;
+    // Within learning due bucket: most overdue first
+    if (aBucket === 2) {
+      return new Date(a.cardState!.due).getTime() - new Date(b.cardState!.due).getTime();
+    }
 
-    // Randomize within same category
+    // Within new or future: randomize
     return Math.random() - 0.5;
   });
 
@@ -182,13 +197,16 @@ export async function getSubModeCounts(userId: string, themeId: string) {
 
   const { data: cardStates } = await supabase
     .from("user_card_state")
-    .select("question_id, due")
+    .select("question_id, due, state")
     .eq("user_id", userId)
     .in("question_id", activeIds);
 
   const seen = (cardStates || []).length;
+  // Only count genuinely due review/relearning cards (not short-term learning steps)
   const dueNow = (cardStates || []).filter(
-    (cs) => new Date(cs.due) <= now,
+    (cs) =>
+      new Date(cs.due) <= now &&
+      (cs.state === "review" || cs.state === "relearning"),
   ).length;
 
   return {

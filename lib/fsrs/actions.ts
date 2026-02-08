@@ -44,7 +44,7 @@ export async function scheduleReview(
   // Upsert card state
   let cardStateId: string;
   if (existingState) {
-    const { data: updated } = await supabase
+    const { data: updated, error: updateError } = await supabase
       .from("user_card_state")
       .update({
         ...dbFields,
@@ -56,9 +56,12 @@ export async function scheduleReview(
       .eq("id", existingState.id)
       .select("id")
       .single();
-    cardStateId = updated!.id;
+    if (updateError || !updated) {
+      throw new Error(`Failed to update card state: ${updateError?.message ?? "no data returned"}`);
+    }
+    cardStateId = updated.id;
   } else {
-    const { data: inserted } = await supabase
+    const { data: inserted, error: insertError } = await supabase
       .from("user_card_state")
       .insert({
         user_id: userId,
@@ -70,11 +73,14 @@ export async function scheduleReview(
       })
       .select("id")
       .single();
-    cardStateId = inserted!.id;
+    if (insertError || !inserted) {
+      throw new Error(`Failed to insert card state: ${insertError?.message ?? "no data returned"}`);
+    }
+    cardStateId = inserted.id;
   }
 
   // Insert review log
-  await supabase.from("review_logs").insert({
+  const { error: logError } = await supabase.from("review_logs").insert({
     user_id: userId,
     question_id: questionId,
     card_state_id: cardStateId,
@@ -85,6 +91,9 @@ export async function scheduleReview(
     stability_before: stabilityBefore,
     difficulty_before: difficultyBefore,
   });
+  if (logError) {
+    console.error("Failed to insert review log:", logError.message);
+  }
 
   return { cardStateId, newState: dbFields };
 }

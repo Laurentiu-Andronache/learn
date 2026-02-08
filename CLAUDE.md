@@ -19,7 +19,8 @@ learn-app/
 ## Dev Workflow
 
 - Dev server: `npm run dev` on `:4000`
-- Test page: `/test-db` (local & prod)
+- Tests: `npm run test` (Vitest, 123 tests across 8 files)
+- Test page: `/test-db` (local only — **SECURITY: must gate behind dev check or remove before prod**)
 - Deploy: push to main → Vercel auto-deploys to https://learn-seven-peach.vercel.app
 - All env vars must be configured in Vercel dashboard
 
@@ -97,10 +98,60 @@ Components and services use "Topic" naming, DB queries use "theme" table names:
 - `lib/services/user-preferences.ts` — `hideTopic`, `unhideTopic`, `getHiddenTopics`
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress`
 
+## FSRS Question Ordering (4-Bucket System)
+
+In "full" quiz/flashcard mode, questions sort by priority buckets:
+1. **Bucket 0**: Genuine review due (state=`review`/`relearning`, due now) — most overdue first
+2. **Bucket 1**: New/unseen cards (no card state) — randomized
+3. **Bucket 2**: Learning cards due (state=`learning`, short-term steps) — most overdue first
+4. **Bucket 3**: Future cards (not yet due) — randomized
+
+`spaced_repetition` sub-mode only shows bucket 0 cards. `quick_review` shows seen cards, max 20.
+
+**Key insight**: Cards in FSRS "learning" state have short intervals (1-10 min). These must NOT be treated as genuine review-due cards, or users re-see questions they just answered.
+
+## Testing
+
+Vitest configured with jsdom + @testing-library. Run: `npm run test`
+
+| Test File | Tests | Covers |
+|-----------|-------|--------|
+| `lib/fsrs/__tests__/question-ordering.test.ts` | 16 | 4-bucket sort, sub-mode filters, counts |
+| `lib/fsrs/__tests__/card-mapper.test.ts` | 26 | toCard/fromCard roundtrips, state mapping |
+| `lib/fsrs/scheduler.test.ts` | 5 | FSRS scheduling integration |
+| `lib/fsrs/card-mapper.test.ts` | 9 | Card mapping basics |
+| `lib/services/__tests__/admin-reviews.test.ts` | 21 | CRUD, status updates, error handling |
+| `lib/services/__tests__/user-preferences.test.ts` | 18 | Suspend/hide, reading progress, profiles |
+| `components/quiz/quiz-logic.test.ts` | 17 | Shuffle, grading, results, review-missed |
+| `components/flashcards/flashcard-logic.test.ts` | 11 | Grading, stack advance, categories |
+
 ## Dev Status
 
-**Done**: Auth, FSRS, Quiz/Flashcard/Reading modes, Admin panel, i18n (EN/ES), content seeding.
+**Done**: Auth, FSRS, Quiz/Flashcard/Reading modes, Admin panel, i18n (EN/ES), content seeding, unit tests (123).
 **Next**: Analytics, community features, additional content.
+
+## Known Issues & Tech Debt (from Feb 2026 audit)
+
+### Critical — Fix Before Production
+- **Open redirect** in `app/auth/confirm/route.ts:10` — `next` param passed to `redirect()` unvalidated
+- **`/test-db` exposes data** via service role key — gate behind dev check or remove
+- **No middleware.ts** — `proxy.ts` exists but is dead code; auth/session refresh not centralized
+- **Server actions lack app-layer auth** — admin actions in `admin-topics.ts`, `admin-reviews.ts` rely solely on RLS
+- **Fire-and-forget `scheduleReview()`** — errors silently lost in quiz/flashcard sessions
+
+### High — Performance & Quality
+- **N+1 in `getAllTopicsProgress()`** — 3 queries per topic (10 topics = 30 queries); batch-fetch instead
+- **Duplicate theme fetch** in `app/topics/[id]/page.tsx` — `generateMetadata()` and page component both query
+- **Sequential queries** in `question-ordering.ts:51-63` and `progress.ts` — use `Promise.all()`
+- **5x `as any` casts** on Supabase returns — add proper types
+- **`updateStatus()` accepts arbitrary table name** — restrict to union type
+
+### Medium — i18n & UX
+- **30 files with hardcoded English** — translation keys often exist but aren't imported (worst: about page, flashcard components, theme switcher)
+- **FlashcardStack double-render** — duplicate `currentIndex` state with parent
+- **Confetti effect** in quiz-results lacks rAF cleanup on unmount
+- **Client-side themeId filtering** in `getQuestionsList` — move to DB query
+- **Feedback/question_reports INSERT** allows unauthenticated — restrict to `auth.uid() IS NOT NULL`
 
 ## UX Patterns (from prototype)
 
