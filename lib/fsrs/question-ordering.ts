@@ -46,21 +46,21 @@ export async function getOrderedQuestions(
   const { data: questions, error: qError } = await questionsQuery;
   if (qError || !questions || questions.length === 0) return [];
 
-  // 2. Exclude suspended questions
+  // 2. Fetch suspended questions and card states in parallel
   const questionIds = questions.map((q) => q.id);
-  const { data: suspended } = await supabase
-    .from("suspended_questions")
-    .select("question_id")
-    .eq("user_id", userId)
-    .in("question_id", questionIds);
+  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
+    supabase
+      .from("suspended_questions")
+      .select("question_id")
+      .eq("user_id", userId)
+      .in("question_id", questionIds),
+    supabase
+      .from("user_card_state")
+      .select("*")
+      .eq("user_id", userId)
+      .in("question_id", questionIds),
+  ]);
   const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
-
-  // 3. Get user card states
-  const { data: cardStates } = await supabase
-    .from("user_card_state")
-    .select("*")
-    .eq("user_id", userId)
-    .in("question_id", questionIds);
   const stateMap = new Map(
     (cardStates || []).map((cs) => [cs.question_id, cs]),
   );
@@ -186,24 +186,27 @@ export async function getSubModeCounts(userId: string, themeId: string) {
 
   const questionIds = questions.map((q) => q.id);
 
-  const { data: suspended } = await supabase
-    .from("suspended_questions")
-    .select("question_id")
-    .eq("user_id", userId)
-    .in("question_id", questionIds);
+  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
+    supabase
+      .from("suspended_questions")
+      .select("question_id")
+      .eq("user_id", userId)
+      .in("question_id", questionIds),
+    supabase
+      .from("user_card_state")
+      .select("question_id, due, state")
+      .eq("user_id", userId)
+      .in("question_id", questionIds),
+  ]);
   const suspendedSet = new Set((suspended || []).map((s) => s.question_id));
-
   const activeIds = questionIds.filter((id) => !suspendedSet.has(id));
 
-  const { data: cardStates } = await supabase
-    .from("user_card_state")
-    .select("question_id, due, state")
-    .eq("user_id", userId)
-    .in("question_id", activeIds);
-
-  const seen = (cardStates || []).length;
+  const activeCardStates = (cardStates || []).filter(
+    (cs) => !suspendedSet.has(cs.question_id),
+  );
+  const seen = activeCardStates.length;
   // Only count genuinely due review/relearning cards (not short-term learning steps)
-  const dueNow = (cardStates || []).filter(
+  const dueNow = activeCardStates.filter(
     (cs) =>
       new Date(cs.due) <= now &&
       (cs.state === "review" || cs.state === "relearning"),

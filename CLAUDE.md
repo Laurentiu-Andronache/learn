@@ -132,7 +132,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
 ### High — Performance & Quality
-- **Sequential queries** in `question-ordering.ts:51-63` — use `Promise.all()` (progress.ts already fixed)
 - **5x `as any` casts** on Supabase returns — add proper types
 
 ### Medium — i18n & UX
