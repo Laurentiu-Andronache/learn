@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -9,6 +10,16 @@ import { getTopicProgress } from "@/lib/fsrs/progress";
 import { getSubModeCounts } from "@/lib/fsrs/question-ordering";
 import { createClient } from "@/lib/supabase/server";
 
+const getTopicById = cache(async (id: string) => {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("themes")
+    .select("*")
+    .eq("id", id)
+    .single();
+  return data;
+});
+
 interface Props {
   params: Promise<{ id: string }>;
 }
@@ -16,13 +27,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const locale = await getLocale();
-  const supabase = await createClient();
-
-  const { data: topic } = await supabase
-    .from("themes")
-    .select("title_en, title_es, description_en, description_es")
-    .eq("id", id)
-    .single();
+  const topic = await getTopicById(id);
 
   if (!topic) {
     return {
@@ -76,11 +81,7 @@ export default async function TopicDetailPage({ params }: Props) {
   const tTopics = await getTranslations("topics");
   const tModes = await getTranslations("modes");
 
-  const { data: topic } = await supabase
-    .from("themes")
-    .select("*")
-    .eq("id", id)
-    .single();
+  const topic = await getTopicById(id);
 
   if (!topic) redirect("/topics");
 
