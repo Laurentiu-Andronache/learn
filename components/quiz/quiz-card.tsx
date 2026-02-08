@@ -263,6 +263,7 @@ export function QuizCard({
             </div>
             <QuestionReportForm
               questionId={question.id}
+              questionText={locale === "es" && question.question_es ? question.question_es : question.question_en}
               open={reportOpen}
               onOpenChange={setReportOpen}
             />

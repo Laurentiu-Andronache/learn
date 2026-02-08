@@ -3,13 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { deleteFeedback } from "@/lib/services/admin-reviews";
 
 interface FeedbackItem {
   id: string;
-  type: string | null;
   message: string;
   name: string | null;
   email: string | null;
@@ -35,14 +33,9 @@ export function FeedbackClient({ items }: { items: FeedbackItem[] }) {
       {items.map((item) => (
         <div key={item.id} className="rounded-lg border p-4 space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              {item.type && (
-                <Badge variant="secondary">{item.type}</Badge>
-              )}
-              <span className="text-xs text-muted-foreground">
-                {new Date(item.created_at).toLocaleDateString()}
-              </span>
-            </div>
+            <span className="text-xs text-muted-foreground">
+              {new Date(item.created_at).toLocaleDateString()}
+            </span>
             <Button
               variant="ghost"
               size="sm"

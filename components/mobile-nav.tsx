@@ -14,7 +14,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 
-export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
+export function MobileNav({ isLoggedIn, isAdmin }: { isLoggedIn: boolean; isAdmin: boolean }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("nav");
 
@@ -52,6 +52,15 @@ export function MobileNav({ isLoggedIn }: { isLoggedIn: boolean }) {
               >
                 {t("settings")}
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+                >
+                  {t("admin")}
+                </Link>
+              )}
               <div className="mt-2 border-t pt-2 px-3">
                 <LogoutButton />
               </div>

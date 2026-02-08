@@ -12,6 +12,15 @@ export async function NavBar() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  let isAdmin = false;
+  if (user) {
+    const { data: admin } = await supabase
+      .from("admin_users")
+      .select("id")
+      .eq("email", user.email!)
+      .maybeSingle();
+    isAdmin = !!admin;
+  }
   const t = await getTranslations("nav");
 
   return (
@@ -31,6 +40,11 @@ export async function NavBar() {
               <Button asChild variant="ghost" size="sm">
                 <Link href="/settings">{t("settings")}</Link>
               </Button>
+              {isAdmin && (
+                <Button asChild variant="ghost" size="sm">
+                  <Link href="/admin">{t("admin")}</Link>
+                </Button>
+              )}
               <LogoutButton />
             </>
           ) : (
@@ -51,7 +65,7 @@ export async function NavBar() {
         <div className="flex md:hidden items-center gap-1">
           <LanguageSwitcher />
           <ThemeSwitcher />
-          <MobileNav isLoggedIn={!!user} />
+          <MobileNav isLoggedIn={!!user} isAdmin={isAdmin} />
         </div>
       </div>
     </nav>

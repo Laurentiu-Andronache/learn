@@ -26,10 +26,11 @@ import { createClient } from "@/lib/supabase/client";
 interface FeedbackModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultType?: string;
 }
 
-export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
-  const [type, setType] = useState<string>("feature");
+export function FeedbackModal({ open, onOpenChange, defaultType }: FeedbackModalProps) {
+  const [type, setType] = useState<string>(defaultType ?? "bug");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -37,6 +38,12 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
   const [includeEmail, setIncludeEmail] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const t = useTranslations();
+
+  useEffect(() => {
+    if (open) {
+      setType(defaultType ?? "bug");
+    }
+  }, [open, defaultType]);
 
   useEffect(() => {
     if (!open) return;
@@ -71,7 +78,7 @@ export function FeedbackModal({ open, onOpenChange }: FeedbackModalProps) {
         onOpenChange(false);
         setSubmitted(false);
         setMessage("");
-        setType("feature");
+        setType(defaultType ?? "bug");
         setName("");
         setIncludeEmail(false);
       }, 2000);

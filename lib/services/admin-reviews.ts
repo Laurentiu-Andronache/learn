@@ -36,12 +36,16 @@ async function updateStatus(
 }
 
 // Feedback
-export async function getFeedbackList() {
+export async function getFeedbackList(type?: string) {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from("feedback")
     .select("*")
     .order("created_at", { ascending: false });
+  if (type) {
+    query = query.eq("type", type);
+  }
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data;
 }
@@ -169,7 +173,10 @@ export async function deleteFeedback(id: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("feedback").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/reviews/feedback");
+  revalidatePath("/admin/reviews/bug-reports");
+  revalidatePath("/admin/reviews/feature-requests");
+  revalidatePath("/admin/reviews/content-issues");
+  revalidatePath("/admin/reviews/other-feedback");
 }
 
 export async function deleteReport(id: string) {

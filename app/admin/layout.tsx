@@ -71,7 +71,7 @@ export default async function AdminLayout({
             className="w-full justify-start"
             size="sm"
           >
-            <Link href="/admin/reviews/feedback">Feedback</Link>
+            <Link href="/admin/reviews/bug-reports">Bug Reports</Link>
           </Button>
           <Button
             asChild
@@ -79,7 +79,7 @@ export default async function AdminLayout({
             className="w-full justify-start"
             size="sm"
           >
-            <Link href="/admin/reviews/reports">Reports</Link>
+            <Link href="/admin/reviews/feature-requests">Feature Requests</Link>
           </Button>
           <Button
             asChild
@@ -87,7 +87,7 @@ export default async function AdminLayout({
             className="w-full justify-start"
             size="sm"
           >
-            <Link href="/admin/reviews/proposed-questions">Proposed Qs</Link>
+            <Link href="/admin/reviews/content-issues">Content Issues</Link>
           </Button>
           <Button
             asChild
@@ -95,7 +95,7 @@ export default async function AdminLayout({
             className="w-full justify-start"
             size="sm"
           >
-            <Link href="/admin/reviews/theme-proposals">Topic Ideas</Link>
+            <Link href="/admin/reviews/other-feedback">Other</Link>
           </Button>
         </nav>
       </aside>

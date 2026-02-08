@@ -9,78 +9,26 @@ import {
 } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase/server";
 
-async function getDashboardStats() {
+export default async function AdminDashboard() {
   const supabase = await createClient();
 
   const [
-    { count: themesCount },
-    { count: questionsCount },
-    { count: usersCount },
-    { count: pendingFeedback },
-    { count: pendingReports },
-    { count: pendingProposedQs },
-    { count: pendingThemeProposals },
+    { count: topicCount },
+    { count: questionCount },
+    { count: userCount },
+    { count: bugCount },
+    { count: featureCount },
+    { count: contentCount },
+    { count: otherCount },
   ] = await Promise.all([
-    supabase.from("themes").select("id", { count: "exact", head: true }),
-    supabase.from("questions").select("id", { count: "exact", head: true }),
-    supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("feedback").select("id", { count: "exact", head: true }),
-    supabase
-      .from("question_reports")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("proposed_questions")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
-    supabase
-      .from("theme_proposals")
-      .select("id", { count: "exact", head: true })
-      .eq("status", "pending"),
+    supabase.from("themes").select("*", { count: "exact", head: true }).eq("is_active", true),
+    supabase.from("questions").select("*", { count: "exact", head: true }),
+    supabase.from("profiles").select("*", { count: "exact", head: true }),
+    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "bug"),
+    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "feature"),
+    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "content"),
+    supabase.from("feedback").select("*", { count: "exact", head: true }).eq("type", "other"),
   ]);
-
-  return {
-    themes: themesCount ?? 0,
-    questions: questionsCount ?? 0,
-    users: usersCount ?? 0,
-    pendingFeedback: pendingFeedback ?? 0,
-    pendingReports: pendingReports ?? 0,
-    pendingProposedQs: pendingProposedQs ?? 0,
-    pendingThemeProposals: pendingThemeProposals ?? 0,
-  };
-}
-
-export default async function AdminDashboard() {
-  const stats = await getDashboardStats();
-
-  const reviewItems = [
-    {
-      label: "Feedback",
-      count: stats.pendingFeedback,
-      href: "/admin/reviews/feedback",
-    },
-    {
-      label: "Question Reports",
-      count: stats.pendingReports,
-      href: "/admin/reviews/reports",
-    },
-    {
-      label: "Proposed Questions",
-      count: stats.pendingProposedQs,
-      href: "/admin/reviews/proposed-questions",
-    },
-    {
-      label: "Theme Proposals",
-      count: stats.pendingThemeProposals,
-      href: "/admin/reviews/theme-proposals",
-    },
-  ];
-
-  const totalPending =
-    stats.pendingFeedback +
-    stats.pendingReports +
-    stats.pendingProposedQs +
-    stats.pendingThemeProposals;
 
   return (
     <div className="space-y-6">
@@ -91,51 +39,45 @@ export default async function AdminDashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Topics</CardDescription>
-            <CardTitle className="text-3xl">{stats.themes}</CardTitle>
+            <CardTitle className="text-3xl">{topicCount ?? 0}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Questions</CardDescription>
-            <CardTitle className="text-3xl">{stats.questions}</CardTitle>
+            <CardTitle className="text-3xl">{questionCount ?? 0}</CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Users</CardDescription>
-            <CardTitle className="text-3xl">{stats.users}</CardTitle>
+            <CardTitle className="text-3xl">{userCount ?? 0}</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
-      {/* Pending review queue */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            Review Queue
-            {totalPending > 0 && (
-              <Badge variant="destructive">{totalPending}</Badge>
-            )}
-          </CardTitle>
-          <CardDescription>Items awaiting admin review</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {reviewItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
-              >
-                <span className="text-sm font-medium">{item.label}</span>
-                <Badge variant={item.count > 0 ? "default" : "secondary"}>
-                  {item.count}
-                </Badge>
-              </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Feedback */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold">Feedback</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link href="/admin/reviews/bug-reports" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+            <span>Bug Reports</span>
+            <Badge variant="secondary">{bugCount ?? 0}</Badge>
+          </Link>
+          <Link href="/admin/reviews/feature-requests" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+            <span>Feature Requests</span>
+            <Badge variant="secondary">{featureCount ?? 0}</Badge>
+          </Link>
+          <Link href="/admin/reviews/content-issues" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+            <span>Content Issues</span>
+            <Badge variant="secondary">{contentCount ?? 0}</Badge>
+          </Link>
+          <Link href="/admin/reviews/other-feedback" className="flex items-center justify-between rounded-lg border p-4 hover:bg-accent transition-colors">
+            <span>Other</span>
+            <Badge variant="secondary">{otherCount ?? 0}</Badge>
+          </Link>
+        </div>
+      </div>
 
       {/* Quick actions */}
       <Card>

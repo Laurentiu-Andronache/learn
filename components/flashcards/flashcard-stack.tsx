@@ -173,6 +173,7 @@ export function FlashcardStack({
 
       <QuestionReportForm
         questionId={current.id}
+        questionText={locale === "es" && current.question_es ? current.question_es : current.question_en}
         open={reportOpen}
         onOpenChange={setReportOpen}
       />

@@ -22,12 +22,14 @@ import { createClient } from "@/lib/supabase/client";
 
 interface QuestionReportFormProps {
   questionId: string;
+  questionText?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function QuestionReportForm({
   questionId,
+  questionText,
   open,
   onOpenChange,
 }: QuestionReportFormProps) {
@@ -46,11 +48,13 @@ export function QuestionReportForm({
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      await supabase.from("question_reports").insert({
-        question_id: questionId,
+      const questionRef = questionText ? `\n\n[Question: ${questionText}]` : `\n\n[Question ID: ${questionId}]`;
+      await supabase.from("feedback").insert({
         user_id: user?.id || null,
-        issue_type: issueType,
-        description: description.trim(),
+        type: "content",
+        message: `[${issueType}] ${description.trim()}${questionRef}`,
+        url: window.location.href,
+        user_agent: navigator.userAgent,
       });
       setSubmitted(true);
       setTimeout(() => {
