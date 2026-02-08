@@ -26,13 +26,11 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
 
   const progress = await getReadingProgress(user.id, id).catch(() => []);
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   return (
     <ReadingView
       userId={user.id}
-      theme={topic as any}
-      progress={progress as any}
+      theme={topic}
+      progress={progress}
     />
   );
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 }

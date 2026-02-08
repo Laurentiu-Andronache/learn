@@ -13,6 +13,7 @@ function chainable(result: MockResult) {
     eq: () => self,
     in: () => self,
     not: () => self,
+    returns: () => self,
     single: () => Promise.resolve(result),
     then: (resolve: (v: MockResult) => void) => Promise.resolve(result).then(resolve),
   };

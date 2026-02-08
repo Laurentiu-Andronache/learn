@@ -1,6 +1,11 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Question, UserCardState } from "@/lib/types/database";
 
+/** Question row with joined category (PostgREST returns single object for FK) */
+type QuestionWithCategoryJoin = Question & {
+  categories: { id: string; name_en: string; name_es: string; color: string | null; theme_id: string };
+};
+
 export type SubMode =
   | "full"
   | "quick_review"
@@ -43,7 +48,7 @@ export async function getOrderedQuestions(
     questionsQuery = questionsQuery.eq("category_id", options.categoryId);
   }
 
-  const { data: questions, error: qError } = await questionsQuery;
+  const { data: questions, error: qError } = await questionsQuery.returns<QuestionWithCategoryJoin[]>();
   if (qError || !questions || questions.length === 0) return [];
 
   // 2. Fetch suspended questions and card states in parallel
@@ -69,31 +74,9 @@ export async function getOrderedQuestions(
   let orderedQuestions: OrderedQuestion[] = questions
     .filter((q) => !suspendedSet.has(q.id))
     .map((q) => {
-      const cat = q.categories as {
-        id: string;
-        name_en: string;
-        name_es: string;
-        color: string | null;
-        theme_id: string;
-      };
+      const { categories: cat, ...questionFields } = q;
       return {
-        question: {
-          id: q.id,
-          category_id: q.category_id,
-          type: q.type,
-          question_en: q.question_en,
-          question_es: q.question_es,
-          options_en: q.options_en,
-          options_es: q.options_es,
-          correct_index: q.correct_index,
-          explanation_en: q.explanation_en,
-          explanation_es: q.explanation_es,
-          extra_en: q.extra_en,
-          extra_es: q.extra_es,
-          difficulty: q.difficulty,
-          created_at: q.created_at,
-          updated_at: q.updated_at,
-        } as Question,
+        question: questionFields,
         cardState: stateMap.get(q.id) || null,
         categoryNameEn: cat.name_en,
         categoryNameEs: cat.name_es,
@@ -178,7 +161,8 @@ export async function getSubModeCounts(userId: string, themeId: string) {
   const { data: questions } = await supabase
     .from("questions")
     .select("id, categories!inner(theme_id)")
-    .eq("categories.theme_id", themeId);
+    .eq("categories.theme_id", themeId)
+    .returns<{ id: string; categories: { theme_id: string } }[]>();
 
   if (!questions || questions.length === 0) {
     return { full: 0, quickReview: 0, spacedRepetition: 0 };

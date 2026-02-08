@@ -131,9 +131,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
-### High — Performance & Quality
-- **5x `as any` casts** on Supabase returns — add proper types
-
 ### Medium — i18n & UX
 - **30 files with hardcoded English** — translation keys often exist but aren't imported (worst: about page, flashcard components, theme switcher)
 - **FlashcardStack double-render** — duplicate `currentIndex` state with parent

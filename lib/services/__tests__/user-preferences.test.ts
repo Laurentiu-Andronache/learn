@@ -108,7 +108,7 @@ describe("getSuspendedQuestions", () => {
     mockSupabase.from.mockReturnValue({ select: selectMock });
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockReturnValue({ order: orderMock });
-    orderMock.mockResolvedValue({ data: mockData, error: null });
+    orderMock.mockReturnValue({ returns: vi.fn().mockResolvedValue({ data: mockData, error: null }) });
 
     const result = await getSuspendedQuestions("user-1");
     expect(result).toEqual(mockData);
@@ -123,7 +123,7 @@ describe("getSuspendedQuestions", () => {
     mockSupabase.from.mockReturnValue({ select: selectMock });
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockReturnValue({ order: orderMock });
-    orderMock.mockResolvedValue({ data: null, error: null });
+    orderMock.mockReturnValue({ returns: vi.fn().mockResolvedValue({ data: null, error: null }) });
 
     const result = await getSuspendedQuestions("user-1");
     expect(result).toEqual([]);
@@ -182,7 +182,7 @@ describe("getHiddenTopics", () => {
     mockSupabase.from.mockReturnValue({ select: selectMock });
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockReturnValue({ order: orderMock });
-    orderMock.mockResolvedValue({ data: mockData, error: null });
+    orderMock.mockReturnValue({ returns: vi.fn().mockResolvedValue({ data: mockData, error: null }) });
 
     const result = await getHiddenTopics("user-1");
     expect(result).toEqual(mockData);

@@ -39,7 +39,6 @@ export default async function SettingsPage() {
     getHiddenTopics(user.id).catch(() => []),
   ]);
 
-  /* eslint-disable @typescript-eslint/no-explicit-any */
   return (
     <SettingsClient
       userId={user.id}
@@ -47,9 +46,8 @@ export default async function SettingsPage() {
       isAnonymous={isAnonymous}
       createdAt={user.created_at}
       profile={profile}
-      suspendedQuestions={suspendedQuestions as any}
-      hiddenTopics={hiddenTopics as any}
+      suspendedQuestions={suspendedQuestions}
+      hiddenTopics={hiddenTopics}
     />
   );
-  /* eslint-enable @typescript-eslint/no-explicit-any */
 }

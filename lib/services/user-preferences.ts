@@ -31,7 +31,19 @@ export async function unsuspendQuestion(userId: string, questionId: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function getSuspendedQuestions(userId: string) {
+export interface SuspendedQuestionDetail {
+  id: string;
+  reason: string | null;
+  suspended_at: string;
+  question: {
+    id: string;
+    question_en: string;
+    question_es: string;
+    category: { name_en: string; name_es: string } | null;
+  } | null;
+}
+
+export async function getSuspendedQuestions(userId: string): Promise<SuspendedQuestionDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("suspended_questions")
@@ -42,7 +54,8 @@ export async function getSuspendedQuestions(userId: string) {
       question:questions(id, question_en, question_es, category:categories(name_en, name_es))
     `)
     .eq("user_id", userId)
-    .order("suspended_at", { ascending: false });
+    .order("suspended_at", { ascending: false })
+    .returns<SuspendedQuestionDetail[]>();
   if (error) throw new Error(error.message);
   return data || [];
 }
@@ -71,7 +84,19 @@ export async function unhideTopic(userId: string, themeId: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function getHiddenTopics(userId: string) {
+export interface HiddenTopicDetail {
+  id: string;
+  hidden_at: string;
+  theme: {
+    id: string;
+    title_en: string;
+    title_es: string;
+    icon: string | null;
+    color: string | null;
+  } | null;
+}
+
+export async function getHiddenTopics(userId: string): Promise<HiddenTopicDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("hidden_themes")
@@ -81,7 +106,8 @@ export async function getHiddenTopics(userId: string) {
       theme:themes(id, title_en, title_es, icon, color)
     `)
     .eq("user_id", userId)
-    .order("hidden_at", { ascending: false });
+    .order("hidden_at", { ascending: false })
+    .returns<HiddenTopicDetail[]>();
   if (error) throw new Error(error.message);
   return data || [];
 }
@@ -131,7 +157,13 @@ export async function updateReadingProgress(
   }
 }
 
-export async function getReadingProgress(userId: string, themeId: string) {
+export interface ReadingProgressDetail {
+  category_id: string;
+  current_section: number;
+  completion_percent: number;
+}
+
+export async function getReadingProgress(userId: string, themeId: string): Promise<ReadingProgressDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reading_progress")

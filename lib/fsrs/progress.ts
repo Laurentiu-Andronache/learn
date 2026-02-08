@@ -1,5 +1,18 @@
 import { createClient } from "@/lib/supabase/server";
 
+/** Shape returned by Supabase when joining questions → categories */
+interface QuestionWithCategory {
+  id: string;
+  category_id: string;
+  categories: {
+    id: string;
+    name_en: string;
+    name_es: string;
+    color: string | null;
+    theme_id: string;
+  };
+}
+
 export interface CategoryProgress {
   categoryId: string;
   categoryNameEn: string;
@@ -45,7 +58,8 @@ export async function getTopicProgress(
       category_id,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
-    .eq("categories.theme_id", themeId);
+    .eq("categories.theme_id", themeId)
+    .returns<QuestionWithCategory[]>();
 
   if (!questions || questions.length === 0) {
     return {
@@ -90,8 +104,7 @@ export async function getTopicProgress(
   for (const q of questions) {
     if (suspendedSet.has(q.id)) continue;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cat = (q as any).categories;
+    const { categories: cat } = q;
     const catId = cat.id;
     if (!categoryMap.has(catId)) {
       categoryMap.set(catId, {
@@ -182,7 +195,8 @@ export async function getAllTopicsProgress(
       supabase
         .from("questions")
         .select("id, category_id, categories!inner(id, name_en, name_es, color, theme_id)")
-        .in("categories.theme_id", themeIds),
+        .in("categories.theme_id", themeIds)
+        .returns<QuestionWithCategory[]>(),
       supabase
         .from("user_card_state")
         .select("question_id, state, stability, due, updated_at")
@@ -194,15 +208,13 @@ export async function getAllTopicsProgress(
     ]);
 
   // 3. Index data for in-memory processing
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const stateMap = new Map((allCardStates || []).map((cs: any) => [cs.question_id, cs]));
-  const suspendedSet = new Set((allSuspended || []).map((s) => s.question_id));
+  const stateMap = new Map((allCardStates ?? []).map((cs) => [cs.question_id, cs]));
+  const suspendedSet = new Set((allSuspended ?? []).map((s) => s.question_id));
 
   // Group questions by theme_id
-  const questionsByTheme = new Map<string, typeof allQuestions>();
-  for (const q of allQuestions || []) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const themeId = (q as any).categories.theme_id;
+  const questionsByTheme = new Map<string, QuestionWithCategory[]>();
+  for (const q of allQuestions ?? []) {
+    const themeId = q.categories.theme_id;
     if (!questionsByTheme.has(themeId)) questionsByTheme.set(themeId, []);
     questionsByTheme.get(themeId)!.push(q);
   }
@@ -215,8 +227,7 @@ export async function getAllTopicsProgress(
 
     for (const q of questions) {
       if (suspendedSet.has(q.id)) continue;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const cat = (q as any).categories;
+      const { categories: cat } = q;
       const catId = cat.id;
       if (!categoryMap.has(catId)) {
         categoryMap.set(catId, {
