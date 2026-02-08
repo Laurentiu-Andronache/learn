@@ -62,19 +62,25 @@ export function QuizResults({
 
   // Confetti burst on good score
   useEffect(() => {
-    if (percent >= 80) {
-      const end = Date.now() + 1500;
-      const frame = () => {
-        confetti({
-          particleCount: 4,
-          angle: 60 + Math.random() * 60,
-          spread: 55,
-          origin: { x: Math.random(), y: Math.random() * 0.4 },
-        });
-        if (Date.now() < end) requestAnimationFrame(frame);
-      };
-      frame();
-    }
+    if (percent < 80) return;
+
+    let rafId: number | null = null;
+    const end = Date.now() + 1500;
+    const frame = () => {
+      confetti({
+        particleCount: 4,
+        angle: 60 + Math.random() * 60,
+        spread: 55,
+        origin: { x: Math.random(), y: Math.random() * 0.4 },
+      });
+      if (Date.now() < end) rafId = requestAnimationFrame(frame);
+    };
+    frame();
+
+    return () => {
+      if (rafId !== null) cancelAnimationFrame(rafId);
+      confetti.reset();
+    };
   }, [percent]);
 
   return (

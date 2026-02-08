@@ -128,7 +128,6 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 ## Known Issues & Tech Debt (from Feb 2026 audit)
 
 ### Medium — i18n & UX
-- **Confetti effect** in quiz-results lacks rAF cleanup on unmount
 - **Client-side themeId filtering** in `getQuestionsList` — move to DB query
 - **Feedback/question_reports INSERT** allows unauthenticated — restrict to `auth.uid() IS NOT NULL`
 
