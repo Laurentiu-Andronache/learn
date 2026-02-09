@@ -258,17 +258,12 @@ export function QuestionsClient({
             id={`question-${q.id}`}
             className="rounded-lg border p-4 space-y-2"
           >
-            <div
-              className="flex items-start justify-between gap-4 cursor-pointer"
+            <button
+              type="button"
+              className="flex items-start justify-between gap-4 cursor-pointer w-full text-left"
               onClick={() =>
                 editingId === q.id ? setEditingId(null) : startEditing(q)
               }
-              onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  editingId === q.id ? setEditingId(null) : startEditing(q);
-              }}
-              role="button"
-              tabIndex={0}
             >
               <p className="text-sm font-medium flex-1">{q.question_en}</p>
               <div className="flex gap-1 shrink-0">
@@ -277,7 +272,7 @@ export function QuestionsClient({
                 </Badge>
                 <Badge variant="secondary">D:{q.difficulty}</Badge>
               </div>
-            </div>
+            </button>
             <p className="text-xs text-muted-foreground">
               {q.category?.theme?.title_en} → {q.category?.name_en}
             </p>

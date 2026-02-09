@@ -14,6 +14,7 @@ function chainable(result: MockResult) {
     not: () => self,
     returns: () => self,
     single: () => Promise.resolve(result),
+    // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock for await support
     then: (resolve: (v: MockResult) => void) =>
       Promise.resolve(result).then(resolve),
   };

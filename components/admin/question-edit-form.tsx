@@ -122,7 +122,7 @@ export function QuestionEditForm({
       <div className="space-y-2">
         <Label>Options ({editTab.toUpperCase()})</Label>
         {((editData[`options_${editTab}`] as string[]) || []).map((opt, i) => (
-          <div key={i} className="flex gap-2 items-center">
+          <div key={`${editTab}-${i}`} className="flex gap-2 items-center">
             <span className="text-xs font-mono w-5">
               {String.fromCharCode(65 + i)}
             </span>

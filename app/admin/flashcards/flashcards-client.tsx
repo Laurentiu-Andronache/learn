@@ -239,17 +239,12 @@ export function FlashcardsClient({
             id={`flashcard-${f.id}`}
             className="rounded-lg border p-4 space-y-2"
           >
-            <div
-              className="flex items-start justify-between gap-4 cursor-pointer"
+            <button
+              type="button"
+              className="flex items-start justify-between gap-4 cursor-pointer w-full text-left"
               onClick={() =>
                 editingId === f.id ? setEditingId(null) : startEditing(f)
               }
-              onKeyDown={(e) => {
-                if (e.key === "Enter")
-                  editingId === f.id ? setEditingId(null) : startEditing(f);
-              }}
-              role="button"
-              tabIndex={0}
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{f.question_en}</p>
@@ -260,7 +255,7 @@ export function FlashcardsClient({
               <div className="flex gap-1 shrink-0">
                 <Badge variant="secondary">D:{f.difficulty}</Badge>
               </div>
-            </div>
+            </button>
             <p className="text-xs text-muted-foreground">
               {f.category?.theme?.title_en} → {f.category?.name_en}
             </p>
