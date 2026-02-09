@@ -53,6 +53,7 @@ interface SessionToolbarProps {
   onUndo: () => void;
   onDeleteQuestion: () => void;
   canUndo: boolean;
+  onStop?: () => Promise<void> | void;
 }
 
 export function SessionToolbar({
@@ -66,18 +67,26 @@ export function SessionToolbar({
   onUndo,
   onDeleteQuestion,
   canUndo,
+  onStop,
 }: SessionToolbarProps) {
   const router = useRouter();
   const t = useTranslations("session");
   const [editOpen, setEditOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [findingNext, setFindingNext] = useState(false);
+  const [stopping, setStopping] = useState(false);
 
   const currentItemId =
     mode === "flashcard" ? currentFlashcard?.id : currentQuestion?.id;
 
-  const handleStop = () => {
-    router.push("/topics");
+  const handleStop = async () => {
+    if (stopping) return;
+    setStopping(true);
+    try {
+      await onStop?.();
+    } finally {
+      router.push("/topics");
+    }
   };
 
   const handleNextTopic = async () => {
@@ -133,6 +142,7 @@ export function SessionToolbar({
             variant="ghost"
             size="sm"
             onClick={handleStop}
+            disabled={stopping}
             className="rounded-full px-2"
           >
             <Square className="size-4" />

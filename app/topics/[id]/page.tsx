@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTopicProgress } from "@/lib/fsrs/progress";
-import { getLatestQuizAttempt } from "@/lib/services/quiz-attempts";
+import { getQuizSummary } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
 
 const getTopicById = cache(async (id: string) => {
@@ -85,18 +85,17 @@ export default async function TopicDetailPage({ params }: Props) {
 
   if (!topic) redirect("/topics");
 
-  const [progress, latestQuizAttempt, { count: quizQuestionCount }] =
-    await Promise.all([
-      getTopicProgress(user.id, id),
-      getLatestQuizAttempt(user.id, id),
-      supabase
-        .from("questions")
-        .select("id, categories!inner(theme_id)", {
-          count: "exact",
-          head: true,
-        })
-        .eq("categories.theme_id", id),
-    ]);
+  const [progress, { count: quizQuestionCount }] = await Promise.all([
+    getTopicProgress(user.id, id),
+    supabase
+      .from("questions")
+      .select("id, categories!inner(theme_id)", {
+        count: "exact",
+        head: true,
+      })
+      .eq("categories.theme_id", id),
+  ]);
+  const quizSummary = await getQuizSummary(user.id, id);
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
@@ -257,30 +256,34 @@ export default async function TopicDetailPage({ params }: Props) {
                 {quizQuestionCount ?? 0} {tTopics("questionCount")}
               </Badge>
             </div>
-            {latestQuizAttempt ? (
+            {quizSummary.attemptCount > 0 ? (
               <div className="text-center space-y-2">
                 <p className="text-sm text-muted-foreground">
-                  {tTopics("lastAttempt")}:{" "}
-                  {Math.round(
-                    (latestQuizAttempt.score / latestQuizAttempt.total) * 100,
-                  )}
-                  %
-                  <span className="ml-1 text-xs">
-                    (
-                    {new Date(
-                      latestQuizAttempt.completed_at,
-                    ).toLocaleDateString(locale === "es" ? "es" : "en", {
-                      month: "short",
-                      day: "numeric",
-                    })}
-                    )
-                  </span>
+                  {quizSummary.uniqueCorrectCount >=
+                  (quizQuestionCount ?? 0)
+                    ? tTopics("quizSummaryAllCorrect", {
+                        attempts: quizSummary.attemptCount,
+                      })
+                    : tTopics("quizSummary", {
+                        attempts: quizSummary.attemptCount,
+                        correct: quizSummary.uniqueCorrectCount,
+                      })}
                 </p>
-                <Button asChild size="sm">
-                  <Link href={`/topics/${id}/quiz`}>
-                    {tTopics("retakeTest")}
-                  </Link>
-                </Button>
+                <div className="flex items-center justify-center gap-2">
+                  <Button asChild size="sm">
+                    <Link href={`/topics/${id}/quiz`}>
+                      {tTopics("fullTest")}
+                    </Link>
+                  </Button>
+                  {quizSummary.uniqueCorrectCount <
+                    (quizQuestionCount ?? 0) && (
+                    <Button asChild size="sm" variant="outline">
+                      <Link href={`/topics/${id}/quiz?mode=remaining`}>
+                        {tTopics("remainingTest")}
+                      </Link>
+                    </Button>
+                  )}
+                </div>
               </div>
             ) : (
               <div className="text-center space-y-2">
@@ -288,7 +291,9 @@ export default async function TopicDetailPage({ params }: Props) {
                   {tTopics("noAttempts")}
                 </p>
                 <Button asChild size="sm" variant="outline">
-                  <Link href={`/topics/${id}/quiz`}>{tTopics("takeTest")}</Link>
+                  <Link href={`/topics/${id}/quiz`}>
+                    {tTopics("fullTest")}
+                  </Link>
                 </Button>
               </div>
             )}

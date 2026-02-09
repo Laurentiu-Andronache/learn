@@ -82,3 +82,48 @@ export async function getLatestQuizAttempt(userId: string, topicId: string) {
   }
   return data;
 }
+
+export interface QuizSummary {
+  attemptCount: number;
+  uniqueCorrectCount: number;
+}
+
+/** Returns IDs of questions correctly answered in ANY attempt */
+export async function getCorrectQuestionIds(
+  userId: string,
+  topicId: string,
+): Promise<string[]> {
+  const attempts = await getQuizAttempts(userId, topicId, 100);
+  const correctIds = new Set<string>();
+  for (const attempt of attempts) {
+    const answers = attempt.answers as Array<{
+      question_id: string;
+      was_correct: boolean;
+    }> | null;
+    if (!answers) continue;
+    for (const a of answers) {
+      if (a.was_correct) correctIds.add(a.question_id);
+    }
+  }
+  return [...correctIds];
+}
+
+/** Returns { attemptCount, uniqueCorrectCount } across all attempts */
+export async function getQuizSummary(
+  userId: string,
+  topicId: string,
+): Promise<QuizSummary> {
+  const attempts = await getQuizAttempts(userId, topicId, 100);
+  const correctIds = new Set<string>();
+  for (const attempt of attempts) {
+    const answers = attempt.answers as Array<{
+      question_id: string;
+      was_correct: boolean;
+    }> | null;
+    if (!answers) continue;
+    for (const a of answers) {
+      if (a.was_correct) correctIds.add(a.question_id);
+    }
+  }
+  return { attemptCount: attempts.length, uniqueCorrectCount: correctIds.size };
+}

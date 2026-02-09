@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
 import { deleteQuestion } from "@/lib/services/admin-reviews";
 import { saveQuizAttempt } from "@/lib/services/quiz-attempts";
-import type { Language, Question, QuizAttempt } from "@/lib/types/database";
+import type { Language, Question } from "@/lib/types/database";
 import { QuizCard } from "./quiz-card";
 import { QuizProgress } from "./quiz-progress";
 import { type QuizAnswer, QuizResults } from "./quiz-results";
@@ -26,7 +26,6 @@ export interface QuizSessionProps {
   topicTitleEn: string;
   topicTitleEs: string;
   questions: QuizQuestionData[];
-  lastAttempt?: QuizAttempt | null;
   isAdmin?: boolean;
 }
 
@@ -120,6 +119,26 @@ export function QuizSession({
     setPhase("quiz");
   }, [answers, allQuestions]);
 
+  // ── Save partial attempt on stop ──
+  const savePartialAttempt = useCallback(async () => {
+    if (answers.length === 0) return;
+    const score = answers.filter((a) => a.wasCorrect).length;
+    try {
+      await saveQuizAttempt(userId, topicId, {
+        score,
+        total: answers.length,
+        answers: answers.map((a) => ({
+          question_id: a.questionId,
+          selected_index: a.selectedIndex,
+          was_correct: a.wasCorrect,
+          time_ms: a.timeMs,
+        })),
+      });
+    } catch {
+      // Best-effort — don't block navigation
+    }
+  }, [answers, userId, topicId]);
+
   // ── Delete question (admin) ──
   const handleDeleteQuestion = useCallback(() => {
     const q = questions[currentIndex];
@@ -193,6 +212,7 @@ export function QuizSession({
         onUndo={() => {}}
         onDeleteQuestion={handleDeleteQuestion}
         canUndo={false}
+        onStop={savePartialAttempt}
       />
     </div>
   );

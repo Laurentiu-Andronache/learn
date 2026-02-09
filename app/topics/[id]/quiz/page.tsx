@@ -1,10 +1,11 @@
 import { redirect } from "next/navigation";
 import { QuizSession } from "@/components/quiz/quiz-session";
-import { getLatestQuizAttempt } from "@/lib/services/quiz-attempts";
+import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ mode?: string }>;
 }
 
 // Fisher-Yates shuffle
@@ -17,8 +18,9 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-export default async function QuizPage({ params }: QuizPageProps) {
+export default async function QuizPage({ params, searchParams }: QuizPageProps) {
   const { id } = await params;
+  const { mode } = await searchParams;
   const supabase = await createClient();
 
   const {
@@ -49,12 +51,18 @@ export default async function QuizPage({ params }: QuizPageProps) {
     )
     .eq("category.theme_id", id);
 
-  const questions = shuffleArray(questionsRaw || []);
+  let filtered = questionsRaw || [];
+
+  // In "remaining" mode, exclude questions already answered correctly
+  if (mode === "remaining") {
+    const correctIds = new Set(await getCorrectQuestionIds(user.id, id));
+    filtered = filtered.filter((q) => !correctIds.has(q.id));
+    if (filtered.length === 0) redirect(`/topics/${id}`);
+  }
+
+  const questions = shuffleArray(filtered);
 
   if (questions.length === 0) redirect(`/topics/${id}`);
-
-  // Get last attempt for display
-  const lastAttempt = await getLatestQuizAttempt(user.id, id);
 
   return (
     <QuizSession
@@ -92,7 +100,6 @@ export default async function QuizPage({ params }: QuizPageProps) {
           categoryColor: cat.color,
         };
       })}
-      lastAttempt={lastAttempt}
       isAdmin={isAdmin}
     />
   );
