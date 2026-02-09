@@ -2,15 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 // ─── Schema definitions (hardcoded reference) ──────────────────────
 const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: boolean; note?: string }>> = {
@@ -294,6 +286,8 @@ export function handleSchemaInfo(
 }
 
 // ─── learn_run_query ───────────────────────────────────────────────
+const ALLOWED_TABLES = new Set(Object.keys(SCHEMA));
+
 export async function handleRunQuery(
   supabase: SupabaseClient,
   params: {
@@ -304,6 +298,10 @@ export async function handleRunQuery(
     limit?: number;
   },
 ): Promise<McpResult> {
+  if (!ALLOWED_TABLES.has(params.table)) {
+    return err(`Invalid table: "${params.table}". Allowed tables: ${[...ALLOWED_TABLES].join(", ")}`);
+  }
+
   let query = supabase.from(params.table).select(params.select ?? "*");
 
   if (params.filters) {
@@ -342,6 +340,7 @@ export function registerAdminTools(server: McpServer): void {
     "learn_admin_summary",
     "Quick admin briefing: pending counts, total content, recently updated",
     {},
+    { readOnlyHint: true },
     async () => handleAdminSummary(getSupabaseClient()),
   );
 
@@ -349,6 +348,7 @@ export function registerAdminTools(server: McpServer): void {
     "learn_schema_info",
     "Database schema reference. Lists all tables or detailed column info for a specific table.",
     { table_name: z.string().optional().describe("Table name for detailed info") },
+    { readOnlyHint: true },
     async ({ table_name }) => handleSchemaInfo({ table_name }),
   );
 
@@ -377,6 +377,7 @@ export function registerAdminTools(server: McpServer): void {
         .describe("Order by"),
       limit: z.number().int().min(1).max(1000).optional().describe("Max rows (default 50)"),
     },
+    { readOnlyHint: true },
     async ({ table, select, filters, order, limit }) =>
       handleRunQuery(getSupabaseClient(), { table, select, filters: filters as any, order, limit }),
   );

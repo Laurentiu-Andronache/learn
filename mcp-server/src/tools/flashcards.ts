@@ -2,19 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = {
-  content: Array<{ type: "text"; text: string }>;
-  isError?: boolean;
-};
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 // ─── Handlers ────────────────────────────────────────────────────────
 
@@ -313,6 +301,7 @@ export function registerFlashcardTools(server: McpServer): void {
       limit: z.number().min(1).max(200).optional().describe("Results per page (default 50)"),
       offset: z.number().min(0).optional().describe("Offset for pagination"),
     },
+    { readOnlyHint: true },
     async (params) => handleListFlashcards(getSupabaseClient(), params)
   );
 
@@ -322,12 +311,13 @@ export function registerFlashcardTools(server: McpServer): void {
     {
       flashcard_id: z.string().uuid().describe("Flashcard UUID"),
     },
+    { readOnlyHint: true },
     async (params) => handleGetFlashcard(getSupabaseClient(), params)
   );
 
   server.tool(
     "learn_search_flashcards",
-    "Full-text search across flashcard question, answer, and extra content.",
+    "Search across flashcard question, answer, and extra content (case-insensitive substring match).",
     {
       query: z.string().describe("Search query"),
       lang: z.enum(["en", "es"]).optional().describe("Limit search to one language"),
@@ -335,6 +325,7 @@ export function registerFlashcardTools(server: McpServer): void {
       topic_id: z.string().uuid().optional().describe("Filter by topic"),
       limit: z.number().min(1).max(100).optional().describe("Max results (default 20)"),
     },
+    { readOnlyHint: true },
     async (params) => handleSearchFlashcards(getSupabaseClient(), params)
   );
 
@@ -418,6 +409,7 @@ export function registerFlashcardTools(server: McpServer): void {
     {
       flashcard_id: z.string().uuid().describe("Flashcard UUID to delete"),
     },
+    { destructiveHint: true },
     async (params) => handleDeleteFlashcard(getSupabaseClient(), params)
   );
 
@@ -428,6 +420,7 @@ export function registerFlashcardTools(server: McpServer): void {
       flashcard_ids: z.array(z.string().uuid()).describe("Flashcard UUIDs to delete"),
       confirm: z.string().describe('Must be "DELETE ALL"'),
     },
+    { destructiveHint: true },
     async (params) => handleDeleteFlashcardsBatch(getSupabaseClient(), params)
   );
 

@@ -2,15 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 /* ── learn_list_topics ── */
 
@@ -245,6 +237,7 @@ export function registerTopicTools(server: McpServer): void {
       limit: z.number().default(50).describe("Max results"),
       offset: z.number().default(0).describe("Offset for pagination"),
     },
+    { readOnlyHint: true },
     async (params) => handleListTopics(getSupabaseClient(), params),
   );
 
@@ -252,6 +245,7 @@ export function registerTopicTools(server: McpServer): void {
     "learn_get_topic",
     "Get full topic detail with nested categories and question counts",
     { topic_id: z.string().describe("Topic UUID") },
+    { readOnlyHint: true },
     async (params) => handleGetTopic(getSupabaseClient(), params),
   );
 
@@ -294,6 +288,7 @@ export function registerTopicTools(server: McpServer): void {
     "learn_delete_topic",
     "Soft-delete a topic (sets is_active=false)",
     { topic_id: z.string().describe("Topic UUID") },
+    { destructiveHint: true },
     async (params) => handleDeleteTopic(getSupabaseClient(), params),
   );
 
@@ -304,6 +299,7 @@ export function registerTopicTools(server: McpServer): void {
       topic_id: z.string().describe("Topic UUID"),
       confirm: z.string().describe('Must be exactly "PERMANENTLY DELETE"'),
     },
+    { destructiveHint: true },
     async (params) => handleHardDeleteTopic(getSupabaseClient(), params),
   );
 }

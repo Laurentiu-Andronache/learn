@@ -2,15 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 // ─── learn_list_users ──────────────────────────────────────────────
 export async function handleListUsers(
@@ -162,6 +154,7 @@ export function registerUserTools(server: McpServer): void {
       limit: z.number().int().min(1).max(200).optional().describe("Max results (default 50)"),
       offset: z.number().int().min(0).optional().describe("Pagination offset (default 0)"),
     },
+    { readOnlyHint: true },
     async ({ search, limit, offset }) => handleListUsers(getSupabaseClient(), { search, limit, offset }),
   );
 
@@ -172,6 +165,7 @@ export function registerUserTools(server: McpServer): void {
       user_id: z.string().uuid().optional().describe("User UUID"),
       display_name: z.string().optional().describe("Display name (exact match)"),
     },
+    { readOnlyHint: true },
     async ({ user_id, display_name }) => handleGetUser(getSupabaseClient(), { user_id, display_name }),
   );
 
@@ -181,6 +175,7 @@ export function registerUserTools(server: McpServer): void {
     {
       since: z.string().describe("ISO date or shorthand: 24h, 7d, 30d"),
     },
+    { readOnlyHint: true },
     async ({ since }) => handleActiveUsers(getSupabaseClient(), { since }),
   );
 
@@ -191,6 +186,7 @@ export function registerUserTools(server: McpServer): void {
       user_id: z.string().uuid().optional().describe("User UUID"),
       display_name: z.string().optional().describe("Display name (exact match)"),
     },
+    { readOnlyHint: true },
     async ({ user_id, display_name }) => handleUserTopics(getSupabaseClient(), { user_id, display_name }),
   );
 }

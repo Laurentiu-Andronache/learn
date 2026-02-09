@@ -2,32 +2,26 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
+import { type McpResult, ok, err } from "../utils.js";
 
-type McpResult = {
-  content: Array<{ type: "text"; text: string }>;
-  isError?: boolean;
-};
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
-
-const TRANSLATION_FIELDS = new Set([
+const QUESTION_TRANSLATION_FIELDS = new Set([
   "question_en", "question_es",
   "options_en", "options_es",
   "explanation_en", "explanation_es",
   "extra_en", "extra_es",
 ]);
 
-function validateTranslationFields(fields: Record<string, unknown>): string | null {
+const FLASHCARD_TRANSLATION_FIELDS = new Set([
+  "question_en", "question_es",
+  "answer_en", "answer_es",
+  "extra_en", "extra_es",
+]);
+
+function validateTranslationFields(fields: Record<string, unknown>, allowedSet: Set<string> = QUESTION_TRANSLATION_FIELDS): string | null {
   const keys = Object.keys(fields);
   if (!keys.length) return "No fields provided";
-  const invalid = keys.filter((k) => !TRANSLATION_FIELDS.has(k));
-  if (invalid.length) return `Invalid translation fields: ${invalid.join(", ")}. Allowed: ${[...TRANSLATION_FIELDS].join(", ")}`;
+  const invalid = keys.filter((k) => !allowedSet.has(k));
+  if (invalid.length) return `Invalid translation fields: ${invalid.join(", ")}. Allowed: ${[...allowedSet].join(", ")}`;
   return null;
 }
 
@@ -151,12 +145,17 @@ export async function handleFindUntranslated(
   const lang = params.lang ?? "es";
   const suffix = `_${lang}`;
 
+  const SCAN_LIMIT = 1000;
+  let truncated = false;
+
   // Check themes
   const { data: themes, error: tErr } = await supabase
     .from("themes")
-    .select("id, title_en, title_es, description_en, description_es");
+    .select("id, title_en, title_es, description_en, description_es")
+    .limit(SCAN_LIMIT);
 
   if (tErr) return err(tErr.message);
+  if ((themes ?? []).length >= SCAN_LIMIT) truncated = true;
 
   const untranslatedThemes = (themes ?? []).filter((t: Record<string, unknown>) => {
     for (const [en, es] of THEME_PAIRS) {
@@ -179,9 +178,11 @@ export async function handleFindUntranslated(
   // Check categories
   const { data: cats, error: cErr } = await supabase
     .from("categories")
-    .select("id, name_en, name_es");
+    .select("id, name_en, name_es")
+    .limit(SCAN_LIMIT);
 
   if (cErr) return err(cErr.message);
+  if ((cats ?? []).length >= SCAN_LIMIT) truncated = true;
 
   const catField = suffix === "_es" ? "name_es" : "name_en";
   const catSource = suffix === "_es" ? "name_en" : "name_es";
@@ -192,9 +193,11 @@ export async function handleFindUntranslated(
   // Check questions
   const { data: questions, error: qErr } = await supabase
     .from("questions")
-    .select("id, question_en, question_es, options_en, options_es, explanation_en, explanation_es, extra_en, extra_es");
+    .select("id, question_en, question_es, options_en, options_es, explanation_en, explanation_es, extra_en, extra_es")
+    .limit(SCAN_LIMIT);
 
   if (qErr) return err(qErr.message);
+  if ((questions ?? []).length >= SCAN_LIMIT) truncated = true;
 
   const untranslatedQuestions = (questions ?? []).filter((q: Record<string, unknown>) => {
     for (const [en, es] of QUESTION_PAIRS) {
@@ -217,9 +220,11 @@ export async function handleFindUntranslated(
   // Check flashcards
   const { data: flashcards, error: fErr } = await supabase
     .from("flashcards")
-    .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es");
+    .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es")
+    .limit(SCAN_LIMIT);
 
   if (fErr) return err(fErr.message);
+  if ((flashcards ?? []).length >= SCAN_LIMIT) truncated = true;
 
   const untranslatedFlashcards = (flashcards ?? []).filter((fc: Record<string, unknown>) => {
     for (const [en, es] of FLASHCARD_PAIRS) {
@@ -241,6 +246,7 @@ export async function handleFindUntranslated(
 
   return ok({
     target_lang: lang,
+    truncated,
     themes: untranslatedThemes,
     categories: untranslatedCats,
     questions: untranslatedQuestions,
@@ -375,25 +381,78 @@ export async function handleBatchUpdateTranslations(
   return ok(results);
 }
 
+export async function handleUpdateFlashcardTranslation(
+  supabase: SupabaseClient,
+  params: { flashcard_id: string; fields: Record<string, unknown> }
+): Promise<McpResult> {
+  const validationErr = validateTranslationFields(params.fields, FLASHCARD_TRANSLATION_FIELDS);
+  if (validationErr) return err(validationErr);
+
+  const { data, error } = await supabase
+    .from("flashcards")
+    .update(params.fields)
+    .eq("id", params.flashcard_id)
+    .select()
+    .single();
+
+  if (error) return err(error.message);
+  console.error(`[audit] Updated translation for flashcard ${params.flashcard_id}`);
+  return ok(data);
+}
+
+export async function handleBatchUpdateFlashcardTranslations(
+  supabase: SupabaseClient,
+  params: { updates: Array<{ flashcard_id: string; fields: Record<string, unknown> }> }
+): Promise<McpResult> {
+  if (!params.updates.length) return err("Updates array cannot be empty");
+
+  for (const u of params.updates) {
+    const validationErr = validateTranslationFields(u.fields, FLASHCARD_TRANSLATION_FIELDS);
+    if (validationErr) return err(`Flashcard ${u.flashcard_id}: ${validationErr}`);
+  }
+
+  const results = { updated: 0, errors: [] as Array<{ flashcard_id: string; error: string }> };
+
+  for (const { flashcard_id, fields } of params.updates) {
+    const { error } = await supabase
+      .from("flashcards")
+      .update(fields)
+      .eq("id", flashcard_id)
+      .select()
+      .single();
+
+    if (error) {
+      results.errors.push({ flashcard_id, error: error.message });
+    } else {
+      results.updated++;
+    }
+  }
+
+  console.error(`[audit] Batch flashcard translation update: ${results.updated} updated, ${results.errors.length} errors`);
+  return ok(results);
+}
+
 // ─── Registration ────────────────────────────────────────────────────
 
 export function registerTranslationTools(server: McpServer): void {
   server.tool(
     "learn_check_translations",
-    "Audit bilingual completeness for a topic. Checks theme, categories, and all questions for missing translations.",
+    "Audit bilingual completeness for a topic. Checks theme, categories, questions, and flashcards for missing translations.",
     {
       topic_id: z.string().uuid().describe("Topic UUID to audit"),
       source_lang: z.enum(["en", "es"]).optional().describe("Source language (default 'en')"),
     },
+    { readOnlyHint: true },
     async (params) => handleCheckTranslations(getSupabaseClient(), params)
   );
 
   server.tool(
     "learn_find_untranslated",
-    "Global scan for any content missing translations across themes, categories, and questions.",
+    "Global scan for any content missing translations across themes, categories, questions, and flashcards.",
     {
       lang: z.enum(["en", "es"]).optional().describe("Target language to check (default 'es')"),
     },
+    { readOnlyHint: true },
     async (params) => handleFindUntranslated(getSupabaseClient(), params)
   );
 
@@ -406,6 +465,7 @@ export function registerTranslationTools(server: McpServer): void {
       flashcard_ids: z.array(z.string().uuid()).optional().describe("Specific flashcard UUIDs"),
       fields: z.array(z.string()).optional().describe("Field names to compare (e.g. 'question', 'explanation')"),
     },
+    { readOnlyHint: true },
     async (params) => handleCompareTranslations(getSupabaseClient(), params)
   );
 
@@ -431,5 +491,29 @@ export function registerTranslationTools(server: McpServer): void {
       ).describe("Array of { question_id, fields } objects"),
     },
     async (params) => handleBatchUpdateTranslations(getSupabaseClient(), params as any)
+  );
+
+  server.tool(
+    "learn_update_flashcard_translation",
+    "Update translation fields for a single flashcard.",
+    {
+      flashcard_id: z.string().uuid().describe("Flashcard UUID"),
+      fields: z.record(z.unknown()).describe("Translation fields to update (e.g. { answer_es: '...' })"),
+    },
+    async (params) => handleUpdateFlashcardTranslation(getSupabaseClient(), params as any)
+  );
+
+  server.tool(
+    "learn_batch_update_flashcard_translations",
+    "Batch update translation fields across multiple flashcards.",
+    {
+      updates: z.array(
+        z.object({
+          flashcard_id: z.string().uuid(),
+          fields: z.record(z.unknown()),
+        })
+      ).describe("Array of { flashcard_id, fields } objects"),
+    },
+    async (params) => handleBatchUpdateFlashcardTranslations(getSupabaseClient(), params as any)
   );
 }

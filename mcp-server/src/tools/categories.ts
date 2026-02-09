@@ -2,15 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 /* ── learn_list_categories ── */
 
@@ -168,6 +160,7 @@ export function registerCategoryTools(server: McpServer): void {
       limit: z.number().default(50).describe("Max results"),
       offset: z.number().default(0).describe("Offset for pagination"),
     },
+    { readOnlyHint: true },
     async (params) => handleListCategories(getSupabaseClient(), params),
   );
 
@@ -204,6 +197,7 @@ export function registerCategoryTools(server: McpServer): void {
       category_id: z.string().describe("Category UUID"),
       confirm: z.string().describe('Must be exactly "DELETE"'),
     },
+    { destructiveHint: true },
     async (params) => handleDeleteCategory(getSupabaseClient(), params),
   );
 

@@ -2,15 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 /* ── Types ── */
 
@@ -387,6 +379,7 @@ export function registerImportExportTools(server: McpServer): void {
       topic_id: z.string().describe("Topic UUID to export"),
       include_ids: z.boolean().default(false).describe("Include DB IDs in export"),
     },
+    { readOnlyHint: true },
     async (params) => handleExportTopic(getSupabaseClient(), params),
   );
 
@@ -405,6 +398,7 @@ export function registerImportExportTools(server: McpServer): void {
     {
       data: z.any().describe("ImportTheme JSON to validate"),
     },
+    { readOnlyHint: true },
     async (params) => handleValidateImport(params),
   );
 

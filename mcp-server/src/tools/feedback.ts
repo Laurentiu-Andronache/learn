@@ -2,15 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
 import { getSupabaseClient } from "../supabase.js";
-
-type McpResult = { content: Array<{ type: "text"; text: string }>; isError?: boolean };
-
-function ok(data: unknown): McpResult {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
-}
-function err(msg: string): McpResult {
-  return { content: [{ type: "text" as const, text: `Error: ${msg}` }], isError: true };
-}
+import { type McpResult, ok, err } from "../utils.js";
 
 // ─── learn_list_feedback ───────────────────────────────────────────
 export async function handleListFeedback(
@@ -93,6 +85,7 @@ export async function handleReviewProposedQuestion(
   if (upErr) return err(upErr.message);
 
   let promoted = false;
+  let promotion_error: string | null = null;
   if (params.action === "approve" && params.promote && updated) {
     const targetType = updated.target_type ?? "question";
 
@@ -105,7 +98,8 @@ export async function handleReviewProposedQuestion(
         answer_es: updated.explanation_es ?? "",
         difficulty: 5,
       });
-      if (!insertErr) promoted = true;
+      if (insertErr) promotion_error = insertErr.message;
+      else promoted = true;
     } else {
       const { error: insertErr } = await supabase.from("questions").insert({
         category_id: updated.category_id,
@@ -119,12 +113,13 @@ export async function handleReviewProposedQuestion(
         explanation_es: updated.explanation_es,
         difficulty: 5,
       });
-      if (!insertErr) promoted = true;
+      if (insertErr) promotion_error = insertErr.message;
+      else promoted = true;
     }
   }
 
   console.error(`[audit] Reviewed proposed question ${params.proposed_question_id}: ${status}`);
-  return ok({ ...updated, promoted });
+  return ok({ ...updated, promoted, ...(promotion_error ? { promotion_error } : {}) });
 }
 
 // ─── learn_list_theme_proposals ────────────────────────────────────
@@ -172,6 +167,7 @@ export async function handleReviewThemeProposal(
   if (upErr) return err(upErr.message);
 
   let createdTopic = null;
+  let topic_creation_error: string | null = null;
   if (params.action === "approve" && params.create_topic && updated) {
     const { data: newTopic, error: insertErr } = await supabase
       .from("themes")
@@ -184,11 +180,12 @@ export async function handleReviewThemeProposal(
       })
       .select("*")
       .single();
-    if (!insertErr) createdTopic = newTopic;
+    if (insertErr) topic_creation_error = insertErr.message;
+    else createdTopic = newTopic;
   }
 
   console.error(`[audit] Reviewed theme proposal ${params.theme_proposal_id}: ${status}`);
-  return ok({ ...updated, created_topic: createdTopic });
+  return ok({ ...updated, created_topic: createdTopic, ...(topic_creation_error ? { topic_creation_error } : {}) });
 }
 
 // ─── Registration ──────────────────────────────────────────────────
@@ -200,6 +197,7 @@ export function registerFeedbackTools(server: McpServer): void {
       type: z.enum(["bug", "feature", "content", "other"]).optional().describe("Filter by feedback type"),
       limit: z.number().int().min(1).max(200).optional().describe("Max results (default 50)"),
     },
+    { readOnlyHint: true },
     async ({ type, limit }) => handleListFeedback(getSupabaseClient(), { type, limit }),
   );
 
@@ -207,6 +205,7 @@ export function registerFeedbackTools(server: McpServer): void {
     "learn_delete_feedback",
     "Delete a feedback entry",
     { feedback_id: z.string().uuid().describe("Feedback UUID to delete") },
+    { destructiveHint: true },
     async ({ feedback_id }) => handleDeleteFeedback(getSupabaseClient(), { feedback_id }),
   );
 
@@ -217,6 +216,7 @@ export function registerFeedbackTools(server: McpServer): void {
       status: z.enum(["pending", "approved", "rejected"]).optional().describe("Filter by status"),
       limit: z.number().int().min(1).max(200).optional().describe("Max results (default 50)"),
     },
+    { readOnlyHint: true },
     async ({ status, limit }) => handleListProposedQuestions(getSupabaseClient(), { status, limit }),
   );
 
@@ -240,6 +240,7 @@ export function registerFeedbackTools(server: McpServer): void {
       status: z.enum(["pending", "approved", "rejected"]).optional().describe("Filter by status"),
       limit: z.number().int().min(1).max(200).optional().describe("Max results (default 50)"),
     },
+    { readOnlyHint: true },
     async ({ status, limit }) => handleListThemeProposals(getSupabaseClient(), { status, limit }),
   );
 
