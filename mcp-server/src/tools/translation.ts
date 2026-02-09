@@ -39,6 +39,12 @@ const QUESTION_PAIRS: Array<[string, string]> = [
   ["extra_en", "extra_es"],
 ];
 
+const FLASHCARD_PAIRS: Array<[string, string]> = [
+  ["question_en", "question_es"],
+  ["answer_en", "answer_es"],
+  ["extra_en", "extra_es"],
+];
+
 const THEME_PAIRS: Array<[string, string]> = [
   ["title_en", "title_es"],
   ["description_en", "description_es"],
@@ -104,9 +110,26 @@ export async function handleCheckTranslations(
       for (const [en, es] of QUESTION_PAIRS) {
         const source = targetSuffix === "_es" ? en : es;
         const target = targetSuffix === "_es" ? es : en;
-        // Only flag missing target if source exists
         if (!isEmpty((q as Record<string, unknown>)[source]) && isEmpty((q as Record<string, unknown>)[target])) {
           missing.push({ type: "question", id: q.id, field: target });
+        }
+      }
+    }
+
+    // Fetch flashcards via categories
+    const { data: flashcards, error: fErr } = await supabase
+      .from("flashcards")
+      .select("*")
+      .in("category_id", catIds);
+
+    if (fErr) return err(fErr.message);
+
+    for (const fc of flashcards ?? []) {
+      for (const [en, es] of FLASHCARD_PAIRS) {
+        const source = targetSuffix === "_es" ? en : es;
+        const target = targetSuffix === "_es" ? es : en;
+        if (!isEmpty((fc as Record<string, unknown>)[source]) && isEmpty((fc as Record<string, unknown>)[target])) {
+          missing.push({ type: "flashcard", id: fc.id, field: target });
         }
       }
     }
@@ -191,51 +214,113 @@ export async function handleFindUntranslated(
       .map(([en, es]) => suffix === "_es" ? es : en),
   }));
 
+  // Check flashcards
+  const { data: flashcards, error: fErr } = await supabase
+    .from("flashcards")
+    .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es");
+
+  if (fErr) return err(fErr.message);
+
+  const untranslatedFlashcards = (flashcards ?? []).filter((fc: Record<string, unknown>) => {
+    for (const [en, es] of FLASHCARD_PAIRS) {
+      const field = suffix === "_es" ? es : en;
+      const source = suffix === "_es" ? en : es;
+      if (!isEmpty(fc[source]) && isEmpty(fc[field])) return true;
+    }
+    return false;
+  }).map((fc: Record<string, unknown>) => ({
+    id: fc.id,
+    missing_fields: FLASHCARD_PAIRS
+      .filter(([en, es]) => {
+        const field = suffix === "_es" ? es : en;
+        const source = suffix === "_es" ? en : es;
+        return !isEmpty(fc[source]) && isEmpty(fc[field]);
+      })
+      .map(([en, es]) => suffix === "_es" ? es : en),
+  }));
+
   return ok({
     target_lang: lang,
     themes: untranslatedThemes,
     categories: untranslatedCats,
     questions: untranslatedQuestions,
+    flashcards: untranslatedFlashcards,
   });
 }
 
 export async function handleCompareTranslations(
   supabase: SupabaseClient,
-  params: { topic_id?: string; question_ids?: string[]; fields?: string[] }
+  params: { topic_id?: string; question_ids?: string[]; flashcard_ids?: string[]; fields?: string[] }
 ): Promise<McpResult> {
-  if (!params.topic_id && !params.question_ids?.length) {
-    return err("Must provide either topic_id or question_ids");
+  if (!params.topic_id && !params.question_ids?.length && !params.flashcard_ids?.length) {
+    return err("Must provide either topic_id, question_ids, or flashcard_ids");
   }
 
-  let query = supabase
-    .from("questions")
-    .select("id, question_en, question_es, options_en, options_es, explanation_en, explanation_es, extra_en, extra_es, categories!inner(id, theme_id)");
+  const result: { questions?: unknown[]; flashcards?: unknown[] } = {};
 
-  if (params.topic_id) {
-    query = query.eq("categories.theme_id", params.topic_id);
+  // Compare questions (unless only flashcard_ids provided)
+  if (!params.flashcard_ids?.length || params.topic_id || params.question_ids?.length) {
+    let query = supabase
+      .from("questions")
+      .select("id, question_en, question_es, options_en, options_es, explanation_en, explanation_es, extra_en, extra_es, categories!inner(id, theme_id)");
+
+    if (params.topic_id) {
+      query = query.eq("categories.theme_id", params.topic_id);
+    }
+    if (params.question_ids?.length) {
+      query = query.in("id", params.question_ids);
+    }
+
+    const { data, error } = await query;
+    if (error) return err(error.message);
+
+    const fieldPairs = params.fields?.length
+      ? QUESTION_PAIRS.filter(([en]) => params.fields!.includes(en.replace(/_en$/, "")))
+      : QUESTION_PAIRS;
+
+    result.questions = (data ?? []).map((q: Record<string, unknown>) => ({
+      id: q.id,
+      fields: Object.fromEntries(
+        fieldPairs.map(([en, es]) => [
+          en.replace(/_en$/, ""),
+          { en: q[en], es: q[es] },
+        ])
+      ),
+    }));
   }
-  if (params.question_ids?.length) {
-    query = query.in("id", params.question_ids);
+
+  // Compare flashcards
+  if (params.flashcard_ids?.length || params.topic_id) {
+    let fcQuery = supabase
+      .from("flashcards")
+      .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es, categories!inner(id, theme_id)");
+
+    if (params.topic_id) {
+      fcQuery = fcQuery.eq("categories.theme_id", params.topic_id);
+    }
+    if (params.flashcard_ids?.length) {
+      fcQuery = fcQuery.in("id", params.flashcard_ids);
+    }
+
+    const { data: fcData, error: fcError } = await fcQuery;
+    if (fcError) return err(fcError.message);
+
+    const fcFieldPairs = params.fields?.length
+      ? FLASHCARD_PAIRS.filter(([en]) => params.fields!.includes(en.replace(/_en$/, "")))
+      : FLASHCARD_PAIRS;
+
+    result.flashcards = (fcData ?? []).map((fc: Record<string, unknown>) => ({
+      id: fc.id,
+      fields: Object.fromEntries(
+        fcFieldPairs.map(([en, es]) => [
+          en.replace(/_en$/, ""),
+          { en: fc[en], es: fc[es] },
+        ])
+      ),
+    }));
   }
 
-  const { data, error } = await query;
-  if (error) return err(error.message);
-
-  const fieldPairs = params.fields?.length
-    ? QUESTION_PAIRS.filter(([en]) => params.fields!.includes(en.replace(/_en$/, "")))
-    : QUESTION_PAIRS;
-
-  const comparisons = (data ?? []).map((q: Record<string, unknown>) => ({
-    id: q.id,
-    fields: Object.fromEntries(
-      fieldPairs.map(([en, es]) => [
-        en.replace(/_en$/, ""),
-        { en: q[en], es: q[es] },
-      ])
-    ),
-  }));
-
-  return ok(comparisons);
+  return ok(result);
 }
 
 export async function handleUpdateTranslation(
@@ -318,6 +403,7 @@ export function registerTranslationTools(server: McpServer): void {
     {
       topic_id: z.string().uuid().optional().describe("Filter by topic"),
       question_ids: z.array(z.string().uuid()).optional().describe("Specific question UUIDs"),
+      flashcard_ids: z.array(z.string().uuid()).optional().describe("Specific flashcard UUIDs"),
       fields: z.array(z.string()).optional().describe("Field names to compare (e.g. 'question', 'explanation')"),
     },
     async (params) => handleCompareTranslations(getSupabaseClient(), params)

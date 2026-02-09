@@ -36,6 +36,7 @@ export async function handleListCategories(
 
   const catIds = (categories ?? []).map((c: any) => c.id);
   const qCountMap: Record<string, number> = {};
+  const fcCountMap: Record<string, number> = {};
 
   if (catIds.length > 0) {
     const { data: qCounts } = await supabase
@@ -46,11 +47,21 @@ export async function handleListCategories(
     for (const row of qCounts ?? []) {
       qCountMap[(row as any).category_id] = Number((row as any).count);
     }
+
+    const { data: fcCounts } = await supabase
+      .from("flashcards")
+      .select("category_id, count:id")
+      .in("category_id", catIds);
+
+    for (const row of fcCounts ?? []) {
+      fcCountMap[(row as any).category_id] = Number((row as any).count);
+    }
   }
 
   const enriched = (categories ?? []).map((c: any) => ({
     ...c,
     question_count: qCountMap[c.id] ?? 0,
+    flashcard_count: fcCountMap[c.id] ?? 0,
   }));
 
   return ok({ categories: enriched, total: count ?? 0, limit, offset });

@@ -94,19 +94,33 @@ export async function handleReviewProposedQuestion(
 
   let promoted = false;
   if (params.action === "approve" && params.promote && updated) {
-    const { error: insertErr } = await supabase.from("questions").insert({
-      category_id: updated.category_id,
-      type: updated.type,
-      question_en: updated.question_en,
-      question_es: updated.question_es,
-      options_en: updated.options_en,
-      options_es: updated.options_es,
-      correct_index: updated.correct_index,
-      explanation_en: updated.explanation_en,
-      explanation_es: updated.explanation_es,
-      difficulty: 5,
-    });
-    if (!insertErr) promoted = true;
+    const targetType = updated.target_type ?? "question";
+
+    if (targetType === "flashcard") {
+      const { error: insertErr } = await supabase.from("flashcards").insert({
+        category_id: updated.category_id,
+        question_en: updated.question_en,
+        question_es: updated.question_es,
+        answer_en: updated.explanation_en ?? "",
+        answer_es: updated.explanation_es ?? "",
+        difficulty: 5,
+      });
+      if (!insertErr) promoted = true;
+    } else {
+      const { error: insertErr } = await supabase.from("questions").insert({
+        category_id: updated.category_id,
+        type: updated.type,
+        question_en: updated.question_en,
+        question_es: updated.question_es,
+        options_en: updated.options_en,
+        options_es: updated.options_es,
+        correct_index: updated.correct_index,
+        explanation_en: updated.explanation_en,
+        explanation_es: updated.explanation_es,
+        difficulty: 5,
+      });
+      if (!insertErr) promoted = true;
+    }
   }
 
   console.error(`[audit] Reviewed proposed question ${params.proposed_question_id}: ${status}`);

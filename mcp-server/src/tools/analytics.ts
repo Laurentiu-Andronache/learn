@@ -31,9 +31,11 @@ export async function handleTopicStats(
       topic_id,
       category_count: 0,
       question_count: 0,
+      flashcard_count: 0,
       difficulty_distribution: {},
       type_breakdown: { multiple_choice: 0, true_false: 0 },
       translation_completeness_pct: 100,
+      flashcard_translation_completeness_pct: 100,
     });
   }
 
@@ -43,26 +45,43 @@ export async function handleTopicStats(
     .in("category_id", categoryIds);
   if (qErr) return err(qErr.message);
 
+  const { data: flashcards, error: fErr } = await supabase
+    .from("flashcards")
+    .select("id, difficulty, question_es, answer_es")
+    .in("category_id", categoryIds);
+  if (fErr) return err(fErr.message);
+
   const qs = questions || [];
+  const fcs = flashcards || [];
   const diffDist: Record<number, number> = {};
   const typeCounts = { multiple_choice: 0, true_false: 0 };
-  let translated = 0;
+  let qTranslated = 0;
 
   for (const q of qs) {
     diffDist[q.difficulty] = (diffDist[q.difficulty] || 0) + 1;
     if (q.type === "multiple_choice") typeCounts.multiple_choice++;
     else typeCounts.true_false++;
     if (q.question_es && q.explanation_es && (q.type === "true_false" || q.options_es))
-      translated++;
+      qTranslated++;
+  }
+
+  const fcDiffDist: Record<number, number> = {};
+  let fcTranslated = 0;
+  for (const fc of fcs) {
+    fcDiffDist[fc.difficulty] = (fcDiffDist[fc.difficulty] || 0) + 1;
+    if (fc.question_es && fc.answer_es) fcTranslated++;
   }
 
   return ok({
     topic_id,
     category_count: categoryIds.length,
     question_count: qs.length,
+    flashcard_count: fcs.length,
     difficulty_distribution: diffDist,
+    flashcard_difficulty_distribution: fcDiffDist,
     type_breakdown: typeCounts,
-    translation_completeness_pct: qs.length > 0 ? Math.round((translated / qs.length) * 10000) / 100 : 100,
+    translation_completeness_pct: qs.length > 0 ? Math.round((qTranslated / qs.length) * 10000) / 100 : 100,
+    flashcard_translation_completeness_pct: fcs.length > 0 ? Math.round((fcTranslated / fcs.length) * 10000) / 100 : 100,
   });
 }
 
@@ -72,34 +91,42 @@ export async function handleContentOverview(
 ): Promise<McpResult> {
   const { data: topics, error: tErr } = await supabase
     .from("themes")
-    .select("id, title_en, title_es, is_active, categories(id, questions(id, question_es, options_es, explanation_es))")
+    .select("id, title_en, title_es, is_active, categories(id, questions(id, question_es, options_es, explanation_es), flashcards(id, question_es, answer_es))")
     .eq("is_active", true);
   if (tErr) return err(tErr.message);
 
   const ts = topics || [];
   let totalCats = 0;
   let totalQs = 0;
+  let totalFcs = 0;
 
   const topicStats = ts.map((t: any) => {
     const cats = t.categories || [];
     const qs = cats.flatMap((c: any) => c.questions || []);
+    const fcs = cats.flatMap((c: any) => c.flashcards || []);
     totalCats += cats.length;
     totalQs += qs.length;
-    const translated = qs.filter(
+    totalFcs += fcs.length;
+    const qTranslated = qs.filter(
       (q: any) => q.question_es && q.explanation_es,
+    ).length;
+    const fcTranslated = fcs.filter(
+      (fc: any) => fc.question_es && fc.answer_es,
     ).length;
     return {
       id: t.id,
       title_en: t.title_en,
       category_count: cats.length,
       question_count: qs.length,
-      translation_pct: qs.length > 0 ? Math.round((translated / qs.length) * 10000) / 100 : 100,
+      flashcard_count: fcs.length,
+      question_translation_pct: qs.length > 0 ? Math.round((qTranslated / qs.length) * 10000) / 100 : 100,
+      flashcard_translation_pct: fcs.length > 0 ? Math.round((fcTranslated / fcs.length) * 10000) / 100 : 100,
     };
   });
 
   return ok({
     topics: topicStats,
-    totals: { topics: ts.length, categories: totalCats, questions: totalQs },
+    totals: { topics: ts.length, categories: totalCats, questions: totalQs, flashcards: totalFcs },
   });
 }
 
@@ -108,37 +135,57 @@ export async function handleQuestionQualityReport(
   supabase: SupabaseClient,
   params: { topic_id?: string },
 ): Promise<McpResult> {
-  let query = supabase
+  let qQuery = supabase
     .from("questions")
     .select("id, type, question_en, question_es, options_en, options_es, explanation_en, explanation_es, correct_index, category_id");
 
+  let fcQuery = supabase
+    .from("flashcards")
+    .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es, category_id");
+
   if (params.topic_id) {
-    query = query.in(
-      "category_id",
-      supabase.from("categories").select("id").eq("theme_id", params.topic_id) as any,
-    );
+    const catFilter = supabase.from("categories").select("id").eq("theme_id", params.topic_id) as any;
+    qQuery = qQuery.in("category_id", catFilter);
+    fcQuery = fcQuery.in("category_id", catFilter);
   }
 
-  const { data: questions, error: qErr } = await query;
+  const { data: questions, error: qErr } = await qQuery;
   if (qErr) return err(qErr.message);
 
+  const { data: flashcards, error: fErr } = await fcQuery;
+  if (fErr) return err(fErr.message);
+
   const qs = questions || [];
-  const issues: Array<{ question_id: string; issue: string }> = [];
+  const questionIssues: Array<{ question_id: string; issue: string }> = [];
 
   for (const q of qs) {
-    if (!q.explanation_en) issues.push({ question_id: q.id, issue: "missing explanation_en" });
-    if (!q.explanation_es) issues.push({ question_id: q.id, issue: "missing explanation_es" });
+    if (!q.explanation_en) questionIssues.push({ question_id: q.id, issue: "missing explanation_en" });
+    if (!q.explanation_es) questionIssues.push({ question_id: q.id, issue: "missing explanation_es" });
     if (q.type === "multiple_choice") {
-      if (!q.options_en) issues.push({ question_id: q.id, issue: "multiple_choice missing options_en" });
-      if (!q.options_es) issues.push({ question_id: q.id, issue: "multiple_choice missing options_es" });
+      if (!q.options_en) questionIssues.push({ question_id: q.id, issue: "multiple_choice missing options_en" });
+      if (!q.options_es) questionIssues.push({ question_id: q.id, issue: "multiple_choice missing options_es" });
       if (q.options_en && q.options_es && q.options_en.length !== q.options_es.length) {
-        issues.push({ question_id: q.id, issue: "mismatched option counts between en/es" });
+        questionIssues.push({ question_id: q.id, issue: "mismatched option counts between en/es" });
       }
     }
-    if (!q.question_es) issues.push({ question_id: q.id, issue: "missing question_es" });
+    if (!q.question_es) questionIssues.push({ question_id: q.id, issue: "missing question_es" });
   }
 
-  return ok({ total_checked: qs.length, issues });
+  const fcs = flashcards || [];
+  const flashcardIssues: Array<{ flashcard_id: string; issue: string }> = [];
+
+  for (const fc of fcs) {
+    if (!fc.answer_en) flashcardIssues.push({ flashcard_id: fc.id, issue: "missing answer_en" });
+    if (!fc.answer_es) flashcardIssues.push({ flashcard_id: fc.id, issue: "missing answer_es" });
+    if (!fc.question_es) flashcardIssues.push({ flashcard_id: fc.id, issue: "missing question_es" });
+  }
+
+  return ok({
+    questions_checked: qs.length,
+    question_issues: questionIssues,
+    flashcards_checked: fcs.length,
+    flashcard_issues: flashcardIssues,
+  });
 }
 
 // ─── learn_user_activity_stats ─────────────────────────────────────
@@ -148,7 +195,7 @@ export async function handleUserActivityStats(
 ): Promise<McpResult> {
   let query = supabase
     .from("review_logs")
-    .select("user_id, mode, was_correct, question_id, reviewed_at");
+    .select("user_id, was_correct, flashcard_id, reviewed_at");
 
   if (params.since) {
     query = query.gte("reviewed_at", params.since);
@@ -159,26 +206,23 @@ export async function handleUserActivityStats(
 
   const reviews = logs || [];
   const userSet = new Set(reviews.map((r: any) => r.user_id));
-  const modeCount: Record<string, number> = {};
-  const incorrectByQ: Record<string, number> = {};
+  const incorrectByFc: Record<string, number> = {};
 
   for (const r of reviews) {
-    modeCount[r.mode] = (modeCount[r.mode] || 0) + 1;
     if (r.was_correct === false) {
-      incorrectByQ[r.question_id] = (incorrectByQ[r.question_id] || 0) + 1;
+      incorrectByFc[r.flashcard_id] = (incorrectByFc[r.flashcard_id] || 0) + 1;
     }
   }
 
-  const hardest = Object.entries(incorrectByQ)
-    .map(([question_id, incorrect_count]) => ({ question_id, incorrect_count }))
+  const hardest = Object.entries(incorrectByFc)
+    .map(([flashcard_id, incorrect_count]) => ({ flashcard_id, incorrect_count }))
     .sort((a, b) => b.incorrect_count - a.incorrect_count)
     .slice(0, 10);
 
   return ok({
     total_reviews: reviews.length,
     unique_users: userSet.size,
-    reviews_per_mode: modeCount,
-    hardest_questions: hardest,
+    hardest_flashcards: hardest,
   });
 }
 
@@ -187,45 +231,45 @@ export async function handleDifficultyAnalysis(
   supabase: SupabaseClient,
   params: { topic_id: string },
 ): Promise<McpResult> {
-  const { data: questions, error: qErr } = await supabase
-    .from("questions")
+  const { data: flashcards, error: fErr } = await supabase
+    .from("flashcards")
     .select("id, difficulty, question_en, categories!inner(theme_id)")
     .eq("categories.theme_id", params.topic_id);
-  if (qErr) return err(qErr.message);
+  if (fErr) return err(fErr.message);
 
-  const qs = questions || [];
-  const qIds = qs.map((q: any) => q.id);
+  const fcs = flashcards || [];
+  const fcIds = fcs.map((fc: any) => fc.id);
 
-  const reviewsByQ: Record<string, Array<{ was_correct: boolean }>> = {};
-  if (qIds.length > 0) {
+  const reviewsByFc: Record<string, Array<{ was_correct: boolean }>> = {};
+  if (fcIds.length > 0) {
     const { data: reviews, error: rErr } = await supabase
       .from("review_logs")
-      .select("question_id, was_correct")
-      .in("question_id", qIds);
+      .select("flashcard_id, was_correct")
+      .in("flashcard_id", fcIds);
     if (rErr) return err(rErr.message);
 
     for (const r of reviews || []) {
-      if (!reviewsByQ[r.question_id]) reviewsByQ[r.question_id] = [];
-      reviewsByQ[r.question_id].push(r);
+      if (!reviewsByFc[r.flashcard_id]) reviewsByFc[r.flashcard_id] = [];
+      reviewsByFc[r.flashcard_id].push(r);
     }
   }
 
-  const analysis = qs.map((q: any) => {
-    const rs = reviewsByQ[q.id] || [];
+  const analysis = fcs.map((fc: any) => {
+    const rs = reviewsByFc[fc.id] || [];
     const total = rs.length;
     const correct = rs.filter((r) => r.was_correct).length;
     const pct = total > 0 ? Math.round((correct / total) * 10000) / 100 : null;
 
-    let suggested = q.difficulty;
+    let suggested = fc.difficulty;
     if (pct !== null) {
-      if (pct > 80 && q.difficulty > 1) suggested = q.difficulty - 1;
-      else if (pct < 40 && q.difficulty < 10) suggested = q.difficulty + 1;
+      if (pct > 80 && fc.difficulty > 1) suggested = fc.difficulty - 1;
+      else if (pct < 40 && fc.difficulty < 10) suggested = fc.difficulty + 1;
     }
 
     return {
-      question_id: q.id,
-      question_en: q.question_en,
-      assigned_difficulty: q.difficulty,
+      flashcard_id: fc.id,
+      question_en: fc.question_en,
+      assigned_difficulty: fc.difficulty,
       total_reviews: total,
       correct_count: correct,
       actual_correct_pct: pct,
@@ -233,7 +277,7 @@ export async function handleDifficultyAnalysis(
     };
   });
 
-  return ok({ topic_id: params.topic_id, questions: analysis });
+  return ok({ topic_id: params.topic_id, flashcards: analysis });
 }
 
 // ─── Registration ──────────────────────────────────────────────────

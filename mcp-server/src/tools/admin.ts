@@ -55,6 +55,19 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
     { name: "created_at", type: "timestamptz" },
     { name: "updated_at", type: "timestamptz" },
   ],
+  flashcards: [
+    { name: "id", type: "uuid", note: "PK" },
+    { name: "category_id", type: "uuid", note: "FK→categories" },
+    { name: "question_en", type: "text" },
+    { name: "question_es", type: "text" },
+    { name: "answer_en", type: "text" },
+    { name: "answer_es", type: "text" },
+    { name: "extra_en", type: "text", nullable: true },
+    { name: "extra_es", type: "text", nullable: true },
+    { name: "difficulty", type: "integer", note: "1-10" },
+    { name: "created_at", type: "timestamptz" },
+    { name: "updated_at", type: "timestamptz" },
+  ],
   profiles: [
     { name: "id", type: "uuid", note: "PK FK→auth.users" },
     { name: "display_name", type: "text", nullable: true },
@@ -73,7 +86,7 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
   user_card_state: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "user_id", type: "uuid" },
-    { name: "question_id", type: "uuid" },
+    { name: "flashcard_id", type: "uuid", note: "FK→flashcards" },
     { name: "stability", type: "float" },
     { name: "difficulty", type: "float" },
     { name: "elapsed_days", type: "float" },
@@ -92,15 +105,23 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
   review_logs: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "user_id", type: "uuid" },
-    { name: "question_id", type: "uuid" },
+    { name: "flashcard_id", type: "uuid", note: "FK→flashcards" },
     { name: "card_state_id", type: "uuid" },
     { name: "rating", type: "integer", note: "1-4" },
-    { name: "mode", type: "text", note: "'quiz'|'flashcard'" },
     { name: "answer_time_ms", type: "integer", nullable: true },
     { name: "was_correct", type: "boolean", nullable: true },
     { name: "stability_before", type: "float", nullable: true },
     { name: "difficulty_before", type: "float", nullable: true },
     { name: "reviewed_at", type: "timestamptz" },
+  ],
+  quiz_attempts: [
+    { name: "id", type: "uuid", note: "PK" },
+    { name: "user_id", type: "uuid" },
+    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "score", type: "integer" },
+    { name: "total", type: "integer" },
+    { name: "answers", type: "jsonb" },
+    { name: "created_at", type: "timestamptz" },
   ],
   feedback: [
     { name: "id", type: "uuid", note: "PK" },
@@ -109,6 +130,9 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
     { name: "message", type: "text" },
     { name: "url", type: "text", nullable: true },
     { name: "user_agent", type: "text", nullable: true },
+    { name: "flashcard_id", type: "uuid", nullable: true, note: "FK→flashcards" },
+    { name: "name", type: "text", nullable: true },
+    { name: "email", type: "text", nullable: true },
     { name: "created_at", type: "timestamptz" },
   ],
   question_reports: [
@@ -128,6 +152,7 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
     { name: "category_id", type: "uuid" },
     { name: "submitted_by", type: "uuid", nullable: true },
     { name: "type", type: "text" },
+    { name: "target_type", type: "text", note: "'question'|'flashcard'", nullable: true },
     { name: "question_en", type: "text" },
     { name: "question_es", type: "text" },
     { name: "options_en", type: "jsonb", nullable: true },
@@ -154,6 +179,26 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
     { name: "created_at", type: "timestamptz" },
     { name: "reviewed_at", type: "timestamptz", nullable: true },
     { name: "reviewed_by", type: "uuid", nullable: true },
+  ],
+  suspended_flashcards: [
+    { name: "id", type: "uuid", note: "PK" },
+    { name: "user_id", type: "uuid", note: "FK→auth.users" },
+    { name: "flashcard_id", type: "uuid", note: "FK→flashcards" },
+    { name: "created_at", type: "timestamptz" },
+  ],
+  hidden_themes: [
+    { name: "id", type: "uuid", note: "PK" },
+    { name: "user_id", type: "uuid", note: "FK→auth.users" },
+    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "created_at", type: "timestamptz" },
+  ],
+  reading_progress: [
+    { name: "id", type: "uuid", note: "PK" },
+    { name: "user_id", type: "uuid", note: "FK→auth.users" },
+    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "completed", type: "boolean" },
+    { name: "created_at", type: "timestamptz" },
+    { name: "updated_at", type: "timestamptz" },
   ],
 };
 
@@ -193,8 +238,19 @@ export async function handleAdminSummary(
     .select("id", { count: "exact", head: true });
   if (qErr) return err(qErr.message);
 
+  const { count: fcCount, error: fcErr } = await supabase
+    .from("flashcards")
+    .select("id", { count: "exact", head: true });
+  if (fcErr) return err(fcErr.message);
+
   const { data: recentQuestions } = await supabase
     .from("questions")
+    .select("id, question_en, updated_at")
+    .order("updated_at", { ascending: false })
+    .limit(5);
+
+  const { data: recentFlashcards } = await supabase
+    .from("flashcards")
     .select("id, question_en, updated_at")
     .order("updated_at", { ascending: false })
     .limit(5);
@@ -207,8 +263,12 @@ export async function handleAdminSummary(
       topics: topicCount ?? 0,
       categories: catCount ?? 0,
       questions: qCount ?? 0,
+      flashcards: fcCount ?? 0,
     },
-    recently_updated: recentQuestions || [],
+    recently_updated: {
+      questions: recentQuestions || [],
+      flashcards: recentFlashcards || [],
+    },
   });
 }
 

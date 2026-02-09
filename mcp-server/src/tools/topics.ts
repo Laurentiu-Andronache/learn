@@ -39,6 +39,7 @@ export async function handleListTopics(
   // Category counts
   const catCountMap: Record<string, number> = {};
   const qCountMap: Record<string, number> = {};
+  const fcCountMap: Record<string, number> = {};
 
   if (ids.length > 0) {
     const { data: catCounts } = await supabase
@@ -56,10 +57,20 @@ export async function handleListTopics(
       .select("category_id:categories!inner(theme_id), count:id")
       .in("categories.theme_id", ids);
 
-    // The RPC-style select may vary; use a simpler approach
     for (const row of qCounts ?? []) {
       const themeId = (row as any).theme_id ?? (row as any).category_id;
       qCountMap[themeId] = Number((row as any).count);
+    }
+
+    // Flashcard counts via categories
+    const { data: fcCounts } = await supabase
+      .from("flashcards")
+      .select("category_id:categories!inner(theme_id), count:id")
+      .in("categories.theme_id", ids);
+
+    for (const row of fcCounts ?? []) {
+      const themeId = (row as any).theme_id ?? (row as any).category_id;
+      fcCountMap[themeId] = Number((row as any).count);
     }
   }
 
@@ -67,6 +78,7 @@ export async function handleListTopics(
     ...t,
     category_count: catCountMap[t.id] ?? 0,
     question_count: qCountMap[t.id] ?? 0,
+    flashcard_count: fcCountMap[t.id] ?? 0,
   }));
 
   return ok({ topics: enriched, total: count ?? 0, limit, offset });
@@ -94,6 +106,7 @@ export async function handleGetTopic(
 
   const catIds = (categories ?? []).map((c: any) => c.id);
   const qCountMap: Record<string, number> = {};
+  const fcCountMap: Record<string, number> = {};
 
   if (catIds.length > 0) {
     const { data: qCounts } = await supabase
@@ -104,11 +117,21 @@ export async function handleGetTopic(
     for (const row of qCounts ?? []) {
       qCountMap[(row as any).category_id] = Number((row as any).count);
     }
+
+    const { data: fcCounts } = await supabase
+      .from("flashcards")
+      .select("category_id, count:id")
+      .in("category_id", catIds);
+
+    for (const row of fcCounts ?? []) {
+      fcCountMap[(row as any).category_id] = Number((row as any).count);
+    }
   }
 
   const enrichedCats = (categories ?? []).map((c: any) => ({
     ...c,
     question_count: qCountMap[c.id] ?? 0,
+    flashcard_count: fcCountMap[c.id] ?? 0,
   }));
 
   return ok({ ...topic, categories: enrichedCats });
