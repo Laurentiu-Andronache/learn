@@ -1,15 +1,21 @@
-import { createEmptyCard, fsrs, generatorParameters, Rating } from "ts-fsrs";
+import { createEmptyCard, Rating } from "ts-fsrs";
 import { toCard } from "@/lib/fsrs/card-mapper";
+import { createUserScheduler, fsrs } from "@/lib/fsrs/scheduler";
 import type { UserCardState } from "@/lib/types/database";
 
-const f = fsrs(generatorParameters({ enable_fuzz: true }));
+export interface UserSchedulerSettings {
+  desired_retention: number;
+  max_review_interval: number;
+}
 
 export function getIntervalPreviews(
   cardState: UserCardState | null,
+  userSettings?: UserSchedulerSettings,
 ): Record<1 | 2 | 3 | 4, string> {
   const card = cardState ? toCard(cardState) : createEmptyCard();
   const now = new Date();
-  const scheduled = f.repeat(card, now);
+  const scheduler = userSettings ? createUserScheduler(userSettings) : fsrs;
+  const scheduled = scheduler.repeat(card, now);
   return {
     1: formatInterval(scheduled[Rating.Again].card.due, now),
     2: formatInterval(scheduled[Rating.Hard].card.due, now),
@@ -18,7 +24,15 @@ export function getIntervalPreviews(
   };
 }
 
-function formatInterval(due: Date, now: Date): string {
+export function getRetrievability(
+  cardState: UserCardState | null,
+): number | null {
+  if (!cardState || cardState.state === "new") return null;
+  const card = toCard(cardState);
+  return fsrs.get_retrievability(card, new Date(), false);
+}
+
+export function formatInterval(due: Date, now: Date): string {
   const diffMs = due.getTime() - now.getTime();
   const mins = Math.round(diffMs / 60000);
   if (mins < 60) return `${mins}m`;

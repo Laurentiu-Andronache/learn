@@ -21,6 +21,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { FsrsSettings } from "@/lib/services/user-preferences";
+import { FsrsSettingsCard } from "./fsrs-settings";
 import { HiddenTopicsList } from "./hidden-topics-list";
 import { ProfileEditor } from "./profile-editor";
 import { SuspendedFlashcardsList } from "./suspended-flashcards-list";
@@ -56,6 +58,7 @@ interface SettingsClientProps {
       color: string | null;
     } | null;
   }>;
+  fsrsSettings?: FsrsSettings | null;
 }
 
 export function SettingsClient({
@@ -66,6 +69,7 @@ export function SettingsClient({
   profile,
   suspendedFlashcards,
   hiddenTopics,
+  fsrsSettings,
 }: SettingsClientProps) {
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
@@ -134,6 +138,11 @@ export function SettingsClient({
           </div>
         </CardContent>
       </Card>
+
+      {/* Study Settings */}
+      {fsrsSettings && (
+        <FsrsSettingsCard userId={userId} settings={fsrsSettings} />
+      )}
 
       {/* Suspended Flashcards */}
       <Card>

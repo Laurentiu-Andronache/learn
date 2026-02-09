@@ -17,6 +17,7 @@ const makeDbState = (overrides: Partial<DbCardState> = {}): DbCardState => ({
   state: "review",
   last_review: "2026-01-15T10:00:00.000Z",
   due: "2026-01-20T10:00:00.000Z",
+  learning_steps: 0,
   ...overrides,
 });
 
@@ -68,9 +69,9 @@ describe("card-mapper", () => {
       expect(card.state).toBe(State.New);
     });
 
-    it("sets learning_steps to 0", () => {
-      const card = toCard(makeDbState());
-      expect(card.learning_steps).toBe(0);
+    it("reads learning_steps from dbState", () => {
+      const card = toCard(makeDbState({ learning_steps: 2 }));
+      expect(card.learning_steps).toBe(2);
     });
   });
 
@@ -143,6 +144,33 @@ describe("card-mapper", () => {
       const original = makeDbState({ last_review: null });
       const roundtripped = fromCard(toCard(original));
       expect(roundtripped.last_review).toBeNull();
+    });
+  });
+
+  describe("learning_steps", () => {
+    it("toCard reads learning_steps from DbCardState", () => {
+      const card = toCard(makeDbState({ learning_steps: 3 }));
+      expect(card.learning_steps).toBe(3);
+    });
+
+    it("fromCard writes learning_steps back", () => {
+      const card = toCard(makeDbState({ learning_steps: 4 }));
+      const db = fromCard(card);
+      expect(db.learning_steps).toBe(4);
+    });
+
+    it.each(["new", "learning", "review", "relearning"] as const)(
+      "roundtrip preserves learning_steps for state '%s'",
+      (state) => {
+        const original = makeDbState({ state, learning_steps: 2 });
+        const roundtripped = fromCard(toCard(original));
+        expect(roundtripped.learning_steps).toBe(2);
+      },
+    );
+
+    it("createNewCard() has learning_steps: 0", () => {
+      const card = createNewCard();
+      expect(card.learning_steps).toBe(0);
     });
   });
 

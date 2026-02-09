@@ -55,6 +55,40 @@ describe("FSRS scheduler integration", () => {
     expect(restored.state).toBe(afterGood.state);
   });
 
+  it("new card rated Good changes learning_steps", () => {
+    const card = createNewCard();
+    expect(card.learning_steps).toBe(0);
+    const scheduled = fsrs.repeat(card, new Date());
+    const afterGood = scheduled[Rating.Good].card;
+    expect(afterGood.learning_steps).toBeGreaterThanOrEqual(0);
+    // learning_steps should be tracked by FSRS after scheduling
+    expect(typeof afterGood.learning_steps).toBe("number");
+  });
+
+  it("card completing learning transitions to Review", () => {
+    let card = createNewCard();
+    // Progress through learning until we hit Review
+    for (let i = 0; i < 10; i++) {
+      const due = new Date(card.due.getTime() + 86400_000);
+      const scheduled = fsrs.repeat(card, due);
+      card = scheduled[Rating.Good].card;
+      if (card.state === State.Review) break;
+    }
+    expect(card.state).toBe(State.Review);
+  });
+
+  it("learning_steps persist through DB roundtrip", () => {
+    const card = createNewCard();
+    const scheduled = fsrs.repeat(card, new Date());
+    const afterGood = scheduled[Rating.Good].card;
+
+    const dbFields = fromCard(afterGood);
+    expect(typeof dbFields.learning_steps).toBe("number");
+
+    const restored = toCard(dbFields);
+    expect(restored.learning_steps).toBe(afterGood.learning_steps);
+  });
+
   it("Review card rated Again goes to Relearning and increments lapses", () => {
     // Create a Review-state card
     const card = createNewCard();

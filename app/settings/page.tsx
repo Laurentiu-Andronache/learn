@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { SettingsClient } from "@/components/settings/settings-client";
 import {
+  getFsrsSettings,
   getHiddenTopics,
   getProfile,
   getSuspendedFlashcards,
@@ -33,11 +34,13 @@ export default async function SettingsPage() {
 
   const isAnonymous = user.is_anonymous ?? false;
 
-  const [profile, suspendedFlashcards, hiddenTopics] = await Promise.all([
-    getProfile(user.id).catch(() => null),
-    getSuspendedFlashcards(user.id).catch(() => []),
-    getHiddenTopics(user.id).catch(() => []),
-  ]);
+  const [profile, suspendedFlashcards, hiddenTopics, fsrsSettings] =
+    await Promise.all([
+      getProfile(user.id).catch(() => null),
+      getSuspendedFlashcards(user.id).catch(() => []),
+      getHiddenTopics(user.id).catch(() => []),
+      getFsrsSettings(user.id).catch(() => null),
+    ]);
 
   return (
     <SettingsClient
@@ -48,6 +51,7 @@ export default async function SettingsPage() {
       profile={profile}
       suspendedFlashcards={suspendedFlashcards}
       hiddenTopics={hiddenTopics}
+      fsrsSettings={fsrsSettings}
     />
   );
 }

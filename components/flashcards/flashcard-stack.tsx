@@ -24,6 +24,7 @@ interface FlashcardStackProps {
   flashcards: FlashcardData[];
   locale: "en" | "es";
   intervalPreviews: Map<string, Record<1 | 2 | 3 | 4, string>>;
+  showIntervalPreviews?: boolean;
   onGrade: (flashcardId: string, rating: 1 | 2 | 3 | 4) => void;
   onSuspend: (flashcardId: string) => void;
   onComplete: (results: Map<string, 1 | 2 | 3 | 4>) => void;
@@ -36,6 +37,7 @@ export function FlashcardStack({
   flashcards,
   locale,
   intervalPreviews,
+  showIntervalPreviews = true,
   onGrade,
   onSuspend,
   onComplete,
@@ -288,9 +290,11 @@ export function FlashcardStack({
               onClick={() => advance(1)}
             >
               <span className="text-sm font-medium">{tf("again")}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {previews[1]}
-              </span>
+              {showIntervalPreviews && (
+                <span className="text-[10px] text-muted-foreground">
+                  {previews[1]}
+                </span>
+              )}
             </Button>
             <Button
               variant="outline"
@@ -298,9 +302,11 @@ export function FlashcardStack({
               onClick={() => advance(2)}
             >
               <span className="text-sm font-medium">{tf("hard")}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {previews[2]}
-              </span>
+              {showIntervalPreviews && (
+                <span className="text-[10px] text-muted-foreground">
+                  {previews[2]}
+                </span>
+              )}
             </Button>
             <Button
               variant="outline"
@@ -308,9 +314,11 @@ export function FlashcardStack({
               onClick={() => advance(3)}
             >
               <span className="text-sm font-medium">{tf("good")}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {previews[3]}
-              </span>
+              {showIntervalPreviews && (
+                <span className="text-[10px] text-muted-foreground">
+                  {previews[3]}
+                </span>
+              )}
             </Button>
             <Button
               variant="outline"
@@ -318,9 +326,11 @@ export function FlashcardStack({
               onClick={() => advance(4)}
             >
               <span className="text-sm font-medium">{tf("easy")}</span>
-              <span className="text-[10px] text-muted-foreground">
-                {previews[4]}
-              </span>
+              {showIntervalPreviews && (
+                <span className="text-[10px] text-muted-foreground">
+                  {previews[4]}
+                </span>
+              )}
             </Button>
           </div>
         </div>

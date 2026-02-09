@@ -222,7 +222,18 @@
     "hiddenTopics": "Temas Ocultos",
     "noHidden": "No hay temas ocultos",
     "account": "Cuenta",
-    "upgradePrompt": "Estás usando una cuenta de invitado. Mejora para guardar tu progreso."
+    "upgradePrompt": "Estás usando una cuenta de invitado. Mejora para guardar tu progreso.",
+    "studySettings": "Ajustes de Estudio",
+    "desiredRetention": "Retención Deseada",
+    "retentionDescription": "Mayor retención significa repasos más frecuentes pero mejor recuerdo. 0.9 es recomendado para la mayoría.",
+    "maxInterval": "Intervalo Máximo (días)",
+    "maxIntervalDescription": "El intervalo más largo permitido entre repasos de una tarjeta.",
+    "newCardsPerDay": "Tarjetas Nuevas Por Día",
+    "newCardsPerDayDescription": "Máximo de tarjetas nuevas introducidas por día por tema.",
+    "showIntervals": "Mostrar Previsualización de Intervalos",
+    "showIntervalsDescription": "Mostrar el próximo tiempo de repaso en los botones de calificación.",
+    "resetDefaults": "Restablecer Valores Predeterminados",
+    "saved": "Ajustes guardados."
   },
   "admin": {
     "title": "Panel de Administración",

@@ -3,7 +3,8 @@
 import type { Grade } from "ts-fsrs";
 import { createNewCard, fromCard, toCard } from "@/lib/fsrs/card-mapper";
 import { getAllTopicsProgress } from "@/lib/fsrs/progress";
-import { fsrs, Rating } from "@/lib/fsrs/scheduler";
+import { createUserScheduler, Rating } from "@/lib/fsrs/scheduler";
+import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 
 export async function scheduleFlashcardReview(
@@ -14,23 +15,42 @@ export async function scheduleFlashcardReview(
 ) {
   const supabase = await createClient();
 
-  // Fetch current card state
-  const { data: existingState } = await supabase
-    .from("user_card_state")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("flashcard_id", flashcardId)
-    .single();
+  // Fetch current card state + user FSRS settings in parallel
+  const [{ data: existingState }, userSettings] = await Promise.all([
+    supabase
+      .from("user_card_state")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("flashcard_id", flashcardId)
+      .single(),
+    getFsrsSettings(userId),
+  ]);
 
   const now = new Date();
   const card = existingState ? toCard(existingState) : createNewCard();
 
-  // Save before state for logging
-  const stabilityBefore = card.stability;
-  const difficultyBefore = card.difficulty;
+  // Capture full before-snapshot for undo support
+  const stabilityBefore = existingState ? existingState.stability : null;
+  const difficultyBefore = existingState ? existingState.difficulty : null;
+  const stateBefore = existingState ? existingState.state : null;
+  const repsBefore = existingState ? existingState.reps : null;
+  const lapsesBefore = existingState ? existingState.lapses : null;
+  const elapsedDaysBefore = existingState ? existingState.elapsed_days : null;
+  const scheduledDaysBefore = existingState
+    ? existingState.scheduled_days
+    : null;
+  const lastReviewBefore = existingState ? existingState.last_review : null;
+  const dueBefore = existingState ? existingState.due : null;
+  const learningStepsBefore = existingState
+    ? existingState.learning_steps ?? 0
+    : null;
 
-  // Run FSRS scheduling — repeat() returns all 4 outcomes, pick by rating
-  const scheduled = fsrs.repeat(card, now);
+  // Run FSRS scheduling with per-user scheduler
+  const scheduler = createUserScheduler({
+    desired_retention: userSettings.desired_retention,
+    max_review_interval: userSettings.max_review_interval,
+  });
+  const scheduled = scheduler.repeat(card, now);
   const newCard = scheduled[rating as Grade].card;
   const dbFields = fromCard(newCard);
 
@@ -84,7 +104,7 @@ export async function scheduleFlashcardReview(
     cardStateId = inserted.id;
   }
 
-  // Insert review log
+  // Insert review log with full before-snapshot
   const { error: logError } = await supabase.from("review_logs").insert({
     user_id: userId,
     flashcard_id: flashcardId,
@@ -93,6 +113,14 @@ export async function scheduleFlashcardReview(
     answer_time_ms: answerTimeMs ?? null,
     stability_before: stabilityBefore,
     difficulty_before: difficultyBefore,
+    state_before: stateBefore,
+    reps_before: repsBefore,
+    lapses_before: lapsesBefore,
+    elapsed_days_before: elapsedDaysBefore,
+    scheduled_days_before: scheduledDaysBefore,
+    last_review_before: lastReviewBefore,
+    due_before: dueBefore,
+    learning_steps_before: learningStepsBefore,
   });
   if (logError) {
     console.error("Failed to insert review log:", logError.message);
@@ -138,10 +166,12 @@ export async function buryFlashcard(userId: string, flashcardId: string) {
 export async function undoLastReview(userId: string, flashcardId: string) {
   const supabase = await createClient();
 
-  // Find the most recent review log
+  // Find the most recent review log with full snapshot
   const { data: lastLog } = await supabase
     .from("review_logs")
-    .select("id, stability_before, difficulty_before")
+    .select(
+      "id, stability_before, difficulty_before, state_before, reps_before, lapses_before, elapsed_days_before, scheduled_days_before, last_review_before, due_before, learning_steps_before",
+    )
     .eq("user_id", userId)
     .eq("flashcard_id", flashcardId)
     .order("reviewed_at", { ascending: false })
@@ -150,111 +180,35 @@ export async function undoLastReview(userId: string, flashcardId: string) {
 
   if (!lastLog) return;
 
-  // Get current card state before deleting the log (for full restore)
-  const { data: currentCardState } = await supabase
-    .from("user_card_state")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("flashcard_id", flashcardId)
-    .single();
-
   // Delete the review log
   await supabase.from("review_logs").delete().eq("id", lastLog.id);
 
-  // Check if there's a previous review log remaining
-  const { data: prevLog } = await supabase
-    .from("review_logs")
-    .select("*")
-    .eq("user_id", userId)
-    .eq("flashcard_id", flashcardId)
-    .order("reviewed_at", { ascending: false })
-    .limit(1)
-    .single();
-
-  if (!prevLog) {
-    // No more review logs — card was new before this review, delete state entirely
+  if (lastLog.state_before === null) {
+    // Card was new before this review — delete card state entirely
     await supabase
       .from("user_card_state")
       .delete()
       .eq("user_id", userId)
       .eq("flashcard_id", flashcardId);
-  } else if (currentCardState) {
-    // Restore full card state from the "before" snapshot stored in the deleted log.
-    // The stability_before/difficulty_before tell us what the card looked like BEFORE
-    // the review we just deleted. We need to reconstruct the full state by re-scheduling
-    // from the previous review's outcome. The simplest correct approach: replay FSRS
-    // from the previous log's snapshot. But we don't store full card state in logs,
-    // so we restore stability/difficulty from the deleted log's "before" values and
-    // replay the previous review to get the rest of the fields.
-    //
-    // Better approach: the previous review log's stability_before/difficulty_before
-    // represent what the card was BEFORE that review. So after that review, the card
-    // should have the values that were the "before" of the review we just deleted.
-    // We restore: stability = lastLog.stability_before, difficulty = lastLog.difficulty_before,
-    // and for the scheduling fields (state, due, reps, lapses, elapsed_days, scheduled_days, last_review),
-    // we need the card state as it was AFTER the previous review. Since the "before" values
-    // of the deleted log ARE the "after" values of the previous review, and we only store
-    // stability_before/difficulty_before, we need to reconstruct the rest.
-    //
-    // The most reliable approach: use the previous log to re-derive the card state.
-    // Since we can't perfectly reconstruct without full snapshots, we use a simpler
-    // but correct approach for the fields we DO have:
-    if (
-      lastLog.stability_before === null ||
-      lastLog.difficulty_before === null
-    ) {
-      // The card was brand new before this review — delete state entirely
-      await supabase
-        .from("user_card_state")
-        .delete()
-        .eq("user_id", userId)
-        .eq("flashcard_id", flashcardId);
-    } else {
-      // Restore stability and difficulty from the deleted log's "before" values.
-      // For the remaining fields, we reconstruct by replaying the previous review.
-      // Get the card state that existed before the previous review (from prevLog's before values),
-      // then replay prevLog's rating to get the full after-state.
-      const prevStabilityBefore = prevLog.stability_before;
-      const prevDifficultyBefore = prevLog.difficulty_before;
-
-      let restoredFields: ReturnType<typeof fromCard>;
-      if (prevStabilityBefore === null || prevDifficultyBefore === null) {
-        // The previous review was on a new card — replay from empty card
-        const emptyCard = createNewCard();
-        const prevReviewDate = new Date(prevLog.reviewed_at);
-        const prevScheduled = fsrs.repeat(emptyCard, prevReviewDate);
-        const afterPrevCard = prevScheduled[prevLog.rating as Grade].card;
-        restoredFields = fromCard(afterPrevCard);
-      } else {
-        // Build a partial card from the previous log's "before" snapshot,
-        // then replay that review
-        const cardBeforePrev = toCard({
-          stability: prevStabilityBefore,
-          difficulty: prevDifficultyBefore,
-          // Use reasonable defaults for fields not in the snapshot
-          elapsed_days: 0,
-          scheduled_days: 0,
-          reps: Math.max(0, currentCardState.reps - 1),
-          lapses: currentCardState.lapses,
-          state: "review",
-          last_review: null,
-          due: prevLog.reviewed_at,
-        });
-        const prevReviewDate = new Date(prevLog.reviewed_at);
-        const prevScheduled = fsrs.repeat(cardBeforePrev, prevReviewDate);
-        const afterPrevCard = prevScheduled[prevLog.rating as Grade].card;
-        restoredFields = fromCard(afterPrevCard);
-      }
-
-      await supabase
-        .from("user_card_state")
-        .update({
-          ...restoredFields,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId)
-        .eq("flashcard_id", flashcardId);
-    }
+  } else {
+    // Restore card state from snapshot
+    await supabase
+      .from("user_card_state")
+      .update({
+        stability: lastLog.stability_before,
+        difficulty: lastLog.difficulty_before,
+        state: lastLog.state_before,
+        reps: lastLog.reps_before,
+        lapses: lastLog.lapses_before,
+        elapsed_days: lastLog.elapsed_days_before,
+        scheduled_days: lastLog.scheduled_days_before,
+        last_review: lastLog.last_review_before,
+        due: lastLog.due_before,
+        learning_steps: lastLog.learning_steps_before ?? 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("flashcard_id", flashcardId);
   }
 }
 
@@ -286,11 +240,11 @@ export async function resetTodayProgress(
   const todayMidnight = new Date();
   todayMidnight.setUTCHours(0, 0, 0, 0);
 
-  // Fetch today's review logs for this topic's flashcards
+  // Fetch today's review logs with full snapshot data
   const { data: todayLogs } = await supabase
     .from("review_logs")
     .select(
-      "id, flashcard_id, stability_before, difficulty_before, rating, reviewed_at",
+      "id, flashcard_id, state_before, stability_before, difficulty_before, reps_before, lapses_before, elapsed_days_before, scheduled_days_before, last_review_before, due_before, learning_steps_before",
     )
     .eq("user_id", userId)
     .in("flashcard_id", flashcardIds)
@@ -299,91 +253,49 @@ export async function resetTodayProgress(
 
   if (!todayLogs?.length) return 0;
 
-  // Group by flashcard_id — first log today tells us the "before" state
+  // Group by flashcard_id — first log today has the pre-today snapshot
   const firstLogByFlashcard = new Map<
     string,
-    { stability_before: number | null; difficulty_before: number | null }
+    (typeof todayLogs)[0]
   >();
   for (const log of todayLogs) {
     if (!firstLogByFlashcard.has(log.flashcard_id)) {
-      firstLogByFlashcard.set(log.flashcard_id, {
-        stability_before: log.stability_before,
-        difficulty_before: log.difficulty_before,
-      });
+      firstLogByFlashcard.set(log.flashcard_id, log);
     }
   }
 
-  // Bulk delete today's review logs first
+  // Bulk delete today's review logs
   const logIds = todayLogs.map((l) => l.id);
   await supabase.from("review_logs").delete().in("id", logIds);
 
-  // Restore each flashcard's card state to its pre-today state
-  for (const [flashcardId, before] of firstLogByFlashcard) {
-    if (before.stability_before === null || before.difficulty_before === null) {
-      // Card was new today -> delete card state entirely
+  // Restore each flashcard's card state to its pre-today state using snapshot
+  for (const [flashcardId, firstLog] of firstLogByFlashcard) {
+    if (firstLog.state_before === null) {
+      // Card was new today — delete card state entirely
       await supabase
         .from("user_card_state")
         .delete()
         .eq("user_id", userId)
         .eq("flashcard_id", flashcardId);
     } else {
-      // Find the most recent remaining review log (pre-today) to reconstruct full state
-      const { data: prevLog } = await supabase
-        .from("review_logs")
-        .select("*")
+      // Restore from first log's before-snapshot
+      await supabase
+        .from("user_card_state")
+        .update({
+          stability: firstLog.stability_before,
+          difficulty: firstLog.difficulty_before,
+          state: firstLog.state_before,
+          reps: firstLog.reps_before,
+          lapses: firstLog.lapses_before,
+          elapsed_days: firstLog.elapsed_days_before,
+          scheduled_days: firstLog.scheduled_days_before,
+          last_review: firstLog.last_review_before,
+          due: firstLog.due_before,
+          learning_steps: firstLog.learning_steps_before ?? 0,
+          updated_at: new Date().toISOString(),
+        })
         .eq("user_id", userId)
-        .eq("flashcard_id", flashcardId)
-        .order("reviewed_at", { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!prevLog) {
-        // No prior logs remain — delete card state
-        await supabase
-          .from("user_card_state")
-          .delete()
-          .eq("user_id", userId)
-          .eq("flashcard_id", flashcardId);
-      } else {
-        // Replay the previous review to reconstruct the full card state after it
-        const prevStabBefore = prevLog.stability_before;
-        const prevDiffBefore = prevLog.difficulty_before;
-        let restoredFields: ReturnType<typeof fromCard>;
-
-        if (prevStabBefore === null || prevDiffBefore === null) {
-          // Previous review was on a new card
-          const emptyCard = createNewCard();
-          const prevDate = new Date(prevLog.reviewed_at);
-          const prevScheduled = fsrs.repeat(emptyCard, prevDate);
-          const afterPrevCard = prevScheduled[prevLog.rating as Grade].card;
-          restoredFields = fromCard(afterPrevCard);
-        } else {
-          const cardBeforePrev = toCard({
-            stability: prevStabBefore,
-            difficulty: prevDiffBefore,
-            elapsed_days: 0,
-            scheduled_days: 0,
-            reps: 0,
-            lapses: 0,
-            state: "review",
-            last_review: null,
-            due: prevLog.reviewed_at,
-          });
-          const prevDate = new Date(prevLog.reviewed_at);
-          const prevScheduled = fsrs.repeat(cardBeforePrev, prevDate);
-          const afterPrevCard = prevScheduled[prevLog.rating as Grade].card;
-          restoredFields = fromCard(afterPrevCard);
-        }
-
-        await supabase
-          .from("user_card_state")
-          .update({
-            ...restoredFields,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("user_id", userId)
-          .eq("flashcard_id", flashcardId);
-      }
+        .eq("flashcard_id", flashcardId);
     }
   }
 

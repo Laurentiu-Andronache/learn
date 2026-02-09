@@ -107,12 +107,15 @@ Service functions use UI names (e.g. `createTopic`, `hideTopic`, `scheduleFlashc
 - `components/quiz/` — quiz session, card, progress, results
 - `components/admin/flashcard-edit-form.tsx` — flashcard editing form
 - `components/admin/question-edit-form.tsx` — quiz question editing form
-- `lib/fsrs/flashcard-ordering.ts` — `getOrderedFlashcards`, `getSubModeCounts`
-- `lib/fsrs/actions.ts` — `scheduleFlashcardReview`, `buryFlashcard`, `undoLastReview`
-- `lib/fsrs/interval-preview.ts` — client-side interval preview for rating buttons
+- `lib/fsrs/flashcard-ordering.ts` — `getOrderedFlashcards`, `getSubModeCounts` (supports `newCardsPerDay` enforcement)
+- `lib/fsrs/actions.ts` — `scheduleFlashcardReview`, `buryFlashcard`, `undoLastReview`, `resetTodayProgress` (uses per-user scheduler + snapshot-based undo)
+- `lib/fsrs/scheduler.ts` — FSRS singleton + `createUserScheduler()` factory for per-user retention/interval settings
+- `lib/fsrs/interval-preview.ts` — `getIntervalPreviews()` (accepts optional user settings), `getRetrievability()`, `formatInterval()`
+- `lib/fsrs/daily-stats.ts` — `getDailyStats()` (reviews today, new cards, correct rate, due tomorrow)
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based)
 - `lib/services/quiz-attempts.ts` — `saveQuizAttempt`, `getLatestQuizAttempt`
-- `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, etc.
+- `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, `getFsrsSettings`, `updateFsrsSettings`, etc.
+- `components/settings/fsrs-settings.tsx` — Study settings card (retention slider, max interval, new cards/day, show intervals)
 
 ## Admin Editing (shared components)
 
@@ -130,11 +133,29 @@ In "full" flashcard mode, cards sort by priority buckets:
 
 `spaced_repetition` sub-mode only shows bucket 0 cards. `quick_review` shows seen cards, max 20.
 
+Bucket 1 (new cards) respects `newCardsPerDay` setting — queries `review_logs` for today's new-card reviews (where `stability_before IS NULL`) and caps accordingly.
+
 **Key insight**: Cards in FSRS "learning" state have short intervals (1-10 min). These must NOT be treated as genuine review-due cards.
 
 ## FSRS 4-Point Rating
 
-Flashcard grading: Again (1, red) / Hard (2, orange) / Good (3, green) / Easy (4, blue). Keyboard hotkeys: 1/2/3/Space/4. Each button shows next interval preview. `enable_fuzz: true` in scheduler.
+Flashcard grading: Again (1, red) / Hard (2, orange) / Good (3, green) / Easy (4, blue). Keyboard hotkeys: 1/2/3/Space/4. Each button shows next interval preview (controlled by `show_review_time` user setting). `enable_fuzz: true` in scheduler.
+
+## Per-User FSRS Settings
+
+Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 20), `show_review_time` (default true).
+
+`createUserScheduler()` in `scheduler.ts` creates FSRS instances with custom retention/interval. Used in `scheduleFlashcardReview` and `getIntervalPreviews`. Settings UI at `/settings` via `components/settings/fsrs-settings.tsx`.
+
+## Undo/Reset: Snapshot-Based Restore
+
+`review_logs` stores full card-state-before snapshot (8 columns: `state_before`, `reps_before`, `lapses_before`, `elapsed_days_before`, `scheduled_days_before`, `last_review_before`, `due_before`, `learning_steps_before`). Undo = delete log + restore snapshot to `user_card_state`. No FSRS replay needed.
+
+When `state_before IS NULL` → card was new before that review → delete card state entirely on undo. Old logs without snapshot columns fall back to same behavior.
+
+## learning_steps Persistence
+
+`user_card_state.learning_steps` column tracks FSRS learning step counter. Without this, cards in learning/relearning reset to step 0 on page reload. Mapped in `card-mapper.ts` `toCard()`/`fromCard()`.
 
 ## Testing
 
@@ -142,15 +163,21 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 
 | Test File | Tests | Covers |
 |-----------|-------|--------|
-| `lib/fsrs/__tests__/flashcard-ordering.test.ts` | 16 | 4-bucket sort, sub-mode filters, counts |
+| `lib/fsrs/__tests__/flashcard-ordering.test.ts` | 16 | 4-bucket sort, sub-mode filters, counts, newCardsPerDay |
 | `lib/fsrs/__tests__/question-ordering.test.ts` | 6 | Quiz question fetch, shuffle, category mapping |
-| `lib/fsrs/__tests__/card-mapper.test.ts` | 26 | toCard/fromCard roundtrips, state mapping |
-| `lib/fsrs/scheduler.test.ts` | 5 | FSRS scheduling integration |
-| `lib/fsrs/card-mapper.test.ts` | 9 | Card mapping basics |
+| `lib/fsrs/__tests__/card-mapper.test.ts` | 30 | toCard/fromCard roundtrips, state mapping, learning_steps |
+| `lib/fsrs/scheduler.test.ts` | 8 | FSRS scheduling integration, learning_steps progression |
+| `lib/fsrs/__tests__/scheduler-factory.test.ts` | 5 | createUserScheduler, retention/interval effects |
+| `lib/fsrs/__tests__/user-settings.test.ts` | 5 | getFsrsSettings, updateFsrsSettings |
+| `lib/fsrs/__tests__/interval-preview-settings.test.ts` | 3 | Interval previews with user settings |
+| `lib/fsrs/__tests__/retrievability.test.ts` | 4 | getRetrievability for various card states |
+| `lib/fsrs/__tests__/daily-stats.test.ts` | 5 | getDailyStats (reviews, new cards, correct rate) |
 | `lib/services/__tests__/admin-reviews.test.ts` | 16 | CRUD, status updates, error handling |
 | `lib/services/__tests__/user-preferences.test.ts` | 18 | Suspend flashcards, hide topics, reading progress, profiles |
 | `components/quiz/quiz-logic.test.ts` | 18 | Shuffle, grading, results, retry |
 | `components/flashcards/flashcard-logic.test.ts` | 17 | 4-point grading, stack advance, categories |
+
+**Total: 163 tests across 14 test files.**
 
 ## UX Patterns
 

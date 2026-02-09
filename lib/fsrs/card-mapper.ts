@@ -12,6 +12,7 @@ export interface DbCardState {
   state: "new" | "learning" | "review" | "relearning";
   last_review: string | null;
   due: string;
+  learning_steps: number;
 }
 
 // Map DB state string to ts-fsrs State enum
@@ -31,7 +32,7 @@ function mapState(dbState: string): State {
 }
 
 // Map ts-fsrs State enum to DB state string
-function unmapState(state: State): DbCardState["state"] {
+export function unmapState(state: State): DbCardState["state"] {
   switch (state) {
     case State.New:
       return "new";
@@ -54,7 +55,7 @@ export function toCard(dbState: DbCardState): Card {
     difficulty: dbState.difficulty,
     elapsed_days: dbState.elapsed_days,
     scheduled_days: dbState.scheduled_days,
-    learning_steps: 0, // not stored in DB; ts-fsrs recomputes from state
+    learning_steps: dbState.learning_steps,
     reps: dbState.reps,
     lapses: dbState.lapses,
     state: mapState(dbState.state),
@@ -81,5 +82,6 @@ export function fromCard(card: Card): DbCardState {
     state: unmapState(card.state),
     last_review: card.last_review ? card.last_review.toISOString() : null,
     due: card.due.toISOString(),
+    learning_steps: card.learning_steps,
   };
 }

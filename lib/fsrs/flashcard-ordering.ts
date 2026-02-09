@@ -30,6 +30,7 @@ export interface OrderingOptions {
   subMode: SubMode;
   categoryId?: string;
   limit?: number;
+  newCardsPerDay?: number;
 }
 
 export async function getOrderedFlashcards(
@@ -157,7 +158,35 @@ export async function getOrderedFlashcards(
     return Math.random() - 0.5;
   });
 
-  // 7. Apply limit
+  // 7. Enforce new cards per day limit
+  if (options.newCardsPerDay !== undefined) {
+    const todayMidnight = new Date(now);
+    todayMidnight.setUTCHours(0, 0, 0, 0);
+
+    // Count new cards already studied today (stability_before IS NULL = was new)
+    const { data: todayNewLogs } = await supabase
+      .from("review_logs")
+      .select("flashcard_id")
+      .eq("user_id", userId)
+      .in("flashcard_id", flashcardIds)
+      .is("stability_before", null)
+      .gte("reviewed_at", todayMidnight.toISOString());
+
+    const newCardsToday = new Set(
+      (todayNewLogs || []).map((l) => l.flashcard_id),
+    ).size;
+    const remaining = Math.max(0, options.newCardsPerDay - newCardsToday);
+
+    // Filter bucket 1 (new/unseen cards) to remaining allowance
+    let newCardCount = 0;
+    orderedFlashcards = orderedFlashcards.filter((of) => {
+      if (of.cardState !== null) return true; // not a new card, keep
+      newCardCount++;
+      return newCardCount <= remaining;
+    });
+  }
+
+  // 8. Apply limit
   if (options.limit && options.limit > 0) {
     orderedFlashcards = orderedFlashcards.slice(0, options.limit);
   }

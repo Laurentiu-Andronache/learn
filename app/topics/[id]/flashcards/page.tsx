@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
 import type { SubMode } from "@/lib/fsrs/flashcard-ordering";
 import { getOrderedFlashcards } from "@/lib/fsrs/flashcard-ordering";
+import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 
 interface FlashcardsPageProps {
@@ -22,25 +23,30 @@ export default async function FlashcardsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const { data: adminRow } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("email", user.email!)
-    .maybeSingle();
+  const [{ data: adminRow }, { data: topic }, fsrsSettings] = await Promise.all(
+    [
+      supabase
+        .from("admin_users")
+        .select("id")
+        .eq("email", user.email!)
+        .maybeSingle(),
+      supabase
+        .from("themes")
+        .select("id, title_en, title_es")
+        .eq("id", id)
+        .single(),
+      getFsrsSettings(user.id),
+    ],
+  );
+
   const isAdmin = !!adminRow;
-
-  const { data: topic } = await supabase
-    .from("themes")
-    .select("id, title_en, title_es")
-    .eq("id", id)
-    .single();
-
   if (!topic) redirect("/topics");
 
   const subMode = (mode as SubMode) || "full";
   const ordered = await getOrderedFlashcards(user.id, id, {
     subMode,
     categoryId: category,
+    newCardsPerDay: fsrsSettings.new_cards_per_day,
   });
 
   if (ordered.length === 0) redirect("/topics");
@@ -52,6 +58,7 @@ export default async function FlashcardsPage({
       themeTitleEn={topic.title_en}
       themeTitleEs={topic.title_es}
       isAdmin={isAdmin}
+      fsrsSettings={fsrsSettings}
       flashcards={ordered.map((o) => ({
         id: o.flashcard.id,
         question_en: o.flashcard.question_en,

@@ -78,6 +78,10 @@ export interface Profile {
   display_name: string | null;
   preferred_language: Language;
   is_anonymous: boolean;
+  desired_retention: number | null;
+  max_review_interval: number | null;
+  new_cards_per_day: number | null;
+  show_review_time: boolean | null;
   created_at: string;
   updated_at: string;
 }
@@ -110,6 +114,7 @@ export interface UserCardState {
   state: CardState;
   last_review: string | null;
   due: string;
+  learning_steps: number;
   times_correct: number;
   times_incorrect: number;
   times_idk: number;
@@ -127,6 +132,14 @@ export interface ReviewLog {
   was_correct: boolean | null;
   stability_before: number | null;
   difficulty_before: number | null;
+  state_before: CardState | null;
+  reps_before: number | null;
+  lapses_before: number | null;
+  elapsed_days_before: number | null;
+  scheduled_days_before: number | null;
+  last_review_before: string | null;
+  due_before: string | null;
+  learning_steps_before: number | null;
   reviewed_at: string;
 }
 

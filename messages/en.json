@@ -222,7 +222,18 @@
     "hiddenTopics": "Hidden Topics",
     "noHidden": "No hidden topics",
     "account": "Account",
-    "upgradePrompt": "You're using a guest account. Upgrade to save your progress."
+    "upgradePrompt": "You're using a guest account. Upgrade to save your progress.",
+    "studySettings": "Study Settings",
+    "desiredRetention": "Desired Retention",
+    "retentionDescription": "Higher retention means more frequent reviews but better recall. 0.9 is recommended for most learners.",
+    "maxInterval": "Maximum Interval (days)",
+    "maxIntervalDescription": "The longest gap allowed between reviews of a card.",
+    "newCardsPerDay": "New Cards Per Day",
+    "newCardsPerDayDescription": "Maximum new cards introduced per day per topic.",
+    "showIntervals": "Show Interval Previews",
+    "showIntervalsDescription": "Display next review time on rating buttons.",
+    "resetDefaults": "Reset to Defaults",
+    "saved": "Settings saved."
   },
   "admin": {
     "title": "Admin Panel",

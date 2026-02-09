@@ -9,8 +9,10 @@ import {
   scheduleFlashcardReview,
   undoLastReview,
 } from "@/lib/fsrs/actions";
+import type { UserSchedulerSettings } from "@/lib/fsrs/interval-preview";
 import { getIntervalPreviews } from "@/lib/fsrs/interval-preview";
 import { deleteFlashcard } from "@/lib/services/admin-reviews";
+import type { FsrsSettings } from "@/lib/services/user-preferences";
 import { suspendFlashcard } from "@/lib/services/user-preferences";
 import type { UserCardState } from "@/lib/types/database";
 import { FlashcardResults } from "./flashcard-results";
@@ -37,6 +39,7 @@ interface FlashcardSessionProps {
   themeTitleEs: string;
   flashcards: FlashcardItemData[];
   isAdmin?: boolean;
+  fsrsSettings?: FsrsSettings | null;
 }
 
 export function FlashcardSession({
@@ -46,6 +49,7 @@ export function FlashcardSession({
   themeTitleEs,
   flashcards: initialFlashcards,
   isAdmin = false,
+  fsrsSettings = null,
 }: FlashcardSessionProps) {
   const locale = useLocale();
   const tq = useTranslations("quiz");
@@ -61,13 +65,24 @@ export function FlashcardSession({
   const [undoSignal, setUndoSignal] = useState(0);
 
   // Compute interval previews for all flashcards (client-side, no server call)
+  const userSchedulerSettings: UserSchedulerSettings | undefined = useMemo(
+    () =>
+      fsrsSettings
+        ? {
+            desired_retention: fsrsSettings.desired_retention,
+            max_review_interval: fsrsSettings.max_review_interval,
+          }
+        : undefined,
+    [fsrsSettings],
+  );
+  const showIntervalPreviews = fsrsSettings?.show_review_time !== false;
   const intervalPreviews = useMemo(() => {
     const map = new Map<string, Record<1 | 2 | 3 | 4, string>>();
     for (const fc of flashcards) {
-      map.set(fc.id, getIntervalPreviews(fc.cardState));
+      map.set(fc.id, getIntervalPreviews(fc.cardState, userSchedulerSettings));
     }
     return map;
-  }, [flashcards]);
+  }, [flashcards, userSchedulerSettings]);
 
   const handleGrade = useCallback(
     (flashcardId: string, rating: 1 | 2 | 3 | 4) => {
@@ -201,6 +216,7 @@ export function FlashcardSession({
         flashcards={flashcards}
         locale={locale as "en" | "es"}
         intervalPreviews={intervalPreviews}
+        showIntervalPreviews={showIntervalPreviews}
         onGrade={handleGrade}
         onSuspend={handleSuspend}
         onComplete={handleComplete}

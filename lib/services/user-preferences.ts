@@ -212,6 +212,54 @@ export async function getReadingProgress(
   return data || [];
 }
 
+// ============ FSRS SETTINGS ============
+
+export interface FsrsSettings {
+  desired_retention: number;
+  max_review_interval: number;
+  new_cards_per_day: number;
+  show_review_time: boolean;
+}
+
+const FSRS_DEFAULTS: FsrsSettings = {
+  desired_retention: 0.9,
+  max_review_interval: 36500,
+  new_cards_per_day: 20,
+  show_review_time: true,
+};
+
+export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select(
+      "desired_retention, max_review_interval, new_cards_per_day, show_review_time",
+    )
+    .eq("id", userId)
+    .single();
+  if (error || !data) return { ...FSRS_DEFAULTS };
+  return {
+    desired_retention: data.desired_retention ?? FSRS_DEFAULTS.desired_retention,
+    max_review_interval:
+      data.max_review_interval ?? FSRS_DEFAULTS.max_review_interval,
+    new_cards_per_day:
+      data.new_cards_per_day ?? FSRS_DEFAULTS.new_cards_per_day,
+    show_review_time: data.show_review_time ?? FSRS_DEFAULTS.show_review_time,
+  };
+}
+
+export async function updateFsrsSettings(
+  userId: string,
+  settings: Partial<FsrsSettings>,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ ...settings, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+}
+
 // ============ PROFILE ============
 
 export async function updateProfile(

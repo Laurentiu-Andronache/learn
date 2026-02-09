@@ -83,6 +83,7 @@ function makeCardState(
     state,
     last_review: "2026-02-07T12:00:00Z",
     due,
+    learning_steps: 0,
     times_correct: 1,
     times_incorrect: 0,
     times_idk: 0,
