@@ -34,9 +34,9 @@ interface FlashcardItemData {
 
 interface FlashcardSessionProps {
   userId: string;
-  themeId: string;
-  themeTitleEn: string;
-  themeTitleEs: string;
+  topicId: string;
+  topicTitleEn: string;
+  topicTitleEs: string;
   flashcards: FlashcardItemData[];
   isAdmin?: boolean;
   fsrsSettings?: FsrsSettings | null;
@@ -44,9 +44,9 @@ interface FlashcardSessionProps {
 
 export function FlashcardSession({
   userId,
-  themeId,
-  themeTitleEn,
-  themeTitleEs,
+  topicId,
+  topicTitleEn,
+  topicTitleEs,
   flashcards: initialFlashcards,
   isAdmin = false,
   fsrsSettings = null,
@@ -208,7 +208,7 @@ export function FlashcardSession({
   return (
     <div className="w-full max-w-lg mx-auto px-4 py-8 pb-16 space-y-6">
       <h1 className="text-xl font-bold text-center">
-        {locale === "es" ? themeTitleEs : themeTitleEn}
+        {locale === "es" ? topicTitleEs : topicTitleEn}
       </h1>
 
       <FlashcardStack
@@ -228,7 +228,7 @@ export function FlashcardSession({
       {currentFc && (
         <SessionToolbar
           userId={userId}
-          themeId={themeId}
+          topicId={topicId}
           mode="flashcard"
           isAdmin={isAdmin}
           currentFlashcard={{

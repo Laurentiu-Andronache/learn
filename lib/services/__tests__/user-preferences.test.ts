@@ -170,12 +170,12 @@ describe("unhideTopic", () => {
 });
 
 describe("getHiddenTopics", () => {
-  it("returns hidden topics with theme details", async () => {
+  it("returns hidden topics with topic details", async () => {
     const mockData = [
       {
         id: "ht-1",
         hidden_at: "2026-01-01",
-        theme: {
+        topic: {
           id: "t1",
           title_en: "T",
           title_es: "T",

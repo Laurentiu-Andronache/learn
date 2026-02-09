@@ -22,9 +22,9 @@ export interface QuizQuestionData {
 
 export interface QuizSessionProps {
   userId: string;
-  themeId: string;
-  themeTitleEn: string;
-  themeTitleEs: string;
+  topicId: string;
+  topicTitleEn: string;
+  topicTitleEs: string;
   questions: QuizQuestionData[];
   lastAttempt?: QuizAttempt | null;
   isAdmin?: boolean;
@@ -36,7 +36,7 @@ type SessionPhase = "quiz" | "results";
 
 export function QuizSession({
   userId,
-  themeId,
+  topicId,
   questions: allQuestions,
   isAdmin = false,
 }: QuizSessionProps) {
@@ -85,7 +85,7 @@ export function QuizSession({
         // Quiz complete — save attempt
         const score = newAnswers.filter((a) => a.wasCorrect).length;
         setSaving(true);
-        saveQuizAttempt(userId, themeId, {
+        saveQuizAttempt(userId, topicId, {
           score,
           total: newAnswers.length,
           answers: newAnswers.map((a) => ({
@@ -102,7 +102,7 @@ export function QuizSession({
         setCurrentIndex((prev) => prev + 1);
       }
     },
-    [questions, currentIndex, locale, userId, themeId, answers],
+    [questions, currentIndex, locale, userId, topicId, answers],
   );
 
   // ── Retry failed questions ──
@@ -140,7 +140,7 @@ export function QuizSession({
       <QuizResults
         answers={answers}
         totalTimeMs={Date.now() - sessionStartTime.current}
-        themeId={themeId}
+        topicId={topicId}
         onRetryFailed={handleRetryFailed}
         saving={saving}
       />
@@ -154,7 +154,7 @@ export function QuizSession({
       <QuizResults
         answers={answers}
         totalTimeMs={Date.now() - sessionStartTime.current}
-        themeId={themeId}
+        topicId={topicId}
         onRetryFailed={handleRetryFailed}
         saving={saving}
       />
@@ -185,7 +185,7 @@ export function QuizSession({
       </div>
       <SessionToolbar
         userId={userId}
-        themeId={themeId}
+        topicId={topicId}
         mode="quiz"
         isAdmin={isAdmin}
         currentQuestion={currentQ.question}

@@ -24,7 +24,7 @@ export interface QuizAnswer {
 interface QuizResultsProps {
   answers: QuizAnswer[];
   totalTimeMs: number;
-  themeId: string;
+  topicId: string;
   onRetryFailed: () => void;
   saving?: boolean;
 }
@@ -32,7 +32,7 @@ interface QuizResultsProps {
 export function QuizResults({
   answers,
   totalTimeMs,
-  themeId,
+  topicId,
   onRetryFailed,
   saving = false,
 }: QuizResultsProps) {
@@ -204,7 +204,7 @@ export function QuizResults({
           </Button>
         )}
         <Button asChild className="flex-1">
-          <Link href={`/topics/${themeId}`}>{t("backToTopics")}</Link>
+          <Link href={`/topics/${topicId}`}>{t("backToTopics")}</Link>
         </Button>
       </div>
     </div>

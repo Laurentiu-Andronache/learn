@@ -19,14 +19,14 @@ import {
 } from "@/lib/services/admin-topics";
 
 interface ReadingEditDialogProps {
-  themeId: string;
+  topicId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved?: () => void;
 }
 
 export function ReadingEditDialog({
-  themeId,
+  topicId,
   open,
   onOpenChange,
   onSaved,
@@ -51,7 +51,7 @@ export function ReadingEditDialog({
     setLoading(true);
     setError(null);
     try {
-      const topic = await getTopicById(themeId);
+      const topic = await getTopicById(topicId);
       setTopicTitle(topic.title_en);
       const en = topic.intro_text_en ?? "";
       const es = topic.intro_text_es ?? "";
@@ -63,7 +63,7 @@ export function ReadingEditDialog({
     } finally {
       setLoading(false);
     }
-  }, [themeId]);
+  }, [topicId]);
 
   useEffect(() => {
     if (open) loadTopic();
@@ -80,7 +80,7 @@ export function ReadingEditDialog({
       setError(null);
       try {
         await updateTopicIntroText(
-          themeId,
+          topicId,
           (final.intro_text_en as string) || null,
           (final.intro_text_es as string) || null,
         );

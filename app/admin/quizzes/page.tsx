@@ -2,14 +2,14 @@ import { Suspense } from "react";
 import {
   getCategoriesList,
   getQuestionsList,
-  getThemesList,
+  getTopicsList,
 } from "@/lib/services/admin-reviews";
 import { QuestionsClient } from "./questions-client";
 
 export default async function AdminQuizzesPage() {
-  const [questions, themes, categories] = await Promise.all([
+  const [questions, topics, categories] = await Promise.all([
     getQuestionsList(),
-    getThemesList(),
+    getTopicsList(),
     getCategoriesList(),
   ]);
 
@@ -19,7 +19,7 @@ export default async function AdminQuizzesPage() {
       <Suspense>
         <QuestionsClient
           initialQuestions={questions}
-          themes={themes}
+          topics={topics}
           categories={categories}
         />
       </Suspense>

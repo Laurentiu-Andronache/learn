@@ -8,15 +8,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
   type ImportSummary,
-  type ImportTheme,
-  importThemeJson,
+  type ImportTopic,
+  importTopicJson,
   validateImportJson,
 } from "@/lib/services/admin-import";
 
 export function JsonUpload() {
   const [jsonText, setJsonText] = useState("");
   const [summary, setSummary] = useState<ImportSummary | null>(null);
-  const [parsed, setParsed] = useState<ImportTheme | null>(null);
+  const [parsed, setParsed] = useState<ImportTopic | null>(null);
   const [importing, setImporting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -42,9 +42,9 @@ export function JsonUpload() {
     setImporting(true);
     setError(null);
     try {
-      const res = await importThemeJson(parsed);
+      const res = await importTopicJson(parsed);
       setResult(
-        `Imported ${res.questionsInserted} questions. Theme ID: ${res.themeId}`,
+        `Imported ${res.questionsInserted} questions. Topic ID: ${res.topicId}`,
       );
       setJsonText("");
       setSummary(null);
@@ -114,7 +114,7 @@ export function JsonUpload() {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm">
-              <span className="font-medium">Theme:</span> {summary.themeTitle}
+              <span className="font-medium">Topic:</span> {summary.topicTitle}
             </p>
             <p className="text-sm">
               <span className="font-medium">Categories:</span>{" "}

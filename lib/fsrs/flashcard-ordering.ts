@@ -35,20 +35,20 @@ export interface OrderingOptions {
 
 export async function getOrderedFlashcards(
   userId: string,
-  themeId: string,
+  topicId: string,
   options: OrderingOptions,
 ): Promise<OrderedFlashcard[]> {
   const supabase = await createClient();
   const now = new Date();
 
-  // 1. Fetch all flashcards for theme with category info
+  // 1. Fetch all flashcards for topic with category info
   let flashcardsQuery = supabase
     .from("flashcards")
     .select(`
       *,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
-    .eq("categories.theme_id", themeId);
+    .eq("categories.theme_id", topicId);
 
   // Category focus filter
   if (options.subMode === "category_focus" && options.categoryId) {
@@ -200,14 +200,14 @@ export async function getOrderedFlashcards(
 }
 
 // Get counts for sub-mode selection UI
-export async function getSubModeCounts(userId: string, themeId: string) {
+export async function getSubModeCounts(userId: string, topicId: string) {
   const supabase = await createClient();
   const now = new Date();
 
   const { data: flashcards } = await supabase
     .from("flashcards")
     .select("id, categories!inner(theme_id)")
-    .eq("categories.theme_id", themeId)
+    .eq("categories.theme_id", topicId)
     .returns<{ id: string; categories: { theme_id: string } }[]>();
 
   if (!flashcards || flashcards.length === 0) {

@@ -45,12 +45,12 @@ const MASTERY_THRESHOLD = 30;
 
 export async function getTopicProgress(
   userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<TopicProgress> {
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  // Get all flashcards for this theme with their categories
+  // Get all flashcards for this topic with their categories
   const { data: flashcards } = await supabase
     .from("flashcards")
     .select(`
@@ -58,12 +58,12 @@ export async function getTopicProgress(
       category_id,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
-    .eq("categories.theme_id", themeId)
+    .eq("categories.theme_id", topicId)
     .returns<FlashcardWithCategory[]>();
 
   if (!flashcards || flashcards.length === 0) {
     return {
-      topicId: themeId,
+      topicId,
       total: 0,
       newCount: 0,
       learningCount: 0,
@@ -162,7 +162,7 @@ export async function getTopicProgress(
     total > 0 ? Math.round((masteredCount / total) * 100) : 0;
 
   return {
-    topicId: themeId,
+    topicId,
     total,
     newCount,
     learningCount,

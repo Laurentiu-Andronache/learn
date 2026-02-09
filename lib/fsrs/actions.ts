@@ -212,14 +212,14 @@ export async function undoLastReview(userId: string, flashcardId: string) {
   }
 }
 
-async function getFlashcardIdsForTheme(
+async function getFlashcardIdsForTopic(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  themeId: string,
+  topicId: string,
 ): Promise<string[]> {
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", themeId);
+    .eq("theme_id", topicId);
   if (!cats?.length) return [];
   const catIds = cats.map((c) => c.id);
   const { data: flashcards } = await supabase
@@ -231,10 +231,10 @@ async function getFlashcardIdsForTheme(
 
 export async function resetTodayProgress(
   userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<number> {
   const supabase = await createClient();
-  const flashcardIds = await getFlashcardIdsForTheme(supabase, themeId);
+  const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
   if (!flashcardIds.length) return 0;
 
   const todayMidnight = new Date();
@@ -304,10 +304,10 @@ export async function resetTodayProgress(
 
 export async function resetAllProgress(
   userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<{ reviewLogs: number; cardStates: number; suspended: number }> {
   const supabase = await createClient();
-  const flashcardIds = await getFlashcardIdsForTheme(supabase, themeId);
+  const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
   if (!flashcardIds.length)
     return { reviewLogs: 0, cardStates: 0, suspended: 0 };
 
@@ -344,11 +344,11 @@ export async function resetAllProgress(
 
 export async function findNextTopic(
   userId: string,
-  excludeThemeId: string,
+  excludeTopicId: string,
 ): Promise<string | null> {
   const allProgress = await getAllTopicsProgress(userId);
   const next = allProgress.find(
-    (p) => p.topicId !== excludeThemeId && p.dueToday > 0,
+    (p) => p.topicId !== excludeTopicId && p.dueToday > 0,
   );
   return next?.topicId ?? null;
 }

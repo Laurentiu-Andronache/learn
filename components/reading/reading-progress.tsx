@@ -8,13 +8,13 @@ import { updateReadingProgress } from "@/lib/services/user-preferences";
 
 interface ReadingProgressBarProps {
   userId: string;
-  themeId: string;
+  topicId: string;
   initialPercent: number;
 }
 
 export function ReadingProgressBar({
   userId,
-  themeId,
+  topicId,
   initialPercent,
 }: ReadingProgressBarProps) {
   const t = useTranslations("reading");
@@ -42,10 +42,10 @@ export function ReadingProgressBar({
 
   const handleMarkAsRead = useCallback(() => {
     startTransition(async () => {
-      await updateReadingProgress(userId, themeId, null, 1, 100);
+      await updateReadingProgress(userId, topicId, null, 1, 100);
       setCompleted(true);
     });
-  }, [userId, themeId]);
+  }, [userId, topicId]);
 
   return (
     <>

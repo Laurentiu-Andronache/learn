@@ -12,15 +12,15 @@ export interface DailyStats {
 
 export async function getDailyStats(
   userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<DailyStats> {
   const supabase = await createClient();
 
-  // Get flashcard IDs for this theme
+  // Get flashcard IDs for this topic
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", themeId);
+    .eq("theme_id", topicId);
   if (!cats?.length)
     return {
       reviewsToday: 0,

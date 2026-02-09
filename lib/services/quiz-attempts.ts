@@ -15,7 +15,7 @@ export interface QuizAttemptData {
 
 export async function saveQuizAttempt(
   userId: string,
-  themeId: string,
+  topicId: string,
   data: QuizAttemptData,
 ) {
   const supabase = await createClient();
@@ -23,7 +23,7 @@ export async function saveQuizAttempt(
     .from("quiz_attempts")
     .insert({
       user_id: userId,
-      theme_id: themeId,
+      theme_id: topicId,
       score: data.score,
       total: data.total,
       answers: data.answers,
@@ -42,7 +42,7 @@ export async function saveQuizAttempt(
 
 export async function getQuizAttempts(
   userId: string,
-  themeId: string,
+  topicId: string,
   limit = 10,
 ) {
   const supabase = await createClient();
@@ -50,7 +50,7 @@ export async function getQuizAttempts(
     .from("quiz_attempts")
     .select("*")
     .eq("user_id", userId)
-    .eq("theme_id", themeId)
+    .eq("theme_id", topicId)
     .order("completed_at", { ascending: false })
     .limit(limit);
   // Gracefully handle missing table (quiz_attempts may not be migrated yet)
@@ -63,13 +63,13 @@ export async function getQuizAttempts(
   return data || [];
 }
 
-export async function getLatestQuizAttempt(userId: string, themeId: string) {
+export async function getLatestQuizAttempt(userId: string, topicId: string) {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("quiz_attempts")
     .select("*")
     .eq("user_id", userId)
-    .eq("theme_id", themeId)
+    .eq("theme_id", topicId)
     .order("completed_at", { ascending: false })
     .limit(1)
     .maybeSingle();

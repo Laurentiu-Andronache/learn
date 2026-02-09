@@ -59,9 +59,9 @@ export default async function QuizPage({ params }: QuizPageProps) {
   return (
     <QuizSession
       userId={user.id}
-      themeId={id}
-      themeTitleEn={topic.title_en}
-      themeTitleEs={topic.title_es}
+      topicId={id}
+      topicTitleEn={topic.title_en}
+      topicTitleEs={topic.title_es}
       questions={questions.map((q) => {
         const cat = q.category as unknown as {
           id: string;

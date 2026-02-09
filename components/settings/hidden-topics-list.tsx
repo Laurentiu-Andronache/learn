@@ -11,7 +11,7 @@ interface HiddenTopicsListProps {
   items: Array<{
     id: string;
     hidden_at: string;
-    theme: {
+    topic: {
       id: string;
       title_en: string;
       title_es: string;
@@ -36,7 +36,7 @@ export function HiddenTopicsList({
     setPending(topicId);
     startTransition(async () => {
       await unhideTopic(userId, topicId);
-      setItems((prev) => prev.filter((i) => i.theme?.id !== topicId));
+      setItems((prev) => prev.filter((i) => i.topic?.id !== topicId));
       setPending(null);
     });
   };
@@ -48,8 +48,8 @@ export function HiddenTopicsList({
   return (
     <div className="flex flex-col gap-2">
       {items.map((item) => {
-        if (!item.theme) return null;
-        const topic = item.theme;
+        if (!item.topic) return null;
+        const topic = item.topic;
         const title = locale === "es" ? topic.title_es : topic.title_en;
 
         return (

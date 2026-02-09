@@ -10,7 +10,7 @@ import { ReadingProgressBar } from "./reading-progress";
 
 interface ReadingViewProps {
   userId: string;
-  theme: {
+  topic: {
     id: string;
     title_en: string;
     title_es: string;
@@ -27,18 +27,18 @@ interface ReadingViewProps {
 
 export function ReadingView({
   userId,
-  theme,
+  topic,
   progress,
   isAdmin,
 }: ReadingViewProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
 
-  const title = locale === "es" ? theme.title_es : theme.title_en;
+  const title = locale === "es" ? topic.title_es : topic.title_en;
   const content =
     locale === "es"
-      ? theme.intro_text_es || theme.intro_text_en
-      : theme.intro_text_en || theme.intro_text_es;
+      ? topic.intro_text_es || topic.intro_text_en
+      : topic.intro_text_en || topic.intro_text_es;
 
   const totalProgress =
     progress.length > 0
@@ -50,21 +50,21 @@ export function ReadingView({
     <div className="relative min-h-screen">
       <ReadingProgressBar
         userId={userId}
-        themeId={theme.id}
+        topicId={topic.id}
         initialPercent={totalProgress}
       />
 
       <div className="max-w-[680px] mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <Button variant="ghost" size="icon-sm" asChild>
-            <Link href={`/topics/${theme.id}`}>
+            <Link href={`/topics/${topic.id}`}>
               <ArrowLeft size={16} />
             </Link>
           </Button>
           <h1 className="text-2xl font-bold">{title}</h1>
           {isAdmin && (
             <Button variant="ghost" size="icon-sm" asChild className="ml-auto">
-              <Link href={`/admin/topics/${theme.id}/edit`}>
+              <Link href={`/admin/topics/${topic.id}/edit`}>
                 <Pencil size={16} />
               </Link>
             </Button>

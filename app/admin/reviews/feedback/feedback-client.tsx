@@ -20,17 +20,17 @@ interface FeedbackItem {
 
 type EditTarget =
   | { type: "question"; questionId: string }
-  | { type: "reading"; themeId: string };
+  | { type: "reading"; topicId: string };
 
 function parseStudyUrl(
   url: string | null,
-): { themeId: string; mode: string } | null {
+): { topicId: string; mode: string } | null {
   if (!url) return null;
   const match = url.match(
     /\/topics\/([0-9a-f-]{36})\/(quiz|flashcards|reading)/,
   );
   if (!match) return null;
-  return { themeId: match[1], mode: match[2] };
+  return { topicId: match[1], mode: match[2] };
 }
 
 function getEditTarget(
@@ -46,7 +46,7 @@ function getEditTarget(
   }
   if (parsed?.mode === "reading") {
     return {
-      target: { type: "reading", themeId: parsed.themeId },
+      target: { type: "reading", topicId: parsed.topicId },
       label: "admin.editReading",
     };
   }
@@ -82,7 +82,7 @@ export function FeedbackClient({ items }: { items: FeedbackItem[] }) {
       )}
       {editTarget?.type === "reading" && (
         <ReadingEditDialog
-          themeId={editTarget.themeId}
+          topicId={editTarget.topicId}
           open
           onOpenChange={(open) => {
             if (!open) setEditTarget(null);

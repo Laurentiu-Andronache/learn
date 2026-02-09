@@ -64,14 +64,14 @@ export async function getSuspendedFlashcards(
 
 export async function unsuspendAllFlashcardsForTopic(
   userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<number> {
   const supabase = await createClient();
   // Get flashcard IDs for this topic
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", themeId);
+    .eq("theme_id", topicId);
   if (!cats?.length) return 0;
   const { data: flashcards } = await supabase
     .from("flashcards")
@@ -95,32 +95,32 @@ export async function unsuspendAllFlashcardsForTopic(
 
 // ============ HIDDEN TOPICS ============
 
-export async function hideTopic(userId: string, themeId: string) {
+export async function hideTopic(userId: string, topicId: string) {
   const supabase = await createClient();
   const { error } = await supabase.from("hidden_themes").upsert(
     {
       user_id: userId,
-      theme_id: themeId,
+      theme_id: topicId,
     },
     { onConflict: "user_id,theme_id" },
   );
   if (error) throw new Error(error.message);
 }
 
-export async function unhideTopic(userId: string, themeId: string) {
+export async function unhideTopic(userId: string, topicId: string) {
   const supabase = await createClient();
   const { error } = await supabase
     .from("hidden_themes")
     .delete()
     .eq("user_id", userId)
-    .eq("theme_id", themeId);
+    .eq("theme_id", topicId);
   if (error) throw new Error(error.message);
 }
 
 export interface HiddenTopicDetail {
   id: string;
   hidden_at: string;
-  theme: {
+  topic: {
     id: string;
     title_en: string;
     title_es: string;
@@ -138,7 +138,7 @@ export async function getHiddenTopics(
     .select(`
       id,
       hidden_at,
-      theme:themes(id, title_en, title_es, icon, color)
+      topic:themes(id, title_en, title_es, icon, color)
     `)
     .eq("user_id", userId)
     .order("hidden_at", { ascending: false })
@@ -151,7 +151,7 @@ export async function getHiddenTopics(
 
 export async function updateReadingProgress(
   userId: string,
-  themeId: string,
+  topicId: string,
   categoryId: string | null,
   currentSection: number,
   completionPercent: number,
@@ -163,7 +163,7 @@ export async function updateReadingProgress(
     .from("reading_progress")
     .select("id")
     .eq("user_id", userId)
-    .eq("theme_id", themeId);
+    .eq("theme_id", topicId);
   query = categoryId
     ? query.eq("category_id", categoryId)
     : query.is("category_id", null);
@@ -182,7 +182,7 @@ export async function updateReadingProgress(
   } else {
     const { error } = await supabase.from("reading_progress").insert({
       user_id: userId,
-      theme_id: themeId,
+      theme_id: topicId,
       category_id: categoryId,
       current_section: currentSection,
       completion_percent: completionPercent,
@@ -200,14 +200,14 @@ export interface ReadingProgressDetail {
 
 export async function getReadingProgress(
   userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<ReadingProgressDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("reading_progress")
     .select("*")
     .eq("user_id", userId)
-    .eq("theme_id", themeId);
+    .eq("theme_id", topicId);
   if (error) throw new Error(error.message);
   return data || [];
 }

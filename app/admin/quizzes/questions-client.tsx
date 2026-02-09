@@ -28,7 +28,7 @@ import {
   updateQuestion,
 } from "@/lib/services/admin-reviews";
 
-interface Theme {
+interface Topic {
   id: string;
   title_en: string;
 }
@@ -57,19 +57,19 @@ interface QuestionItem {
     id?: string;
     name_en?: string;
     theme_id?: string;
-    theme?: { id?: string; title_en?: string };
+    topic?: { id?: string; title_en?: string };
   };
 }
 
 interface QuestionsClientProps {
   initialQuestions: QuestionItem[];
-  themes: Theme[];
+  topics: Topic[];
   categories: Category[];
 }
 
 export function QuestionsClient({
   initialQuestions,
-  themes,
+  topics,
   categories,
 }: QuestionsClientProps) {
   const _router = useRouter();
@@ -78,10 +78,10 @@ export function QuestionsClient({
   const [isPending, startTransition] = useTransition();
 
   const editParam = searchParams.get("edit");
-  const themeParam = searchParams.get("theme");
+  const topicParam = searchParams.get("topic");
 
   // Filters
-  const [themeId, setThemeId] = useState<string>(themeParam || "all");
+  const [topicId, setTopicId] = useState<string>(topicParam || "all");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
@@ -125,11 +125,11 @@ export function QuestionsClient({
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Filter categories by selected theme
+  // Filter categories by selected topic
   const filteredCategories = useMemo(() => {
-    if (themeId === "all") return categories;
-    return categories.filter((c) => c.theme_id === themeId);
-  }, [themeId, categories]);
+    if (topicId === "all") return categories;
+    return categories.filter((c) => c.theme_id === topicId);
+  }, [topicId, categories]);
 
   // Reset category when theme changes
   useEffect(() => {
@@ -140,19 +140,19 @@ export function QuestionsClient({
   const fetchQuestions = useCallback(() => {
     startTransition(async () => {
       const filters: {
-        themeId?: string;
+        topicId?: string;
         categoryId?: string;
         type?: string;
         search?: string;
       } = {};
-      if (themeId !== "all") filters.themeId = themeId;
+      if (topicId !== "all") filters.topicId = topicId;
       if (categoryId !== "all") filters.categoryId = categoryId;
       if (typeFilter !== "all") filters.type = typeFilter;
       if (debouncedSearch) filters.search = debouncedSearch;
       const data = await getQuestionsList(filters);
       setQuestions(data as QuestionItem[]);
     });
-  }, [themeId, categoryId, typeFilter, debouncedSearch]);
+  }, [topicId, categoryId, typeFilter, debouncedSearch]);
 
   useEffect(() => {
     fetchQuestions();
@@ -200,13 +200,13 @@ export function QuestionsClient({
     <div className="space-y-4">
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <Select value={themeId} onValueChange={setThemeId}>
+        <Select value={topicId} onValueChange={setTopicId}>
           <SelectTrigger>
             <SelectValue placeholder={t("admin.allTopics")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("admin.allTopics")}</SelectItem>
-            {themes.map((th) => (
+            {topics.map((th) => (
               <SelectItem key={th.id} value={th.id}>
                 {th.title_en}
               </SelectItem>
@@ -274,7 +274,7 @@ export function QuestionsClient({
               </div>
             </button>
             <p className="text-xs text-muted-foreground">
-              {q.category?.theme?.title_en} → {q.category?.name_en}
+              {q.category?.topic?.title_en} → {q.category?.name_en}
             </p>
 
             {/* Inline edit form */}

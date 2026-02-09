@@ -54,9 +54,9 @@ export default async function FlashcardsPage({
   return (
     <FlashcardSession
       userId={user.id}
-      themeId={id}
-      themeTitleEn={topic.title_en}
-      themeTitleEs={topic.title_es}
+      topicId={id}
+      topicTitleEn={topic.title_en}
+      topicTitleEs={topic.title_es}
       isAdmin={isAdmin}
       fsrsSettings={fsrsSettings}
       flashcards={ordered.map((o) => ({

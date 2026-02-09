@@ -7,7 +7,7 @@
 
 export type QuestionType = "multiple_choice" | "true_false";
 
-export interface Theme {
+export interface Topic {
   id: string;
   title_en: string;
   title_es: string;
@@ -176,7 +176,7 @@ export interface SuspendedFlashcard {
   suspended_at: string;
 }
 
-export interface HiddenTheme {
+export interface HiddenTopic {
   id: string;
   user_id: string;
   theme_id: string;
@@ -234,7 +234,7 @@ export interface ProposedQuestion {
   reviewed_by: string | null;
 }
 
-export interface ThemeProposal {
+export interface TopicProposal {
   id: string;
   submitted_by: string | null;
   title_en: string;
@@ -253,7 +253,7 @@ export interface ThemeProposal {
 // INSERT TYPES (omit server-generated fields)
 // ============================================================================
 
-export type ThemeInsert = Omit<Theme, "id" | "created_at" | "updated_at"> & {
+export type TopicInsert = Omit<Topic, "id" | "created_at" | "updated_at"> & {
   id?: string;
 };
 export type CategoryInsert = Omit<Category, "id" | "created_at"> & {
@@ -283,8 +283,8 @@ export type QuizAttemptInsert = Omit<QuizAttempt, "id" | "completed_at"> & {
 // UPDATE TYPES (all fields optional except id)
 // ============================================================================
 
-export type ThemeUpdate = Partial<
-  Omit<Theme, "id" | "created_at" | "updated_at">
+export type TopicUpdate = Partial<
+  Omit<Topic, "id" | "created_at" | "updated_at">
 >;
 export type QuestionUpdate = Partial<
   Omit<Question, "id" | "created_at" | "updated_at">

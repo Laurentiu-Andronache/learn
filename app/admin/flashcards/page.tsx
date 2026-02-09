@@ -2,14 +2,14 @@ import { Suspense } from "react";
 import {
   getCategoriesList,
   getFlashcardsList,
-  getThemesList,
+  getTopicsList,
 } from "@/lib/services/admin-reviews";
 import { FlashcardsClient } from "./flashcards-client";
 
 export default async function AdminFlashcardsPage() {
-  const [flashcards, themes, categories] = await Promise.all([
+  const [flashcards, topics, categories] = await Promise.all([
     getFlashcardsList(),
-    getThemesList(),
+    getTopicsList(),
     getCategoriesList(),
   ]);
 
@@ -19,7 +19,7 @@ export default async function AdminFlashcardsPage() {
       <Suspense>
         <FlashcardsClient
           initialFlashcards={flashcards}
-          themes={themes}
+          topics={topics}
           categories={categories}
         />
       </Suspense>

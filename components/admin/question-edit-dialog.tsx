@@ -35,7 +35,7 @@ export function QuestionEditDialog({
   const [error, setError] = useState<string | null>(null);
   const [question, setQuestion] = useState<QuestionEditFormData | null>(null);
   const [questionMeta, setQuestionMeta] = useState<{
-    themeName?: string;
+    topicName?: string;
     categoryName?: string;
   }>({});
 
@@ -78,7 +78,7 @@ export function QuestionEditDialog({
         difficulty: q.difficulty,
       });
       setQuestionMeta({
-        themeName: q.category?.theme?.title_en,
+        topicName: q.category?.topic?.title_en,
         categoryName: q.category?.name_en,
       });
     } catch (err) {
@@ -113,9 +113,9 @@ export function QuestionEditDialog({
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("admin.editQuestion")}</DialogTitle>
-          {questionMeta.themeName && (
+          {questionMeta.topicName && (
             <p className="text-xs text-muted-foreground">
-              {questionMeta.themeName} → {questionMeta.categoryName}
+              {questionMeta.topicName} → {questionMeta.categoryName}
             </p>
           )}
         </DialogHeader>

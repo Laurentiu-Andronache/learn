@@ -36,7 +36,7 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   return (
     <ReadingView
       userId={user.id}
-      theme={topic}
+      topic={topic}
       progress={progress}
       isAdmin={isAdmin}
     />

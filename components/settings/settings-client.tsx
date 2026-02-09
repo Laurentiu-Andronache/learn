@@ -50,7 +50,7 @@ interface SettingsClientProps {
   hiddenTopics: Array<{
     id: string;
     hidden_at: string;
-    theme: {
+    topic: {
       id: string;
       title_en: string;
       title_es: string;

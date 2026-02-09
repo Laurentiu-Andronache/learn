@@ -44,7 +44,7 @@ import {
 
 interface SessionToolbarProps {
   userId: string;
-  themeId: string;
+  topicId: string;
   mode: "quiz" | "flashcard";
   isAdmin: boolean;
   currentQuestion?: QuestionEditFormData & { category_id?: string | null };
@@ -57,7 +57,7 @@ interface SessionToolbarProps {
 
 export function SessionToolbar({
   userId,
-  themeId,
+  topicId,
   mode,
   isAdmin,
   currentQuestion,
@@ -83,7 +83,7 @@ export function SessionToolbar({
   const handleNextTopic = async () => {
     setFindingNext(true);
     try {
-      const nextId = await findNextTopic(userId, themeId);
+      const nextId = await findNextTopic(userId, topicId);
       if (nextId) {
         router.push(
           `/topics/${nextId}/${mode === "quiz" ? "quiz" : "flashcards"}`,

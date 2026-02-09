@@ -28,7 +28,7 @@ import {
   updateFlashcard,
 } from "@/lib/services/admin-reviews";
 
-interface Theme {
+interface Topic {
   id: string;
   title_en: string;
 }
@@ -53,19 +53,19 @@ interface FlashcardItem {
     id?: string;
     name_en?: string;
     theme_id?: string;
-    theme?: { id?: string; title_en?: string };
+    topic?: { id?: string; title_en?: string };
   };
 }
 
 interface FlashcardsClientProps {
   initialFlashcards: FlashcardItem[];
-  themes: Theme[];
+  topics: Topic[];
   categories: Category[];
 }
 
 export function FlashcardsClient({
   initialFlashcards,
-  themes,
+  topics,
   categories,
 }: FlashcardsClientProps) {
   const _router = useRouter();
@@ -74,10 +74,10 @@ export function FlashcardsClient({
   const [isPending, startTransition] = useTransition();
 
   const editParam = searchParams.get("edit");
-  const themeParam = searchParams.get("theme");
+  const topicParam = searchParams.get("topic");
 
   // Filters
-  const [themeId, setThemeId] = useState<string>(themeParam || "all");
+  const [topicId, setTopicId] = useState<string>(topicParam || "all");
   const [categoryId, setCategoryId] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -119,11 +119,11 @@ export function FlashcardsClient({
     return () => clearTimeout(timer);
   }, [search]);
 
-  // Filter categories by selected theme
+  // Filter categories by selected topic
   const filteredCategories = useMemo(() => {
-    if (themeId === "all") return categories;
-    return categories.filter((c) => c.theme_id === themeId);
-  }, [themeId, categories]);
+    if (topicId === "all") return categories;
+    return categories.filter((c) => c.theme_id === topicId);
+  }, [topicId, categories]);
 
   // Reset category when theme changes
   useEffect(() => {
@@ -134,17 +134,17 @@ export function FlashcardsClient({
   const fetchFlashcards = useCallback(() => {
     startTransition(async () => {
       const filters: {
-        themeId?: string;
+        topicId?: string;
         categoryId?: string;
         search?: string;
       } = {};
-      if (themeId !== "all") filters.themeId = themeId;
+      if (topicId !== "all") filters.topicId = topicId;
       if (categoryId !== "all") filters.categoryId = categoryId;
       if (debouncedSearch) filters.search = debouncedSearch;
       const data = await getFlashcardsList(filters);
       setFlashcards(data as FlashcardItem[]);
     });
-  }, [themeId, categoryId, debouncedSearch]);
+  }, [topicId, categoryId, debouncedSearch]);
 
   useEffect(() => {
     fetchFlashcards();
@@ -192,13 +192,13 @@ export function FlashcardsClient({
     <div className="space-y-4">
       {/* Filters */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <Select value={themeId} onValueChange={setThemeId}>
+        <Select value={topicId} onValueChange={setTopicId}>
           <SelectTrigger>
             <SelectValue placeholder={t("admin.allTopics")} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{t("admin.allTopics")}</SelectItem>
-            {themes.map((th) => (
+            {topics.map((th) => (
               <SelectItem key={th.id} value={th.id}>
                 {th.title_en}
               </SelectItem>
@@ -257,7 +257,7 @@ export function FlashcardsClient({
               </div>
             </button>
             <p className="text-xs text-muted-foreground">
-              {f.category?.theme?.title_en} → {f.category?.name_en}
+              {f.category?.topic?.title_en} → {f.category?.name_en}
             </p>
 
             {/* Inline edit form */}

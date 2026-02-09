@@ -36,7 +36,7 @@ export interface ImportCategory {
   flashcards?: ImportFlashcard[];
 }
 
-export interface ImportTheme {
+export interface ImportTopic {
   title_en: string;
   title_es: string;
   description_en?: string | null;
@@ -47,7 +47,7 @@ export interface ImportTheme {
 }
 
 export interface ImportSummary {
-  themeTitle: string;
+  topicTitle: string;
   categoryCount: number;
   questionCount: number;
   flashcardCount: number;
@@ -62,7 +62,7 @@ export async function validateImportJson(
 
   if (!data || typeof data !== "object") {
     return {
-      themeTitle: "",
+      topicTitle: "",
       categoryCount: 0,
       questionCount: 0,
       flashcardCount: 0,
@@ -78,7 +78,7 @@ export async function validateImportJson(
   if (!Array.isArray(cats) || cats.length === 0) {
     errors.push("Missing or empty categories array");
     return {
-      themeTitle: title,
+      topicTitle: title,
       categoryCount: 0,
       questionCount: 0,
       flashcardCount: 0,
@@ -116,7 +116,7 @@ export async function validateImportJson(
   });
 
   return {
-    themeTitle: title,
+    topicTitle: title,
     categoryCount: cats.length,
     questionCount: totalQuestions,
     flashcardCount: totalFlashcards,
@@ -124,7 +124,7 @@ export async function validateImportJson(
   };
 }
 
-export async function importThemeJson(json: ImportTheme) {
+export async function importTopicJson(json: ImportTopic) {
   const supabase = await createClient();
 
   // Get current user for creator_id
@@ -221,7 +221,7 @@ export async function importThemeJson(json: ImportTheme) {
   revalidatePath("/admin/quizzes");
   revalidatePath("/admin/flashcards");
   return {
-    themeId: theme.id,
+    topicId: theme.id,
     questionsInserted: totalQuestionsInserted,
     flashcardsInserted: totalFlashcardsInserted,
   };

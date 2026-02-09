@@ -20,12 +20,12 @@ export interface OrderedQuestion {
 }
 
 /**
- * Get all quiz questions for a theme, shuffled randomly.
+ * Get all quiz questions for a topic, shuffled randomly.
  * Quiz mode is a simple recognition test with no FSRS or sub-modes.
  */
 export async function getOrderedQuestions(
   _userId: string,
-  themeId: string,
+  topicId: string,
 ): Promise<OrderedQuestion[]> {
   const supabase = await createClient();
 
@@ -35,7 +35,7 @@ export async function getOrderedQuestions(
       *,
       categories!inner(id, name_en, name_es, color, theme_id)
     `)
-    .eq("categories.theme_id", themeId)
+    .eq("categories.theme_id", topicId)
     .returns<QuestionWithCategoryJoin[]>();
 
   if (qError || !questions || questions.length === 0) return [];
@@ -62,12 +62,12 @@ export async function getOrderedQuestions(
   return orderedQuestions;
 }
 
-/** Get total quiz question count for a theme */
-export async function getQuizQuestionCount(themeId: string): Promise<number> {
+/** Get total quiz question count for a topic */
+export async function getQuizQuestionCount(topicId: string): Promise<number> {
   const supabase = await createClient();
   const { count } = await supabase
     .from("questions")
     .select("id, categories!inner(theme_id)", { count: "exact", head: true })
-    .eq("categories.theme_id", themeId);
+    .eq("categories.theme_id", topicId);
   return count ?? 0;
 }

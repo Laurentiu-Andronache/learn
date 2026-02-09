@@ -42,15 +42,15 @@ import {
   deleteFeedback,
   deleteProposedQuestion,
   deleteQuestion,
-  deleteThemeProposal,
+  deleteTopicProposal,
   getCategoriesList,
   getFeedbackList,
   getProposedQuestionsList,
   getQuestionsList,
-  getThemeProposalsList,
-  getThemesList,
+  getTopicProposalsList,
+  getTopicsList,
   updateProposedQuestionStatus,
-  updateThemeProposalStatus,
+  updateTopicProposalStatus,
 } from "../admin-reviews";
 
 beforeEach(() => {
@@ -122,17 +122,17 @@ describe("updateProposedQuestionStatus", () => {
   });
 });
 
-// ─── updateThemeProposalStatus ──────────────────────────────────────
+// ─── updateTopicProposalStatus ──────────────────────────────────────
 
-describe("updateThemeProposalStatus", () => {
-  it("updates theme proposal status", async () => {
+describe("updateTopicProposalStatus", () => {
+  it("updates topic proposal status", async () => {
     const updateMock = vi.fn();
     const eqMock = vi.fn();
     mockSupabase.from.mockReturnValue({ update: updateMock });
     updateMock.mockReturnValue({ eq: eqMock });
     eqMock.mockResolvedValue({ error: null });
 
-    await updateThemeProposalStatus("tp-1", "rejected", "Not relevant");
+    await updateTopicProposalStatus("tp-1", "rejected", "Not relevant");
 
     expect(mockSupabase.from).toHaveBeenCalledWith("theme_proposals");
     expect(updateMock).toHaveBeenCalledWith(
@@ -162,16 +162,16 @@ describe("getProposedQuestionsList", () => {
   });
 });
 
-// ─── getThemeProposalsList ──────────────────────────────────────────
+// ─── getTopicProposalsList ──────────────────────────────────────────
 
-describe("getThemeProposalsList", () => {
-  it("returns theme proposals", async () => {
+describe("getTopicProposalsList", () => {
+  it("returns topic proposals", async () => {
     const mockData = [{ id: "1", title_en: "New Topic" }];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );
 
-    const result = await getThemeProposalsList();
+    const result = await getTopicProposalsList();
     expect(mockSupabase.from).toHaveBeenCalledWith("theme_proposals");
     expect(result).toEqual(mockData);
   });
@@ -180,7 +180,7 @@ describe("getThemeProposalsList", () => {
 // ─── getQuestionsList ───────────────────────────────────────────────
 
 describe("getQuestionsList", () => {
-  it("returns questions with nested category/theme join", async () => {
+  it("returns questions with nested category/topic join", async () => {
     const mockData = [
       {
         id: "q1",
@@ -188,7 +188,7 @@ describe("getQuestionsList", () => {
           id: "c1",
           name_en: "Cat",
           theme_id: "t1",
-          theme: { id: "t1", title_en: "Topic" },
+          topic: { id: "t1", title_en: "Topic" },
         },
       },
     ];
@@ -200,13 +200,13 @@ describe("getQuestionsList", () => {
     expect(result).toEqual(mockData);
   });
 
-  it("filters by themeId at DB level via !inner join", async () => {
+  it("filters by topicId at DB level via !inner join", async () => {
     const mockData = [{ id: "q1", category: { theme_id: "t1" } }];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );
 
-    const result = await getQuestionsList({ themeId: "t1" });
+    const result = await getQuestionsList({ topicId: "t1" });
     expect(result).toEqual(mockData);
   });
 });
@@ -264,29 +264,29 @@ describe("deleteProposedQuestion", () => {
   });
 });
 
-describe("deleteThemeProposal", () => {
-  it("deletes theme proposal", async () => {
+describe("deleteTopicProposal", () => {
+  it("deletes topic proposal", async () => {
     const deleteMock = vi.fn();
     const eqMock = vi.fn();
     mockSupabase.from.mockReturnValue({ delete: deleteMock });
     deleteMock.mockReturnValue({ eq: eqMock });
     eqMock.mockResolvedValue({ error: null });
 
-    await deleteThemeProposal("tp-1");
+    await deleteTopicProposal("tp-1");
     expect(mockSupabase.from).toHaveBeenCalledWith("theme_proposals");
   });
 });
 
 // ─── Lookup lists ───────────────────────────────────────────────────
 
-describe("getThemesList", () => {
-  it("returns active themes", async () => {
+describe("getTopicsList", () => {
+  it("returns active topics", async () => {
     const mockData = [{ id: "t1", title_en: "Topic 1" }];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );
 
-    const result = await getThemesList();
+    const result = await getTopicsList();
     expect(result).toEqual(mockData);
   });
 });
