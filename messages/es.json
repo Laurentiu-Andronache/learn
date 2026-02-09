@@ -351,7 +351,7 @@
     "studyModes": "Modos de Estudio",
     "faq": "Preguntas Frecuentes",
     "faqFsrsQuestion": "¿Qué hace a FSRS diferente de otras apps de tarjetas?",
-    "faqFsrsAnswer": "FSRS es un algoritmo más nuevo que supera a sistemas tradicionales como SM-2 (usado por Anki). Usa principios de aprendizaje automático para predecir con mayor precisión cuándo olvidarás algo, resultando en menos repasos necesarios para mantener el mismo nivel de retención.",
+    "faqFsrsAnswer": "FSRS es un algoritmo más nuevo que supera a sistemas tradicionales como SM-2 (usado por Anki). Usa principios de aprendizaje automático para predecir con mayor precisión cuándo olvidarás algo, resultando en menos repasos necesarios para mantener el mismo nivel de retención. <link>Más detalles aquí</link>.",
     "faqAnonymousQuestion": "¿Puedo usar LEARN sin crear una cuenta?",
     "faqAnonymousAnswer": "¡Sí! Puedes probar LEARN como invitado. Tu progreso se guardará, y puedes mejorar a una cuenta completa en cualquier momento para asegurar que tus datos se guarden permanentemente.",
     "faqBilingualQuestion": "¿Cómo funciona el soporte bilingüe?",

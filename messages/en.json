@@ -351,7 +351,7 @@
     "studyModes": "Study Modes",
     "faq": "FAQ",
     "faqFsrsQuestion": "What makes FSRS different from other flashcard apps?",
-    "faqFsrsAnswer": "FSRS is a newer algorithm that outperforms traditional systems like SM-2 (used by Anki). It uses machine learning principles to more accurately predict when you'll forget something, resulting in fewer reviews needed to maintain the same level of retention.",
+    "faqFsrsAnswer": "FSRS is a newer algorithm that outperforms traditional systems like SM-2 (used by Anki). It uses machine learning principles to more accurately predict when you'll forget something, resulting in fewer reviews needed to maintain the same level of retention. <link>More details here</link>.",
     "faqAnonymousQuestion": "Can I use LEARN without creating an account?",
     "faqAnonymousAnswer": "Yes! You can try LEARN as a guest. Your progress will be saved, and you can upgrade to a full account at any time to ensure your data is permanently saved.",
     "faqBilingualQuestion": "How does bilingual support work?",
