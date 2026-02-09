@@ -1,0 +1,14 @@
+{
+	"$schema": "https://opencode.ai/config.json",
+	"mcp": {
+		"learn-supabase": {
+			"type": "local",
+			"command": ["node", "mcp-server/dist/index.js"],
+			"enabled": true,
+			"environment": {
+				"SUPABASE_URL": "{env:LEARN_SUPABASE_URL}",
+				"SUPABASE_SERVICE_ROLE_KEY": "{env:LEARN_SUPABASE_SERVICE_ROLE_KEY}"
+			}
+		}
+	}
+}
