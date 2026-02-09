@@ -109,7 +109,7 @@
     "backToTopics": "Volver a Temas",
     "progressTitle": "Progreso de Recuerdo",
     "recallProgress": "Progreso de Recuerdo",
-    "recognitionTest": "Prueba de Reconocimiento",
+    "recognitionTest": "Quiz",
     "lastAttempt": "Último intento",
     "takeTest": "Tomar Prueba",
     "retakeTest": "Retomar Prueba",
@@ -146,7 +146,7 @@
     "flashcard": "Tarjetas",
     "flashcardDescription": "Estudia con repetición espaciada para recuerdo a largo plazo",
     "reading": "Lectura",
-    "readingDescription": "Lee el material educativo"
+    "readingDescription": "Lee este resumen antes de hacer las flashcards del tema por primera vez"
   },
   "subModes": {
     "full": "Completo",

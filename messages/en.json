@@ -109,7 +109,7 @@
     "backToTopics": "Back to Topics",
     "progressTitle": "Recall Progress",
     "recallProgress": "Recall Progress",
-    "recognitionTest": "Recognition Test",
+    "recognitionTest": "Quiz",
     "lastAttempt": "Last attempt",
     "takeTest": "Take Test",
     "retakeTest": "Retake Test",
@@ -146,7 +146,7 @@
     "flashcard": "Flashcards",
     "flashcardDescription": "Study with spaced repetition for long-term recall",
     "reading": "Reading",
-    "readingDescription": "Read the educational material"
+    "readingDescription": "Read this summary before doing the topic's flashcards for the first time"
   },
   "subModes": {
     "full": "Full",
