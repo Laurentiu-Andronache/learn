@@ -47,3 +47,5 @@ mcp-server/dist
 
 # AI
 CLAUDE.local.md
+.mcp.json
+opencode.json
