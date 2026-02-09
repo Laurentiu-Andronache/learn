@@ -57,7 +57,7 @@ export function ReadingView({
       <div className="max-w-[680px] mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
           <Button variant="ghost" size="icon-sm" asChild>
-            <Link href="/topics">
+            <Link href={`/topics/${theme.id}`}>
               <ArrowLeft size={16} />
             </Link>
           </Button>
