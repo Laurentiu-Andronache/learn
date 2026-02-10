@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { UserCardState } from "@/lib/types/database";
@@ -224,7 +225,7 @@ export function FlashcardStack({
               {answer && (
                 <div>
                   <p className="text-sm font-medium mb-1">{tf("answer")}</p>
-                  <p className="text-sm text-muted-foreground">{answer}</p>
+                  <MarkdownContent text={answer} className="text-sm text-muted-foreground" />
                 </div>
               )}
               {extra && (
@@ -232,7 +233,7 @@ export function FlashcardStack({
                   <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
                     {tq("learnMore")}
                   </p>
-                  <p className="text-xs text-muted-foreground">{extra}</p>
+                  <MarkdownContent text={extra} className="text-xs text-muted-foreground" />
                 </div>
               )}
             </div>

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
+import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -220,7 +221,7 @@ export function QuizCard({
             {/* Explanation */}
             {explanation && (
               <div className="rounded-lg bg-muted p-4">
-                <p className="text-sm leading-relaxed">{explanation}</p>
+                <MarkdownContent text={explanation} className="text-sm leading-relaxed" />
               </div>
             )}
 
@@ -231,7 +232,7 @@ export function QuizCard({
                   {t("learnMore")}
                 </summary>
                 <div className="px-4 pb-3 text-sm leading-relaxed text-blue-900 dark:text-blue-200">
-                  {extra}
+                  <MarkdownContent text={extra} className="text-sm leading-relaxed" />
                 </div>
               </details>
             )}

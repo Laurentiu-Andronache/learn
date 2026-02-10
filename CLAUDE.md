@@ -14,7 +14,8 @@ learn-app/
 ├── supabase/      # Database migrations
 ├── mcp-server/    # MCP content management server
 ├── CLAUDE.md      # This file
-└── CLAUDE-supabase.md  # DB schema, migrations, admin access
+├── CLAUDE-supabase.md  # DB schema, migrations, admin access
+└── CLAUDE-content-creation.md  # Flashcard/quiz/reading content rules
 ```
 
 ## Dev Workflow
@@ -89,13 +90,13 @@ DB tables use `topics`, `hidden_topics`, `topic_proposals` — matching UI termi
 | `/admin/quizzes` | Admin quiz question CRUD |
 | `/settings` | User preferences |
 
-## Glossary Tooltips (Reading Mode)
+## Glossary Tooltips
 
-Reading content supports `{{term|explanation}}` syntax for hover/tap tooltips on technical terms. Preprocessed to markdown links, rendered via `GlossaryTerm` (Radix Tooltip). Only annotate first occurrence of each term.
+`{{term|explanation}}` syntax renders hover/tap tooltips on technical terms. Supported in **reading mode, flashcard answers/extras, and quiz explanations/extras**. Authoring rules in `CLAUDE-content-creation.md`.
 
-- `lib/markdown/preprocess-tooltips.ts` — converts `{{term|explanation}}` → `[term](tooltip "explanation")`, skips code blocks
+- `lib/markdown/preprocess-tooltips.ts` — converts `{{term|explanation}}` → `[term](tooltip "explanation")`, skips code blocks and inline code
 - `components/reading/glossary-term.tsx` — controlled Tooltip (hover + tap toggle), dotted underline + cursor-help
-- `components/reading/reading-view.tsx` — wraps ReactMarkdown in `TooltipProvider`, overrides `a` component to detect `href="tooltip"` links
+- `components/shared/markdown-content.tsx` — reusable ReactMarkdown + tooltip renderer (used by reading-view, flashcard-stack, quiz-card)
 
 ## Component/Service Naming
 
@@ -191,6 +192,8 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 **Server actions in client `useEffect`**: Always wrap in try/catch. `requireAdmin()` throws on auth failure — unhandled throws in `startTransition` cause silent redirects. The admin layout handles access control; client-side fetches just need to swallow auth errors gracefully.
 
 **Settings list components (hidden topics, suspended flashcards)**: Parent passes server-fetched data as initial prop + `onCountChange` callback. Child manages local state with `useState(initial)` and calls `onCountChange` on mutations so the parent's count/visibility stays in sync.
+
+**MarkdownContent inside `<p>` tags**: `MarkdownContent` renders `<span className="block">` instead of `<p>` to avoid React hydration errors from nested `<p>` elements. If you render markdown in a context that's already inside a `<p>`, this is handled automatically.
 
 ## Troubleshooting
 
