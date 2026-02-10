@@ -57,7 +57,7 @@ function makeQuestion(id: string, categoryId = "cat-1") {
       name_en: "Cat",
       name_es: "Gato",
       color: "#fff",
-      theme_id: "theme-1",
+      topic_id: "topic-1",
     },
   };
 }
@@ -75,7 +75,7 @@ describe("getOrderedQuestions", () => {
     vi.clearAllMocks();
   });
 
-  it("returns all questions for a theme", async () => {
+  it("returns all questions for a topic", async () => {
     tableData = {
       questions: [
         makeQuestion("q-1"),
@@ -84,21 +84,21 @@ describe("getOrderedQuestions", () => {
       ],
     };
 
-    const result = await getOrderedQuestions("user-1", "theme-1");
+    const result = await getOrderedQuestions("user-1", "topic-1");
     expect(result).toHaveLength(3);
   });
 
   it("returns empty array when no questions exist", async () => {
     tableData = { questions: [] };
 
-    const result = await getOrderedQuestions("user-1", "theme-1");
+    const result = await getOrderedQuestions("user-1", "topic-1");
     expect(result).toEqual([]);
   });
 
   it("maps category data correctly", async () => {
     tableData = { questions: [makeQuestion("q-1", "cat-special")] };
 
-    const result = await getOrderedQuestions("user-1", "theme-1");
+    const result = await getOrderedQuestions("user-1", "topic-1");
     expect(result).toHaveLength(1);
     expect(result[0].categoryNameEn).toBe("Cat");
     expect(result[0].categoryNameEs).toBe("Gato");
@@ -112,7 +112,7 @@ describe("getOrderedQuestions", () => {
     );
     tableData = { questions };
 
-    const result = await getOrderedQuestions("user-1", "theme-1");
+    const result = await getOrderedQuestions("user-1", "topic-1");
     expect(result).toHaveLength(20);
     // All IDs should be present
     const ids = new Set(result.map((oq) => oq.question.id));
@@ -123,19 +123,19 @@ describe("getOrderedQuestions", () => {
 });
 
 describe("getQuizQuestionCount", () => {
-  it("returns the count of questions for a theme", async () => {
+  it("returns the count of questions for a topic", async () => {
     tableData = {
       questions: [makeQuestion("q-1"), makeQuestion("q-2")],
     };
 
-    const count = await getQuizQuestionCount("theme-1");
+    const count = await getQuizQuestionCount("topic-1");
     expect(count).toBe(2);
   });
 
   it("returns 0 when no questions", async () => {
     tableData = { questions: [] };
 
-    const count = await getQuizQuestionCount("theme-1");
+    const count = await getQuizQuestionCount("topic-1");
     expect(count).toBe(0);
   });
 });

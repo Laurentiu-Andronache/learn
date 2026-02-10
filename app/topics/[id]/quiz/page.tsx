@@ -36,7 +36,7 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
   const isAdmin = !!adminRow;
 
   const { data: topic } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id, title_en, title_es")
     .eq("id", id)
     .single();
@@ -47,9 +47,9 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
   const { data: questionsRaw } = await supabase
     .from("questions")
     .select(
-      "*, category:categories!inner(id, name_en, name_es, color, theme_id)",
+      "*, category:categories!inner(id, name_en, name_es, color, topic_id)",
     )
-    .eq("category.theme_id", id);
+    .eq("category.topic_id", id);
 
   let filtered = questionsRaw || [];
 

@@ -26,7 +26,7 @@ interface ImportCategory {
   flashcards?: ImportFlashcard[];
 }
 
-interface ImportTheme {
+interface ImportTopic {
   title_en: string; title_es: string;
   description_en?: string | null; description_es?: string | null;
   icon?: string | null; color?: string | null;
@@ -42,7 +42,7 @@ export async function handleExportTopic(
   const includeIds = params.include_ids ?? false;
 
   const { data: topic, error: tErr } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*")
     .eq("id", params.topic_id)
     .single();
@@ -52,7 +52,7 @@ export async function handleExportTopic(
   const { data: categories } = await supabase
     .from("categories")
     .select("*")
-    .eq("theme_id", params.topic_id)
+    .eq("topic_id", params.topic_id)
     .order("created_at", { ascending: true });
 
   const catIds = (categories ?? []).map((c: any) => c.id);
@@ -125,20 +125,20 @@ export async function handleExportTopic(
 
 export async function handleImportTopic(
   supabase: SupabaseClient,
-  params: { data: ImportTheme },
+  params: { data: ImportTopic },
 ): Promise<McpResult> {
-  const { data: theme } = params;
+  const { data: topic } = params;
 
-  // Insert theme
-  const { data: newTheme, error: tErr } = await supabase
-    .from("themes")
+  // Insert topic
+  const { data: newTopic, error: tErr } = await supabase
+    .from("topics")
     .insert({
-      title_en: theme.title_en,
-      title_es: theme.title_es,
-      description_en: theme.description_en ?? null,
-      description_es: theme.description_es ?? null,
-      icon: theme.icon ?? null,
-      color: theme.color ?? null,
+      title_en: topic.title_en,
+      title_es: topic.title_es,
+      description_en: topic.description_en ?? null,
+      description_es: topic.description_es ?? null,
+      icon: topic.icon ?? null,
+      color: topic.color ?? null,
       is_active: true,
     })
     .select()
@@ -150,11 +150,11 @@ export async function handleImportTopic(
   let questionsCreated = 0;
   let flashcardsCreated = 0;
 
-  for (const cat of theme.categories) {
+  for (const cat of topic.categories) {
     const { data: newCat, error: cErr } = await supabase
       .from("categories")
       .insert({
-        theme_id: newTheme.id,
+        topic_id: newTopic.id,
         name_en: cat.name_en,
         name_es: cat.name_es,
         slug: cat.slug,
@@ -213,9 +213,9 @@ export async function handleImportTopic(
     }
   }
 
-  console.error(`[audit] imported topic ${newTheme.id}: ${theme.title_en} (${categoriesCreated} cats, ${questionsCreated} qs, ${flashcardsCreated} fcs)`);
+  console.error(`[audit] imported topic ${newTopic.id}: ${topic.title_en} (${categoriesCreated} cats, ${questionsCreated} qs, ${flashcardsCreated} fcs)`);
   return ok({
-    topic_id: newTheme.id,
+    topic_id: newTopic.id,
     categories_created: categoriesCreated,
     questions_created: questionsCreated,
     flashcards_created: flashcardsCreated,
@@ -359,7 +359,7 @@ const importCategorySchema = z.object({
   flashcards: z.array(importFlashcardSchema).optional(),
 });
 
-const importThemeSchema = z.object({
+const importTopicSchema = z.object({
   title_en: z.string(),
   title_es: z.string(),
   description_en: z.string().nullable().optional(),
@@ -374,7 +374,7 @@ const importThemeSchema = z.object({
 export function registerImportExportTools(server: McpServer): void {
   server.tool(
     "learn_export_topic",
-    "Export a topic as ImportTheme JSON (for backup or duplication)",
+    "Export a topic as ImportTopic JSON (for backup or duplication)",
     {
       topic_id: z.string().describe("Topic UUID to export"),
       include_ids: z.boolean().default(false).describe("Include DB IDs in export"),
@@ -385,9 +385,9 @@ export function registerImportExportTools(server: McpServer): void {
 
   server.tool(
     "learn_import_topic",
-    "Import a full topic from ImportTheme JSON (creates theme + categories + questions + flashcards)",
+    "Import a full topic from ImportTopic JSON (creates topic + categories + questions + flashcards)",
     {
-      data: importThemeSchema.describe("ImportTheme JSON object"),
+      data: importTopicSchema.describe("ImportTopic JSON object"),
     },
     async (params) => handleImportTopic(getSupabaseClient(), params),
   );
@@ -396,7 +396,7 @@ export function registerImportExportTools(server: McpServer): void {
     "learn_validate_import",
     "Validate import JSON without inserting (dry-run check)",
     {
-      data: z.any().describe("ImportTheme JSON to validate"),
+      data: z.any().describe("ImportTopic JSON to validate"),
     },
     { readOnlyHint: true },
     async (params) => handleValidateImport(params),

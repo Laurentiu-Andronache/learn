@@ -35,14 +35,14 @@ const sampleImport = {
 /* ────────────────────── learn_export_topic ────────────────────── */
 
 describe("handleExportTopic", () => {
-  it("exports topic as ImportTheme JSON", async () => {
+  it("exports topic as ImportTopic JSON", async () => {
     const sb = mockSupabase();
     const topic = {
       id: "t1", title_en: "Bio", title_es: "Bio",
       description_en: "d", description_es: null, icon: "🧬", color: "#00ff00",
       intro_text_en: null, intro_text_es: null,
     };
-    const cats = [{ id: "c1", theme_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells", color: null }];
+    const cats = [{ id: "c1", topic_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells", color: null }];
     const questions = [{
       id: "q1", category_id: "c1", type: "multiple_choice",
       question_en: "What?", question_es: "¿Qué?",
@@ -69,7 +69,7 @@ describe("handleExportTopic", () => {
   it("includes IDs when requested", async () => {
     const sb = mockSupabase();
     const topic = { id: "t1", title_en: "Bio", title_es: "Bio" };
-    const cats = [{ id: "c1", theme_id: "t1", name_en: "X", name_es: "Y", slug: "x", color: null }];
+    const cats = [{ id: "c1", topic_id: "t1", name_en: "X", name_es: "Y", slug: "x", color: null }];
     const questions = [{
       id: "q1", category_id: "c1", type: "true_false",
       question_en: "True?", question_es: "¿Verdad?",
@@ -114,7 +114,7 @@ describe("handleExportTopic", () => {
 describe("handleImportTopic", () => {
   it("imports a full topic with categories and questions", async () => {
     const sb = mockSupabase();
-    // insert theme
+    // insert topic
     sb.from.mockReturnValueOnce(chainable({ data: { id: "t-new" }, error: null }));
     // insert category
     sb.from.mockReturnValueOnce(chainable({ data: { id: "c-new" }, error: null }));
@@ -128,7 +128,7 @@ describe("handleImportTopic", () => {
     expect(json.questions_created).toBe(1);
   });
 
-  it("returns error on theme insert failure", async () => {
+  it("returns error on topic insert failure", async () => {
     const sb = mockSupabase();
     sb.from.mockReturnValueOnce(chainable({ data: null, error: { message: "insert failed" } }));
 
@@ -241,7 +241,7 @@ describe("handleDuplicateTopic", () => {
       description_en: "d", description_es: null, icon: "🧬", color: "#00ff00",
       intro_text_en: null, intro_text_es: null,
     };
-    const cats = [{ id: "c1", theme_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells", color: null }];
+    const cats = [{ id: "c1", topic_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells", color: null }];
     const questions = [{
       id: "q1", category_id: "c1", type: "multiple_choice",
       question_en: "What?", question_es: "¿Qué?",
@@ -255,7 +255,7 @@ describe("handleDuplicateTopic", () => {
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: questions, error: null })); // questions
     sb.from.mockReturnValueOnce(chainable({ data: [], error: null })); // flashcards
-    // Insert new theme
+    // Insert new topic
     sb.from.mockReturnValueOnce(chainable({ data: { id: "t-dup" }, error: null }));
     // Insert category
     sb.from.mockReturnValueOnce(chainable({ data: { id: "c-dup" }, error: null }));

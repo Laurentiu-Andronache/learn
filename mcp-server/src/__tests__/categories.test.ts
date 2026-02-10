@@ -21,8 +21,8 @@ describe("handleListCategories", () => {
   it("returns categories with question counts", async () => {
     const sb = mockSupabase();
     const cats = [
-      { id: "c1", theme_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells" },
-      { id: "c2", theme_id: "t1", name_en: "DNA", name_es: "ADN", slug: "dna" },
+      { id: "c1", topic_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells" },
+      { id: "c2", topic_id: "t1", name_en: "DNA", name_es: "ADN", slug: "dna" },
     ];
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null, count: 2 }));
     sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 10 }, { category_id: "c2", count: 5 }], error: null }));
@@ -37,7 +37,7 @@ describe("handleListCategories", () => {
 
   it("filters by topic_id", async () => {
     const sb = mockSupabase();
-    sb.from.mockReturnValueOnce(chainable({ data: [{ id: "c1", theme_id: "t1", name_en: "X", name_es: "Y", slug: "x" }], error: null, count: 1 }));
+    sb.from.mockReturnValueOnce(chainable({ data: [{ id: "c1", topic_id: "t1", name_en: "X", name_es: "Y", slug: "x" }], error: null, count: 1 }));
     sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 3 }], error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 1 }], error: null }));
 
@@ -70,7 +70,7 @@ describe("handleListCategories", () => {
 describe("handleCreateCategory", () => {
   it("creates a category with required fields", async () => {
     const sb = mockSupabase();
-    const created = { id: "c-new", theme_id: "t1", name_en: "Genetics", name_es: "Genética", slug: "genetics" };
+    const created = { id: "c-new", topic_id: "t1", name_en: "Genetics", name_es: "Genética", slug: "genetics" };
     sb.from.mockReturnValueOnce(chainable({ data: created, error: null }));
 
     const result = await handleCreateCategory(sb as any, {
@@ -83,7 +83,7 @@ describe("handleCreateCategory", () => {
 
   it("creates a category with optional color", async () => {
     const sb = mockSupabase();
-    const created = { id: "c-new", theme_id: "t1", name_en: "X", name_es: "Y", slug: "x", color: "#abc" };
+    const created = { id: "c-new", topic_id: "t1", name_en: "X", name_es: "Y", slug: "x", color: "#abc" };
     sb.from.mockReturnValueOnce(chainable({ data: created, error: null }));
 
     const result = await handleCreateCategory(sb as any, {
@@ -165,12 +165,12 @@ describe("handleDeleteCategory", () => {
 describe("handleMoveCategory", () => {
   it("moves category to new topic", async () => {
     const sb = mockSupabase();
-    const updated = { id: "c1", theme_id: "t2" };
+    const updated = { id: "c1", topic_id: "t2" };
     sb.from.mockReturnValueOnce(chainable({ data: updated, error: null }));
 
     const result = await handleMoveCategory(sb as any, { category_id: "c1", new_topic_id: "t2" });
     const json = extractJson(result) as any;
-    expect(json.theme_id).toBe("t2");
+    expect(json.topic_id).toBe("t2");
   });
 
   it("returns error on failure", async () => {

@@ -20,23 +20,23 @@ export function trackEvent(
 // Pre-defined events
 export const analytics = {
   quizCompleted: (params: {
-    themeId: string;
+    topicId: string;
     score: number;
     totalQuestions: number;
     timeMs: number;
   }) => trackEvent("quiz_completed", params),
   flashcardSessionCompleted: (params: {
-    themeId: string;
+    topicId: string;
     knew: number;
     didntKnow: number;
   }) => trackEvent("flashcard_session_completed", params),
-  themeSelected: (themeId: string) => trackEvent("theme_selected", { themeId }),
+  topicSelected: (topicId: string) => trackEvent("topic_selected", { topicId }),
   signup: (method: string) => trackEvent("signup", { method }),
   anonymousUpgrade: () => trackEvent("anonymous_upgrade"),
   feedbackSubmitted: (type: string) =>
     trackEvent("feedback_submitted", { type }),
   questionSuspended: (questionId: string) =>
     trackEvent("question_suspended", { questionId }),
-  readingCompleted: (themeId: string) =>
-    trackEvent("reading_completed", { themeId }),
+  readingCompleted: (topicId: string) =>
+    trackEvent("reading_completed", { topicId }),
 };

@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 const getTopicById = cache(async (id: string) => {
   const supabase = await createClient();
   const { data } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*, creator:profiles!creator_id(display_name)")
     .eq("id", id)
     .single();
@@ -90,11 +90,11 @@ export default async function TopicDetailPage({ params }: Props) {
     getTopicProgress(user.id, id),
     supabase
       .from("questions")
-      .select("id, categories!inner(theme_id)", {
+      .select("id, categories!inner(topic_id)", {
         count: "exact",
         head: true,
       })
-      .eq("categories.theme_id", id),
+      .eq("categories.topic_id", id),
   ]);
   const quizSummary = await getQuizSummary(user.id, id);
 

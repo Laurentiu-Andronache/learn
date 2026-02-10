@@ -23,7 +23,7 @@ export async function saveQuizAttempt(
     .from("quiz_attempts")
     .insert({
       user_id: userId,
-      theme_id: topicId,
+      topic_id: topicId,
       score: data.score,
       total: data.total,
       answers: data.answers,
@@ -50,7 +50,7 @@ export async function getQuizAttempts(
     .from("quiz_attempts")
     .select("*")
     .eq("user_id", userId)
-    .eq("theme_id", topicId)
+    .eq("topic_id", topicId)
     .order("completed_at", { ascending: false })
     .limit(limit);
   // Gracefully handle missing table (quiz_attempts may not be migrated yet)
@@ -69,7 +69,7 @@ export async function getLatestQuizAttempt(userId: string, topicId: string) {
     .from("quiz_attempts")
     .select("*")
     .eq("user_id", userId)
-    .eq("theme_id", topicId)
+    .eq("topic_id", topicId)
     .order("completed_at", { ascending: false })
     .limit(1)
     .maybeSingle();

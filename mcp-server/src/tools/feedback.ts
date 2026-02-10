@@ -45,7 +45,7 @@ export async function handleListProposedQuestions(
 ): Promise<McpResult> {
   let query = supabase
     .from("proposed_questions")
-    .select("*, categories(name_en, name_es, theme_id)");
+    .select("*, categories(name_en, name_es, topic_id)");
 
   if (params.status) {
     query = query.eq("status", params.status);
@@ -122,12 +122,12 @@ export async function handleReviewProposedQuestion(
   return ok({ ...updated, promoted, ...(promotion_error ? { promotion_error } : {}) });
 }
 
-// ─── learn_list_theme_proposals ────────────────────────────────────
-export async function handleListThemeProposals(
+// ─── learn_list_topic_proposals ────────────────────────────────────
+export async function handleListTopicProposals(
   supabase: SupabaseClient,
   params: { status?: string; limit?: number },
 ): Promise<McpResult> {
-  let query = supabase.from("theme_proposals").select("*");
+  let query = supabase.from("topic_proposals").select("*");
 
   if (params.status) {
     query = query.eq("status", params.status);
@@ -141,11 +141,11 @@ export async function handleListThemeProposals(
   return ok({ proposals: data || [] });
 }
 
-// ─── learn_review_theme_proposal ───────────────────────────────────
-export async function handleReviewThemeProposal(
+// ─── learn_review_topic_proposal ───────────────────────────────────
+export async function handleReviewTopicProposal(
   supabase: SupabaseClient,
   params: {
-    theme_proposal_id: string;
+    topic_proposal_id: string;
     action: string;
     admin_notes?: string;
     create_topic?: boolean;
@@ -159,9 +159,9 @@ export async function handleReviewThemeProposal(
   if (params.admin_notes) updateData.admin_notes = params.admin_notes;
 
   const { data: updated, error: upErr } = await supabase
-    .from("theme_proposals")
+    .from("topic_proposals")
     .update(updateData)
-    .eq("id", params.theme_proposal_id)
+    .eq("id", params.topic_proposal_id)
     .select("*")
     .single();
   if (upErr) return err(upErr.message);
@@ -170,7 +170,7 @@ export async function handleReviewThemeProposal(
   let topic_creation_error: string | null = null;
   if (params.action === "approve" && params.create_topic && updated) {
     const { data: newTopic, error: insertErr } = await supabase
-      .from("themes")
+      .from("topics")
       .insert({
         title_en: updated.title_en,
         title_es: updated.title_es,
@@ -184,7 +184,7 @@ export async function handleReviewThemeProposal(
     else createdTopic = newTopic;
   }
 
-  console.error(`[audit] Reviewed theme proposal ${params.theme_proposal_id}: ${status}`);
+  console.error(`[audit] Reviewed topic proposal ${params.topic_proposal_id}: ${status}`);
   return ok({ ...updated, created_topic: createdTopic, ...(topic_creation_error ? { topic_creation_error } : {}) });
 }
 
@@ -234,26 +234,26 @@ export function registerFeedbackTools(server: McpServer): void {
   );
 
   server.tool(
-    "learn_list_theme_proposals",
+    "learn_list_topic_proposals",
     "List community-proposed topic ideas",
     {
       status: z.enum(["pending", "approved", "rejected"]).optional().describe("Filter by status"),
       limit: z.number().int().min(1).max(200).optional().describe("Max results (default 50)"),
     },
     { readOnlyHint: true },
-    async ({ status, limit }) => handleListThemeProposals(getSupabaseClient(), { status, limit }),
+    async ({ status, limit }) => handleListTopicProposals(getSupabaseClient(), { status, limit }),
   );
 
   server.tool(
-    "learn_review_theme_proposal",
+    "learn_review_topic_proposal",
     "Approve or reject a topic proposal. Optionally create the topic on approval.",
     {
-      theme_proposal_id: z.string().uuid().describe("Theme proposal UUID"),
+      topic_proposal_id: z.string().uuid().describe("Topic proposal UUID"),
       action: z.enum(["approve", "reject"]).describe("Approve or reject"),
       admin_notes: z.string().optional().describe("Admin notes"),
       create_topic: z.boolean().optional().describe("If approving, also create the topic"),
     },
-    async ({ theme_proposal_id, action, admin_notes, create_topic }) =>
-      handleReviewThemeProposal(getSupabaseClient(), { theme_proposal_id, action, admin_notes, create_topic }),
+    async ({ topic_proposal_id, action, admin_notes, create_topic }) =>
+      handleReviewTopicProposal(getSupabaseClient(), { topic_proposal_id: topic_proposal_id as string, action, admin_notes, create_topic }),
   );
 }

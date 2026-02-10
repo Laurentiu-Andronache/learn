@@ -132,9 +132,9 @@ export async function importTopicJson(json: ImportTopic) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Insert theme
-  const { data: theme, error: themeErr } = await supabase
-    .from("themes")
+  // Insert topic
+  const { data: topic, error: topicErr } = await supabase
+    .from("topics")
     .insert({
       title_en: json.title_en,
       title_es: json.title_es,
@@ -148,7 +148,7 @@ export async function importTopicJson(json: ImportTopic) {
     .select("id")
     .single();
 
-  if (themeErr) throw new Error(`Theme insert failed: ${themeErr.message}`);
+  if (topicErr) throw new Error(`Topic insert failed: ${topicErr.message}`);
 
   let totalQuestionsInserted = 0;
   let totalFlashcardsInserted = 0;
@@ -157,7 +157,7 @@ export async function importTopicJson(json: ImportTopic) {
     const { data: category, error: catErr } = await supabase
       .from("categories")
       .insert({
-        theme_id: theme.id,
+        topic_id: topic.id,
         name_en: cat.name_en,
         name_es: cat.name_es,
         slug: cat.slug,
@@ -221,7 +221,7 @@ export async function importTopicJson(json: ImportTopic) {
   revalidatePath("/admin/quizzes");
   revalidatePath("/admin/flashcards");
   return {
-    topicId: theme.id,
+    topicId: topic.id,
     questionsInserted: totalQuestionsInserted,
     flashcardsInserted: totalFlashcardsInserted,
   };

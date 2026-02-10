@@ -19,11 +19,13 @@ interface SuspendedFlashcardsListProps {
       category: { name_en: string; name_es: string } | null;
     } | null;
   }>;
+  onCountChange?: (count: number) => void;
 }
 
 export function SuspendedFlashcardsList({
   userId,
   items: initial,
+  onCountChange,
 }: SuspendedFlashcardsListProps) {
   const t = useTranslations("settings");
   const locale = useLocale();
@@ -35,7 +37,11 @@ export function SuspendedFlashcardsList({
     setPending(flashcardId);
     startTransition(async () => {
       await unsuspendFlashcard(userId, flashcardId);
-      setItems((prev) => prev.filter((i) => i.flashcard?.id !== flashcardId));
+      setItems((prev) => {
+        const next = prev.filter((i) => i.flashcard?.id !== flashcardId);
+        onCountChange?.(next.length);
+        return next;
+      });
       setPending(null);
     });
   };

@@ -8,7 +8,7 @@ type FlashcardWithCategoryJoin = Flashcard & {
     name_en: string;
     name_es: string;
     color: string | null;
-    theme_id: string;
+    topic_id: string;
   };
 };
 
@@ -46,9 +46,9 @@ export async function getOrderedFlashcards(
     .from("flashcards")
     .select(`
       *,
-      categories!inner(id, name_en, name_es, color, theme_id)
+      categories!inner(id, name_en, name_es, color, topic_id)
     `)
-    .eq("categories.theme_id", topicId);
+    .eq("categories.topic_id", topicId);
 
   // Category focus filter
   if (options.subMode === "category_focus" && options.categoryId) {
@@ -206,9 +206,9 @@ export async function getSubModeCounts(userId: string, topicId: string) {
 
   const { data: flashcards } = await supabase
     .from("flashcards")
-    .select("id, categories!inner(theme_id)")
-    .eq("categories.theme_id", topicId)
-    .returns<{ id: string; categories: { theme_id: string } }[]>();
+    .select("id, categories!inner(topic_id)")
+    .eq("categories.topic_id", topicId)
+    .returns<{ id: string; categories: { topic_id: string } }[]>();
 
   if (!flashcards || flashcards.length === 0) {
     return { full: 0, quickReview: 0, spacedRepetition: 0 };

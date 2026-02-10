@@ -71,20 +71,9 @@ All SEO features are implemented following Next.js App Router best practices:
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
 - **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings.
 
-## Terminology Mapping (UI → DB)
+## DB Naming
 
-| UI Term | DB Table | Route |
-|---------|----------|-------|
-| Topic | themes | /topics |
-| Category | categories | — |
-| Quiz Question | questions | /admin/quizzes |
-| Flashcard | flashcards | /admin/flashcards |
-| Quiz Attempt | quiz_attempts | — |
-| Suspended Flashcard | suspended_flashcards | — |
-| Hidden Topic | hidden_themes | — |
-| Topic Proposal | theme_proposals | — |
-
-Service functions use UI names (e.g. `createTopic`, `hideTopic`, `scheduleFlashcardReview`) but query DB table names internally.
+DB tables use `topics`, `hidden_topics`, `topic_proposals` — matching UI terminology directly. No mapping needed.
 
 ## Key Routes
 
@@ -196,6 +185,12 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 - Immediate feedback with explanations
 - Per-card difficulty tracking
 - Quiz attempt history with retry failed
+
+## Patterns & Pitfalls
+
+**Server actions in client `useEffect`**: Always wrap in try/catch. `requireAdmin()` throws on auth failure — unhandled throws in `startTransition` cause silent redirects. The admin layout handles access control; client-side fetches just need to swallow auth errors gracefully.
+
+**Settings list components (hidden topics, suspended flashcards)**: Parent passes server-fetched data as initial prop + `onCountChange` callback. Child manages local state with `useState(initial)` and calls `onCountChange` on mutations so the parent's count/visibility stays in sync.
 
 ## Troubleshooting
 

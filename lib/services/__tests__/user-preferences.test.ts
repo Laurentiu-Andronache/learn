@@ -137,22 +137,22 @@ describe("getSuspendedFlashcards", () => {
 // ─── HIDDEN TOPICS ──────────────────────────────────────────────────
 
 describe("hideTopic", () => {
-  it("upserts a hidden theme", async () => {
+  it("upserts a hidden topic", async () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await hideTopic("user-1", "theme-1");
+    await hideTopic("user-1", "topic-1");
 
-    expect(mockSupabase.from).toHaveBeenCalledWith("hidden_themes");
+    expect(mockSupabase.from).toHaveBeenCalledWith("hidden_topics");
     expect(upsertMock).toHaveBeenCalledWith(
-      { user_id: "user-1", theme_id: "theme-1" },
-      { onConflict: "user_id,theme_id" },
+      { user_id: "user-1", topic_id: "topic-1" },
+      { onConflict: "user_id,topic_id" },
     );
   });
 });
 
 describe("unhideTopic", () => {
-  it("deletes the hidden theme record", async () => {
+  it("deletes the hidden topic record", async () => {
     const deleteMock = vi.fn();
     const eq1Mock = vi.fn();
     const eq2Mock = vi.fn();
@@ -162,10 +162,10 @@ describe("unhideTopic", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ error: null });
 
-    await unhideTopic("user-1", "theme-1");
+    await unhideTopic("user-1", "topic-1");
 
     expect(eq1Mock).toHaveBeenCalledWith("user_id", "user-1");
-    expect(eq2Mock).toHaveBeenCalledWith("theme_id", "theme-1");
+    expect(eq2Mock).toHaveBeenCalledWith("topic_id", "topic-1");
   });
 });
 
@@ -225,7 +225,7 @@ describe("updateReadingProgress", () => {
     updateMock.mockReturnValue({ eq: updateEqMock });
     updateEqMock.mockResolvedValue({ error: null });
 
-    await updateReadingProgress("user-1", "theme-1", "cat-1", 3, 75);
+    await updateReadingProgress("user-1", "topic-1", "cat-1", 3, 75);
 
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -253,12 +253,12 @@ describe("updateReadingProgress", () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValueOnce({ insert: insertMock });
 
-    await updateReadingProgress("user-1", "theme-1", "cat-1", 0, 0);
+    await updateReadingProgress("user-1", "topic-1", "cat-1", 0, 0);
 
     expect(insertMock).toHaveBeenCalledWith(
       expect.objectContaining({
         user_id: "user-1",
-        theme_id: "theme-1",
+        topic_id: "topic-1",
         category_id: "cat-1",
         current_section: 0,
         completion_percent: 0,
@@ -282,7 +282,7 @@ describe("updateReadingProgress", () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValueOnce({ insert: insertMock });
 
-    await updateReadingProgress("user-1", "theme-1", null, 1, 50);
+    await updateReadingProgress("user-1", "topic-1", null, 1, 50);
 
     expect(isMock).toHaveBeenCalledWith("category_id", null);
     expect(insertMock).toHaveBeenCalledWith(
@@ -292,7 +292,7 @@ describe("updateReadingProgress", () => {
 });
 
 describe("getReadingProgress", () => {
-  it("returns reading progress for user/theme", async () => {
+  it("returns reading progress for user/topic", async () => {
     const mockData = [
       { id: "rp-1", current_section: 2, completion_percent: 50 },
     ];
@@ -306,7 +306,7 @@ describe("getReadingProgress", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ data: mockData, error: null });
 
-    const result = await getReadingProgress("user-1", "theme-1");
+    const result = await getReadingProgress("user-1", "topic-1");
     expect(result).toEqual(mockData);
   });
 
@@ -320,7 +320,7 @@ describe("getReadingProgress", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ data: null, error: null });
 
-    const result = await getReadingProgress("user-1", "theme-1");
+    const result = await getReadingProgress("user-1", "topic-1");
     expect(result).toEqual([]);
   });
 });

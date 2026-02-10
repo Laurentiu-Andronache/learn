@@ -115,7 +115,7 @@ describe("handleGetQuestion", () => {
   it("returns question with category/topic context", async () => {
     const q = {
       ...SAMPLE_Q,
-      categories: { id: "cat1", name_en: "Bio", name_es: "Bio", themes: { id: "t1", title_en: "Science" } },
+      categories: { id: "cat1", name_en: "Bio", name_es: "Bio", topics: { id: "t1", title_en: "Science" } },
     };
     mock.from.mockReturnValue(chainable({ data: q, error: null }));
     const result = await handleGetQuestion(mock as any, { question_id: "q1" });

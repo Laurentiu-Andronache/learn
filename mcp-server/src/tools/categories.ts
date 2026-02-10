@@ -20,7 +20,7 @@ export async function handleListCategories(
     .order("created_at", { ascending: true });
 
   if (params.topic_id) {
-    query = query.eq("theme_id", params.topic_id);
+    query = query.eq("topic_id", params.topic_id);
   }
 
   const { data: categories, error, count } = await query;
@@ -66,7 +66,7 @@ export async function handleCreateCategory(
   params: { topic_id: string; name_en: string; name_es: string; slug: string; color?: string },
 ): Promise<McpResult> {
   const insert: Record<string, unknown> = {
-    theme_id: params.topic_id,
+    topic_id: params.topic_id,
     name_en: params.name_en,
     name_es: params.name_es,
     slug: params.slug,
@@ -138,7 +138,7 @@ export async function handleMoveCategory(
 ): Promise<McpResult> {
   const { data, error } = await supabase
     .from("categories")
-    .update({ theme_id: params.new_topic_id })
+    .update({ topic_id: params.new_topic_id })
     .eq("id", params.category_id)
     .select()
     .single();

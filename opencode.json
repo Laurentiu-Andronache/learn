@@ -9,6 +9,11 @@
 				"SUPABASE_URL": "{env:LEARN_SUPABASE_URL}",
 				"SUPABASE_SERVICE_ROLE_KEY": "{env:LEARN_SUPABASE_SERVICE_ROLE_KEY}"
 			}
-		}
+        },
+        "supabase": {
+            "type": "remote",
+            "url": "https://mcp.supabase.com/mcp?project_ref=hqathtprnfdovjyrlyfb",
+            "enabled": true
+        }
 	}
 }

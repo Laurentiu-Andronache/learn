@@ -28,17 +28,17 @@ Claude Code is responsible for all schema changes.
 
 Full schema: `supabase/migrations/20260207000000_initial_schema.sql` + `20260209000000_split_quiz_flashcard.sql`
 
-**Content** (public read, admin write): `themes`, `categories`, `questions`, `flashcards`
+**Content** (public read, admin write): `topics`, `categories`, `questions`, `flashcards`
 
 **User Management**: `profiles`, `admin_users`
 
 **FSRS Spaced Repetition**: `user_card_state` (FK → flashcards), `review_logs` (FK → flashcards)
 
-**Quiz**: `quiz_attempts` (user_id, theme_id, score, total, answers JSONB)
+**Quiz**: `quiz_attempts` (user_id, topic_id, score, total, answers JSONB)
 
-**User Preferences**: `suspended_flashcards`, `hidden_themes`, `reading_progress`
+**User Preferences**: `suspended_flashcards`, `hidden_topics`, `reading_progress`
 
-**Feedback & Moderation**: `feedback` (has `question_id` + `flashcard_id` FKs), `question_reports` (issue_type, status, admin_notes), `proposed_questions` (has `target_type`), `theme_proposals`
+**Feedback & Moderation**: `feedback` (has `question_id` + `flashcard_id` FKs), `question_reports` (issue_type, status, admin_notes), `proposed_questions` (has `target_type`), `topic_proposals`
 
 ## Admin Access
 

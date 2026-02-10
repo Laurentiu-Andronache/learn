@@ -89,7 +89,7 @@ export function JsonUpload() {
           setResult(null);
         }}
         rows={16}
-        placeholder="Paste theme JSON here or upload a file..."
+        placeholder="Paste topic JSON here or upload a file..."
         className="font-mono text-xs"
       />
 

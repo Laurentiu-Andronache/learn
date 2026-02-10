@@ -39,7 +39,7 @@ const FLASHCARD_PAIRS: Array<[string, string]> = [
   ["extra_en", "extra_es"],
 ];
 
-const THEME_PAIRS: Array<[string, string]> = [
+const TOPIC_PAIRS: Array<[string, string]> = [
   ["title_en", "title_es"],
   ["description_en", "description_es"],
 ];
@@ -57,21 +57,21 @@ export async function handleCheckTranslations(
   const targetSuffix = (params.source_lang ?? "en") === "en" ? "_es" : "_en";
   const missing: Array<{ type: string; id: string; field: string }> = [];
 
-  // Fetch theme
-  const { data: theme, error: themeErr } = await supabase
-    .from("themes")
+  // Fetch topic
+  const { data: topic, error: topicErr } = await supabase
+    .from("topics")
     .select("*")
     .eq("id", params.topic_id)
     .single();
 
-  if (themeErr) return err(themeErr.message);
-  if (!theme) return err("Topic not found");
+  if (topicErr) return err(topicErr.message);
+  if (!topic) return err("Topic not found");
 
-  // Check theme fields
-  for (const [en, es] of THEME_PAIRS) {
+  // Check topic fields
+  for (const [en, es] of TOPIC_PAIRS) {
     const target = targetSuffix === "_es" ? es : en;
-    if (isEmpty((theme as Record<string, unknown>)[target])) {
-      missing.push({ type: "theme", id: theme.id, field: target });
+    if (isEmpty((topic as Record<string, unknown>)[target])) {
+      missing.push({ type: "topic", id: topic.id, field: target });
     }
   }
 
@@ -79,7 +79,7 @@ export async function handleCheckTranslations(
   const { data: categories, error: catErr } = await supabase
     .from("categories")
     .select("*")
-    .eq("theme_id", params.topic_id);
+    .eq("topic_id", params.topic_id);
 
   if (catErr) return err(catErr.message);
 
@@ -148,17 +148,17 @@ export async function handleFindUntranslated(
   const SCAN_LIMIT = 1000;
   let truncated = false;
 
-  // Check themes
-  const { data: themes, error: tErr } = await supabase
-    .from("themes")
+  // Check topics
+  const { data: topics, error: tErr } = await supabase
+    .from("topics")
     .select("id, title_en, title_es, description_en, description_es")
     .limit(SCAN_LIMIT);
 
   if (tErr) return err(tErr.message);
-  if ((themes ?? []).length >= SCAN_LIMIT) truncated = true;
+  if ((topics ?? []).length >= SCAN_LIMIT) truncated = true;
 
-  const untranslatedThemes = (themes ?? []).filter((t: Record<string, unknown>) => {
-    for (const [en, es] of THEME_PAIRS) {
+  const untranslatedTopics = (topics ?? []).filter((t: Record<string, unknown>) => {
+    for (const [en, es] of TOPIC_PAIRS) {
       const field = suffix === "_es" ? es : en;
       const source = suffix === "_es" ? en : es;
       if (!isEmpty(t[source]) && isEmpty(t[field])) return true;
@@ -166,10 +166,10 @@ export async function handleFindUntranslated(
     return false;
   }).map((t: Record<string, unknown>) => ({
     id: t.id,
-    missing_fields: THEME_PAIRS
+    missing_fields: TOPIC_PAIRS
       .map(([en, es]) => suffix === "_es" ? es : en)
       .filter((f) => {
-        const source = THEME_PAIRS.find(([en, es]) => (suffix === "_es" ? es : en) === f)!;
+        const source = TOPIC_PAIRS.find(([en, es]) => (suffix === "_es" ? es : en) === f)!;
         const srcField = suffix === "_es" ? source[0] : source[1];
         return !isEmpty(t[srcField]) && isEmpty(t[f]);
       }),
@@ -247,7 +247,7 @@ export async function handleFindUntranslated(
   return ok({
     target_lang: lang,
     truncated,
-    themes: untranslatedThemes,
+    topics: untranslatedTopics,
     categories: untranslatedCats,
     questions: untranslatedQuestions,
     flashcards: untranslatedFlashcards,
@@ -268,10 +268,10 @@ export async function handleCompareTranslations(
   if (!params.flashcard_ids?.length || params.topic_id || params.question_ids?.length) {
     let query = supabase
       .from("questions")
-      .select("id, question_en, question_es, options_en, options_es, explanation_en, explanation_es, extra_en, extra_es, categories!inner(id, theme_id)");
+      .select("id, question_en, question_es, options_en, options_es, explanation_en, explanation_es, extra_en, extra_es, categories!inner(id, topic_id)");
 
     if (params.topic_id) {
-      query = query.eq("categories.theme_id", params.topic_id);
+      query = query.eq("categories.topic_id", params.topic_id);
     }
     if (params.question_ids?.length) {
       query = query.in("id", params.question_ids);
@@ -299,10 +299,10 @@ export async function handleCompareTranslations(
   if (params.flashcard_ids?.length || params.topic_id) {
     let fcQuery = supabase
       .from("flashcards")
-      .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es, categories!inner(id, theme_id)");
+      .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es, categories!inner(id, topic_id)");
 
     if (params.topic_id) {
-      fcQuery = fcQuery.eq("categories.theme_id", params.topic_id);
+      fcQuery = fcQuery.eq("categories.topic_id", params.topic_id);
     }
     if (params.flashcard_ids?.length) {
       fcQuery = fcQuery.in("id", params.flashcard_ids);
@@ -437,7 +437,7 @@ export async function handleBatchUpdateFlashcardTranslations(
 export function registerTranslationTools(server: McpServer): void {
   server.tool(
     "learn_check_translations",
-    "Audit bilingual completeness for a topic. Checks theme, categories, questions, and flashcards for missing translations.",
+    "Audit bilingual completeness for a topic. Checks topic, categories, questions, and flashcards for missing translations.",
     {
       topic_id: z.string().uuid().describe("Topic UUID to audit"),
       source_lang: z.enum(["en", "es"]).optional().describe("Source language (default 'en')"),
@@ -448,7 +448,7 @@ export function registerTranslationTools(server: McpServer): void {
 
   server.tool(
     "learn_find_untranslated",
-    "Global scan for any content missing translations across themes, categories, questions, and flashcards.",
+    "Global scan for any content missing translations across topics, categories, questions, and flashcards.",
     {
       lang: z.enum(["en", "es"]).optional().describe("Target language to check (default 'es')"),
     },

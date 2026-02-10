@@ -83,7 +83,7 @@ describe("handleContentOverview", () => {
 
   it("returns overview of all active topics", async () => {
     mock.from.mockImplementation((table: string) => {
-      if (table === "themes") {
+      if (table === "topics") {
         return chainable({
           data: [
             { id: "t1", title_en: "Science", is_active: true, categories: [{ id: "c1", questions: [{ id: "q1", question_es: "hola", options_es: ["a"], explanation_es: "e" }] }] },
@@ -314,7 +314,7 @@ describe("handleDifficultyAnalysis", () => {
       if (table === "flashcards") {
         return chainable({
           data: [
-            { id: "fc1", difficulty: 5, question_en: "What?", categories: { theme_id: "t1" } },
+            { id: "fc1", difficulty: 5, question_en: "What?", categories: { topic_id: "t1" } },
           ],
           error: null,
         });
@@ -352,7 +352,7 @@ describe("handleDifficultyAnalysis", () => {
       if (table === "flashcards") {
         return chainable({
           data: [
-            { id: "fc1", difficulty: 5, question_en: "What?", categories: { theme_id: "t1" } },
+            { id: "fc1", difficulty: 5, question_en: "What?", categories: { topic_id: "t1" } },
           ],
           error: null,
         });

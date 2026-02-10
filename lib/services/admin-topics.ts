@@ -18,7 +18,7 @@ export interface TopicFormData {
 export async function createTopic(data: TopicFormData) {
   const { supabase, user } = await requireAdmin();
   const { data: topic, error } = await supabase
-    .from("themes")
+    .from("topics")
     .insert({ ...data, creator_id: user.id })
     .select("id")
     .single();
@@ -29,7 +29,7 @@ export async function createTopic(data: TopicFormData) {
 
 export async function updateTopic(id: string, data: TopicFormData) {
   const { supabase } = await requireAdmin();
-  const { error } = await supabase.from("themes").update(data).eq("id", id);
+  const { error } = await supabase.from("topics").update(data).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/admin/topics");
   revalidatePath(`/admin/topics/${id}/edit`);
@@ -38,7 +38,7 @@ export async function updateTopic(id: string, data: TopicFormData) {
 export async function softDeleteTopic(id: string) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
-    .from("themes")
+    .from("topics")
     .update({ is_active: false })
     .eq("id", id);
   if (error) throw new Error(error.message);
@@ -48,7 +48,7 @@ export async function softDeleteTopic(id: string) {
 export async function restoreTopic(id: string) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
-    .from("themes")
+    .from("topics")
     .update({ is_active: true })
     .eq("id", id);
   if (error) throw new Error(error.message);
@@ -58,7 +58,7 @@ export async function restoreTopic(id: string) {
 export async function getTopicById(id: string) {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*, creator:profiles!creator_id(display_name)")
     .eq("id", id)
     .single();
@@ -73,7 +73,7 @@ export async function updateTopicIntroText(
 ) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
-    .from("themes")
+    .from("topics")
     .update({ intro_text_en: introTextEn, intro_text_es: introTextEs })
     .eq("id", id);
   if (error) throw new Error(error.message);
@@ -85,7 +85,7 @@ export async function updateTopicIntroText(
 export async function getAllTopics() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*, creator:profiles!creator_id(display_name)")
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);

@@ -27,11 +27,11 @@ describe("handleListTopics", () => {
     ];
     sb.from.mockReturnValueOnce(chainable({ data: topics, error: null, count: 2 }));
     // category counts
-    sb.from.mockReturnValueOnce(chainable({ data: [{ theme_id: "t1", count: 3 }, { theme_id: "t2", count: 1 }], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [{ topic_id: "t1", count: 3 }, { topic_id: "t2", count: 1 }], error: null }));
     // question counts
-    sb.from.mockReturnValueOnce(chainable({ data: [{ theme_id: "t1", count: 20 }, { theme_id: "t2", count: 5 }], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [{ topic_id: "t1", count: 20 }, { topic_id: "t2", count: 5 }], error: null }));
     // flashcard counts
-    sb.from.mockReturnValueOnce(chainable({ data: [{ theme_id: "t1", count: 15 }, { theme_id: "t2", count: 8 }], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [{ topic_id: "t1", count: 15 }, { topic_id: "t2", count: 8 }], error: null }));
 
     const result = await handleListTopics(sb as any, {});
     const json = extractJson(result) as any;
@@ -81,8 +81,8 @@ describe("handleGetTopic", () => {
     const sb = mockSupabase();
     const topic = { id: "t1", title_en: "Bio", title_es: "Bio", is_active: true };
     const cats = [
-      { id: "c1", theme_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells" },
-      { id: "c2", theme_id: "t1", name_en: "DNA", name_es: "ADN", slug: "dna" },
+      { id: "c1", topic_id: "t1", name_en: "Cells", name_es: "Células", slug: "cells" },
+      { id: "c2", topic_id: "t1", name_en: "DNA", name_es: "ADN", slug: "dna" },
     ];
     sb.from.mockReturnValueOnce(chainable({ data: topic, error: null }));
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null }));

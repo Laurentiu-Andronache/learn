@@ -39,7 +39,7 @@ export default async function TopicsPage() {
 
   // Get all active topics with creator info
   const { data: topics } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*, creator:profiles!creator_id(display_name)")
     .eq("is_active", true)
     .order("created_at");
@@ -49,10 +49,10 @@ export default async function TopicsPage() {
 
   // Get hidden topic IDs
   const { data: hidden } = await supabase
-    .from("hidden_themes")
-    .select("theme_id")
+    .from("hidden_topics")
+    .select("topic_id")
     .eq("user_id", user.id);
-  const hiddenIds = new Set((hidden || []).map((h) => h.theme_id));
+  const hiddenIds = new Set((hidden || []).map((h) => h.topic_id));
 
   const visibleTopics = (topics || []).filter((t) => !hiddenIds.has(t.id));
 

@@ -14,7 +14,7 @@ export async function handleTopicStats(
   const { data: categories, error: catErr } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", topic_id);
+    .eq("topic_id", topic_id);
   if (catErr) return err(catErr.message);
 
   const categoryIds = (categories || []).map((c: any) => c.id);
@@ -82,7 +82,7 @@ export async function handleContentOverview(
   supabase: SupabaseClient,
 ): Promise<McpResult> {
   const { data: topics, error: tErr } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id, title_en, title_es, is_active, categories(id, questions(id, question_es, options_es, explanation_es), flashcards(id, question_es, answer_es))")
     .eq("is_active", true);
   if (tErr) return err(tErr.message);
@@ -139,7 +139,7 @@ export async function handleQuestionQualityReport(
     const { data: cats, error: catErr } = await supabase
       .from("categories")
       .select("id")
-      .eq("theme_id", params.topic_id);
+      .eq("topic_id", params.topic_id);
     if (catErr) return err(catErr.message);
     const categoryIds = (cats || []).map((c: any) => c.id);
     if (categoryIds.length === 0) {
@@ -199,7 +199,7 @@ export async function handleUserActivityStats(
     const { data: cats, error: catErr } = await supabase
       .from("categories")
       .select("id")
-      .eq("theme_id", params.topic_id);
+      .eq("topic_id", params.topic_id);
     if (catErr) return err(catErr.message);
     const catIds = (cats || []).map((c: any) => c.id);
     if (catIds.length === 0) {
@@ -259,8 +259,8 @@ export async function handleDifficultyAnalysis(
 ): Promise<McpResult> {
   const { data: flashcards, error: fErr } = await supabase
     .from("flashcards")
-    .select("id, difficulty, question_en, categories!inner(theme_id)")
-    .eq("categories.theme_id", params.topic_id);
+    .select("id, difficulty, question_en, categories!inner(topic_id)")
+    .eq("categories.topic_id", params.topic_id);
   if (fErr) return err(fErr.message);
 
   const fcs = flashcards || [];
@@ -312,7 +312,7 @@ export async function handleContentHealth(
 ): Promise<McpResult> {
   // Fetch all active topics with nested content
   const { data: topics, error: tErr } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id, title_en, title_es, is_active, categories(id, questions(id, question_es, options_es, explanation_es, type, options_en), flashcards(id, question_es, answer_es, answer_en))")
     .eq("is_active", true);
   if (tErr) return err(tErr.message);

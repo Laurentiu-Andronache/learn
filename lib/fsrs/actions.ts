@@ -219,7 +219,7 @@ async function getFlashcardIdsForTopic(
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", topicId);
+    .eq("topic_id", topicId);
   if (!cats?.length) return [];
   const catIds = cats.map((c) => c.id);
   const { data: flashcards } = await supabase

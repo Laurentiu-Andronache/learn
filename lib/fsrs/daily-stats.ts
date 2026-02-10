@@ -20,7 +20,7 @@ export async function getDailyStats(
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", topicId);
+    .eq("topic_id", topicId);
   if (!cats?.length)
     return {
       reviewsToday: 0,

@@ -22,7 +22,7 @@ export default async function AdminDashboard() {
     { count: otherCount },
   ] = await Promise.all([
     supabase
-      .from("themes")
+      .from("topics")
       .select("*", { count: "exact", head: true })
       .eq("is_active", true),
     supabase.from("questions").select("*", { count: "exact", head: true }),

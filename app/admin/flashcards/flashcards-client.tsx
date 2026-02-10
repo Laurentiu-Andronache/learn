@@ -36,7 +36,7 @@ interface Topic {
 interface Category {
   id: string;
   name_en: string;
-  theme_id: string;
+  topic_id: string;
 }
 
 interface FlashcardItem {
@@ -52,7 +52,7 @@ interface FlashcardItem {
   category?: {
     id?: string;
     name_en?: string;
-    theme_id?: string;
+    topic_id?: string;
     topic?: { id?: string; title_en?: string };
   };
 }
@@ -122,10 +122,10 @@ export function FlashcardsClient({
   // Filter categories by selected topic
   const filteredCategories = useMemo(() => {
     if (topicId === "all") return categories;
-    return categories.filter((c) => c.theme_id === topicId);
+    return categories.filter((c) => c.topic_id === topicId);
   }, [topicId, categories]);
 
-  // Reset category when theme changes
+  // Reset category when topic changes
   useEffect(() => {
     setCategoryId("all");
   }, []);
@@ -133,16 +133,20 @@ export function FlashcardsClient({
   // Fetch filtered flashcards
   const fetchFlashcards = useCallback(() => {
     startTransition(async () => {
-      const filters: {
-        topicId?: string;
-        categoryId?: string;
-        search?: string;
-      } = {};
-      if (topicId !== "all") filters.topicId = topicId;
-      if (categoryId !== "all") filters.categoryId = categoryId;
-      if (debouncedSearch) filters.search = debouncedSearch;
-      const data = await getFlashcardsList(filters);
-      setFlashcards(data as FlashcardItem[]);
+      try {
+        const filters: {
+          topicId?: string;
+          categoryId?: string;
+          search?: string;
+        } = {};
+        if (topicId !== "all") filters.topicId = topicId;
+        if (categoryId !== "all") filters.categoryId = categoryId;
+        if (debouncedSearch) filters.search = debouncedSearch;
+        const data = await getFlashcardsList(filters);
+        setFlashcards(data as FlashcardItem[]);
+      } catch {
+        // Auth error from requireAdmin() — layout already handles access control
+      }
     });
   }, [topicId, categoryId, debouncedSearch]);
 

@@ -24,10 +24,10 @@ export async function handleListQuestions(
 
   let query = supabase
     .from("questions")
-    .select("*, categories!inner(id, name_en, name_es, theme_id)", { count: "exact" });
+    .select("*, categories!inner(id, name_en, name_es, topic_id)", { count: "exact" });
 
   if (params.topic_id) {
-    query = query.eq("categories.theme_id", params.topic_id);
+    query = query.eq("categories.topic_id", params.topic_id);
   }
   if (params.category_id) {
     query = query.eq("category_id", params.category_id);
@@ -59,7 +59,7 @@ export async function handleGetQuestion(
 ): Promise<McpResult> {
   const { data, error } = await supabase
     .from("questions")
-    .select("*, categories(id, name_en, name_es, themes(id, title_en, title_es))")
+    .select("*, categories(id, name_en, name_es, topics(id, title_en, title_es))")
     .eq("id", params.question_id)
     .single();
 
@@ -94,12 +94,12 @@ export async function handleSearchQuestions(
 
   let query = supabase
     .from("questions")
-    .select("*, categories!inner(id, name_en, theme_id)")
+    .select("*, categories!inner(id, name_en, topic_id)")
     .or(orFilter)
     .limit(limit);
 
   if (params.topic_id) {
-    query = query.eq("categories.theme_id", params.topic_id);
+    query = query.eq("categories.topic_id", params.topic_id);
   }
 
   const { data, error } = await query;
@@ -314,7 +314,7 @@ export function registerQuestionTools(server: McpServer): void {
     "learn_list_questions",
     "List questions with optional filters (topic, category, type, difficulty, search). Returns paginated results.",
     {
-      topic_id: z.string().uuid().optional().describe("Filter by topic (theme) UUID"),
+      topic_id: z.string().uuid().optional().describe("Filter by topic UUID"),
       category_id: z.string().uuid().optional().describe("Filter by category UUID"),
       type: z.enum(["multiple_choice", "true_false"]).optional().describe("Question type"),
       difficulty_min: z.number().min(1).max(10).optional().describe("Min difficulty"),

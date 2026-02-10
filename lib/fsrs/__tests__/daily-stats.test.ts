@@ -54,7 +54,7 @@ describe("getDailyStats", () => {
       user_card_state: [],
     };
 
-    const stats = await getDailyStats("user-1", "theme-1");
+    const stats = await getDailyStats("user-1", "topic-1");
     expect(stats.reviewsToday).toBe(0);
     expect(stats.newCardsToday).toBe(0);
     expect(stats.correctRate).toBeNull();
@@ -102,7 +102,7 @@ describe("getDailyStats", () => {
       user_card_state: [],
     };
 
-    const stats = await getDailyStats("user-1", "theme-1");
+    const stats = await getDailyStats("user-1", "topic-1");
     expect(stats.reviewsToday).toBe(5);
     expect(stats.correctRate).toBeCloseTo(3 / 5);
   });
@@ -119,7 +119,7 @@ describe("getDailyStats", () => {
       user_card_state: [],
     };
 
-    const stats = await getDailyStats("user-1", "theme-1");
+    const stats = await getDailyStats("user-1", "topic-1");
     expect(stats.newCardsToday).toBe(2);
   });
 
@@ -135,7 +135,7 @@ describe("getDailyStats", () => {
       user_card_state: [],
     };
 
-    const stats = await getDailyStats("user-1", "theme-1");
+    const stats = await getDailyStats("user-1", "topic-1");
     expect(stats.avgAnswerTimeMs).toBe(2000);
   });
 
@@ -152,7 +152,7 @@ describe("getDailyStats", () => {
       ],
     };
 
-    const stats = await getDailyStats("user-1", "theme-1");
+    const stats = await getDailyStats("user-1", "topic-1");
     expect(stats.dueTomorrow).toBe(3);
   });
 });

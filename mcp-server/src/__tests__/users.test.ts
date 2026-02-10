@@ -93,7 +93,7 @@ describe("handleGetUser", () => {
       if (table === "profiles") {
         return chainable({ data: SAMPLE_PROFILE, error: null });
       }
-      if (table === "themes") {
+      if (table === "topics") {
         return chainable({ data: [{ id: "t1" }], error: null, count: 1 });
       }
       if (table === "review_logs") {
@@ -111,7 +111,7 @@ describe("handleGetUser", () => {
       if (table === "profiles") {
         return chainable({ data: SAMPLE_PROFILE, error: null });
       }
-      if (table === "themes") {
+      if (table === "topics") {
         return chainable({ data: [], error: null, count: 0 });
       }
       if (table === "review_logs") {
@@ -210,7 +210,7 @@ describe("handleUserTopics", () => {
 
   it("returns topics created by user_id", async () => {
     mock.from.mockImplementation((table: string) => {
-      if (table === "themes") {
+      if (table === "topics") {
         return chainable({
           data: [{ id: "t1", title_en: "Science", creator_id: "u1" }],
           error: null,
@@ -229,7 +229,7 @@ describe("handleUserTopics", () => {
       if (table === "profiles") {
         return chainable({ data: { id: "u1" }, error: null });
       }
-      if (table === "themes") {
+      if (table === "topics") {
         return chainable({
           data: [{ id: "t1", title_en: "Science", creator_id: "u1" }],
           error: null,

@@ -8,8 +8,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const supabase = await createClient();
 
-  const { data: themes } = await supabase
-    .from("themes")
+  const { data: topics } = await supabase
+    .from("topics")
     .select("id, updated_at")
     .eq("status", "published");
 
@@ -34,13 +34,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  const themePages: MetadataRoute.Sitemap =
-    themes?.map((theme) => ({
-      url: `${baseUrl}/topics/${theme.id}`,
-      lastModified: theme.updated_at ? new Date(theme.updated_at) : new Date(),
+  const topicPages: MetadataRoute.Sitemap =
+    topics?.map((topic) => ({
+      url: `${baseUrl}/topics/${topic.id}`,
+      lastModified: topic.updated_at ? new Date(topic.updated_at) : new Date(),
       changeFrequency: "weekly",
       priority: 0.7,
     })) || [];
 
-  return [...staticPages, ...themePages];
+  return [...staticPages, ...topicPages];
 }

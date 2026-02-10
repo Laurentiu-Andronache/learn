@@ -21,7 +21,7 @@ export default async function Image({ params }: Props) {
   const supabase = await createClient();
 
   const { data: topic } = await supabase
-    .from("themes")
+    .from("topics")
     .select("title_en, title_es, icon")
     .eq("id", id)
     .single();

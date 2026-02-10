@@ -25,7 +25,7 @@ export interface Topic {
 
 export interface Category {
   id: string;
-  theme_id: string;
+  topic_id: string;
   name_en: string;
   name_es: string;
   slug: string;
@@ -157,7 +157,7 @@ export interface QuizAttemptAnswer {
 export interface QuizAttempt {
   id: string;
   user_id: string;
-  theme_id: string;
+  topic_id: string;
   score: number;
   total: number;
   answers: QuizAttemptAnswer[];
@@ -179,14 +179,14 @@ export interface SuspendedFlashcard {
 export interface HiddenTopic {
   id: string;
   user_id: string;
-  theme_id: string;
+  topic_id: string;
   hidden_at: string;
 }
 
 export interface ReadingProgress {
   id: string;
   user_id: string;
-  theme_id: string;
+  topic_id: string;
   category_id: string;
   current_section: number;
   completion_percent: number;

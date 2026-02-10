@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/supabase/server";
 
-type AdminTable = "proposed_questions" | "theme_proposals";
+type AdminTable = "proposed_questions" | "topic_proposals";
 
 // Generic status update — now uses requireAdmin's user for resolved_by/reviewed_by
 async function updateStatus(
@@ -71,7 +71,7 @@ export async function updateProposedQuestionStatus(
 export async function getTopicProposalsList() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
-    .from("theme_proposals")
+    .from("topic_proposals")
     .select("*")
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -83,8 +83,8 @@ export async function updateTopicProposalStatus(
   status: string,
   adminNotes?: string,
 ) {
-  await updateStatus("theme_proposals", id, status, adminNotes);
-  revalidatePath("/admin/reviews/theme-proposals");
+  await updateStatus("topic_proposals", id, status, adminNotes);
+  revalidatePath("/admin/reviews/topic-proposals");
 }
 
 // Single question fetch (for inline editing)
@@ -93,7 +93,7 @@ export async function getQuestionById(id: string) {
   const { data, error } = await supabase
     .from("questions")
     .select(
-      "*, category:categories(id, name_en, theme_id, topic:themes(id, title_en))",
+      "*, category:categories(id, name_en, topic_id, topic:topics(id, title_en))",
     )
     .eq("id", id)
     .single();
@@ -110,8 +110,8 @@ export async function getQuestionsList(filters?: {
 }) {
   const { supabase } = await requireAdmin();
   const selectStr = filters?.topicId
-    ? "*, category:categories!inner(id, name_en, theme_id, topic:themes(id, title_en))"
-    : "*, category:categories(id, name_en, theme_id, topic:themes(id, title_en))";
+    ? "*, category:categories!inner(id, name_en, topic_id, topic:topics(id, title_en))"
+    : "*, category:categories(id, name_en, topic_id, topic:topics(id, title_en))";
 
   let query = supabase
     .from("questions")
@@ -120,7 +120,7 @@ export async function getQuestionsList(filters?: {
     .limit(100);
 
   if (filters?.topicId) {
-    query = query.eq("categories.theme_id", filters.topicId);
+    query = query.eq("categories.topic_id", filters.topicId);
   }
   if (filters?.categoryId) {
     query = query.eq("category_id", filters.categoryId);
@@ -182,11 +182,11 @@ export async function deleteProposedQuestion(id: string) {
 export async function deleteTopicProposal(id: string) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
-    .from("theme_proposals")
+    .from("topic_proposals")
     .delete()
     .eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/reviews/theme-proposals");
+  revalidatePath("/admin/reviews/topic-proposals");
 }
 
 // Flashcard CRUD
@@ -197,15 +197,15 @@ export async function getFlashcardsList(filters?: {
 }) {
   const { supabase } = await requireAdmin();
   const selectStr = filters?.topicId
-    ? "*, category:categories!inner(id, name_en, theme_id, topic:themes(id, title_en))"
-    : "*, category:categories(id, name_en, theme_id, topic:themes(id, title_en))";
+    ? "*, category:categories!inner(id, name_en, topic_id, topic:topics(id, title_en))"
+    : "*, category:categories(id, name_en, topic_id, topic:topics(id, title_en))";
   let query = supabase
     .from("flashcards")
     .select(selectStr)
     .order("created_at", { ascending: false })
     .limit(100);
   if (filters?.topicId)
-    query = query.eq("categories.theme_id", filters.topicId);
+    query = query.eq("categories.topic_id", filters.topicId);
   if (filters?.categoryId) query = query.eq("category_id", filters.categoryId);
   if (filters?.search)
     query = query.ilike("question_en", `%${filters.search}%`);
@@ -219,7 +219,7 @@ export async function getFlashcardById(id: string) {
   const { data, error } = await supabase
     .from("flashcards")
     .select(
-      "*, category:categories(id, name_en, theme_id, topic:themes(id, title_en))",
+      "*, category:categories(id, name_en, topic_id, topic:topics(id, title_en))",
     )
     .eq("id", id)
     .single();
@@ -251,7 +251,7 @@ export async function deleteFlashcard(id: string) {
 export async function getTopicsList() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id, title_en")
     .eq("is_active", true)
     .order("title_en");
@@ -263,7 +263,7 @@ export async function getCategoriesList() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase
     .from("categories")
-    .select("id, name_en, theme_id")
+    .select("id, name_en, topic_id")
     .order("name_en");
   if (error) throw new Error(error.message);
   return data;

@@ -72,7 +72,7 @@ learn-app/
 ## Database Schema (17 tables)
 
 **Content** (public read, admin write):
-- `themes` — Top-level content groupings (displayed as "Topics" in UI)
+- `topics` — Top-level content groupings
 - `categories` — Subject subdivisions within topics
 - `questions` — Quiz items (multiple choice, true/false)
 - `flashcards` — Recall cards (question/answer pairs for FSRS)
@@ -86,18 +86,18 @@ learn-app/
 - `review_logs` — Review history (FK → flashcards)
 
 **Quiz**:
-- `quiz_attempts` — Quiz results (user_id, theme_id, score, total, answers JSONB)
+- `quiz_attempts` — Quiz results (user_id, topic_id, score, total, answers JSONB)
 
 **User Preferences**:
 - `suspended_flashcards` — User-hidden flashcards
-- `hidden_themes` — User-hidden topics
+- `hidden_topics` — User-hidden topics
 - `reading_progress` — Reading mode tracking
 
 **Feedback & Moderation**:
 - `feedback` — User feedback (has `question_id` + `flashcard_id` FKs)
 - `question_reports` — Content issue reports with admin review workflow
 - `proposed_questions` — Community-proposed questions/flashcards (has `target_type`)
-- `theme_proposals` — Community topic suggestions
+- `topic_proposals` — Community topic suggestions
 
 All tables have RLS policies for secure data access.
 
@@ -152,8 +152,7 @@ npm run dev
 ```
 
 Visit:
-- **Homepage**: http://localhost:3000
-- **Database Test**: http://localhost:3000/test-db
+- **Homepage**: http://localhost:4000
 
 ### 6. Build for Production
 
@@ -170,7 +169,7 @@ Vitest configured with jsdom + @testing-library/react. Run:
 npm run test
 ```
 
-131 tests across 9 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, and flashcard grading.
+175 tests across 15 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, flashcard grading, and glossary tooltip processing. The MCP server has an additional 175 tests across 9 test files.
 
 ## Deployment
 

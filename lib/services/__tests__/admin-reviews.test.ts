@@ -134,7 +134,7 @@ describe("updateTopicProposalStatus", () => {
 
     await updateTopicProposalStatus("tp-1", "rejected", "Not relevant");
 
-    expect(mockSupabase.from).toHaveBeenCalledWith("theme_proposals");
+    expect(mockSupabase.from).toHaveBeenCalledWith("topic_proposals");
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
         status: "rejected",
@@ -172,7 +172,7 @@ describe("getTopicProposalsList", () => {
     );
 
     const result = await getTopicProposalsList();
-    expect(mockSupabase.from).toHaveBeenCalledWith("theme_proposals");
+    expect(mockSupabase.from).toHaveBeenCalledWith("topic_proposals");
     expect(result).toEqual(mockData);
   });
 });
@@ -187,7 +187,7 @@ describe("getQuestionsList", () => {
         category: {
           id: "c1",
           name_en: "Cat",
-          theme_id: "t1",
+          topic_id: "t1",
           topic: { id: "t1", title_en: "Topic" },
         },
       },
@@ -201,7 +201,7 @@ describe("getQuestionsList", () => {
   });
 
   it("filters by topicId at DB level via !inner join", async () => {
-    const mockData = [{ id: "q1", category: { theme_id: "t1" } }];
+    const mockData = [{ id: "q1", category: { topic_id: "t1" } }];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );
@@ -273,7 +273,7 @@ describe("deleteTopicProposal", () => {
     eqMock.mockResolvedValue({ error: null });
 
     await deleteTopicProposal("tp-1");
-    expect(mockSupabase.from).toHaveBeenCalledWith("theme_proposals");
+    expect(mockSupabase.from).toHaveBeenCalledWith("topic_proposals");
   });
 });
 
@@ -293,7 +293,7 @@ describe("getTopicsList", () => {
 
 describe("getCategoriesList", () => {
   it("returns all categories", async () => {
-    const mockData = [{ id: "c1", name_en: "Cat 1", theme_id: "t1" }];
+    const mockData = [{ id: "c1", name_en: "Cat 1", topic_id: "t1" }];
     mockSupabase.from.mockReturnValue(
       chainable({ data: mockData, error: null }),
     );

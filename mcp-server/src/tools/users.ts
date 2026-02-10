@@ -48,7 +48,7 @@ export async function handleGetUser(
   const userId = (profile as any).id;
 
   const { count: topicCount } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id", { count: "exact", head: true })
     .eq("creator_id", userId);
 
@@ -136,7 +136,7 @@ export async function handleUserTopics(
   }
 
   const { data: topics, error } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*")
     .eq("creator_id", userId!);
   if (error) return err(error.message);

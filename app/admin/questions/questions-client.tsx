@@ -36,7 +36,7 @@ interface Topic {
 interface Category {
   id: string;
   name_en: string;
-  theme_id: string;
+  topic_id: string;
 }
 
 interface QuestionItem {
@@ -56,7 +56,7 @@ interface QuestionItem {
   category?: {
     id?: string;
     name_en?: string;
-    theme_id?: string;
+    topic_id?: string;
     topic?: { id?: string; title_en?: string };
   };
 }
@@ -128,10 +128,10 @@ export function QuestionsClient({
   // Filter categories by selected topic
   const filteredCategories = useMemo(() => {
     if (topicId === "all") return categories;
-    return categories.filter((c) => c.theme_id === topicId);
+    return categories.filter((c) => c.topic_id === topicId);
   }, [topicId, categories]);
 
-  // Reset category when theme changes
+  // Reset category when topic changes
   useEffect(() => {
     setCategoryId("all");
   }, []);
@@ -139,18 +139,22 @@ export function QuestionsClient({
   // Fetch filtered questions
   const fetchQuestions = useCallback(() => {
     startTransition(async () => {
-      const filters: {
-        topicId?: string;
-        categoryId?: string;
-        type?: string;
-        search?: string;
-      } = {};
-      if (topicId !== "all") filters.topicId = topicId;
-      if (categoryId !== "all") filters.categoryId = categoryId;
-      if (typeFilter !== "all") filters.type = typeFilter;
-      if (debouncedSearch) filters.search = debouncedSearch;
-      const data = await getQuestionsList(filters);
-      setQuestions(data as QuestionItem[]);
+      try {
+        const filters: {
+          topicId?: string;
+          categoryId?: string;
+          type?: string;
+          search?: string;
+        } = {};
+        if (topicId !== "all") filters.topicId = topicId;
+        if (categoryId !== "all") filters.categoryId = categoryId;
+        if (typeFilter !== "all") filters.type = typeFilter;
+        if (debouncedSearch) filters.search = debouncedSearch;
+        const data = await getQuestionsList(filters);
+        setQuestions(data as QuestionItem[]);
+      } catch {
+        // Auth error from requireAdmin() — layout already handles access control
+      }
     });
   }, [topicId, categoryId, typeFilter, debouncedSearch]);
 

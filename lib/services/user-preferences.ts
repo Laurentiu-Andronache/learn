@@ -71,7 +71,7 @@ export async function unsuspendAllFlashcardsForTopic(
   const { data: cats } = await supabase
     .from("categories")
     .select("id")
-    .eq("theme_id", topicId);
+    .eq("topic_id", topicId);
   if (!cats?.length) return 0;
   const { data: flashcards } = await supabase
     .from("flashcards")
@@ -97,12 +97,12 @@ export async function unsuspendAllFlashcardsForTopic(
 
 export async function hideTopic(userId: string, topicId: string) {
   const supabase = await createClient();
-  const { error } = await supabase.from("hidden_themes").upsert(
+  const { error } = await supabase.from("hidden_topics").upsert(
     {
       user_id: userId,
-      theme_id: topicId,
+      topic_id: topicId,
     },
-    { onConflict: "user_id,theme_id" },
+    { onConflict: "user_id,topic_id" },
   );
   if (error) throw new Error(error.message);
 }
@@ -110,10 +110,10 @@ export async function hideTopic(userId: string, topicId: string) {
 export async function unhideTopic(userId: string, topicId: string) {
   const supabase = await createClient();
   const { error } = await supabase
-    .from("hidden_themes")
+    .from("hidden_topics")
     .delete()
     .eq("user_id", userId)
-    .eq("theme_id", topicId);
+    .eq("topic_id", topicId);
   if (error) throw new Error(error.message);
 }
 
@@ -134,11 +134,11 @@ export async function getHiddenTopics(
 ): Promise<HiddenTopicDetail[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
-    .from("hidden_themes")
+    .from("hidden_topics")
     .select(`
       id,
       hidden_at,
-      topic:themes(id, title_en, title_es, icon, color)
+      topic:topics(id, title_en, title_es, icon, color)
     `)
     .eq("user_id", userId)
     .order("hidden_at", { ascending: false })
@@ -163,7 +163,7 @@ export async function updateReadingProgress(
     .from("reading_progress")
     .select("id")
     .eq("user_id", userId)
-    .eq("theme_id", topicId);
+    .eq("topic_id", topicId);
   query = categoryId
     ? query.eq("category_id", categoryId)
     : query.is("category_id", null);
@@ -182,7 +182,7 @@ export async function updateReadingProgress(
   } else {
     const { error } = await supabase.from("reading_progress").insert({
       user_id: userId,
-      theme_id: topicId,
+      topic_id: topicId,
       category_id: categoryId,
       current_section: currentSection,
       completion_percent: completionPercent,
@@ -207,7 +207,7 @@ export async function getReadingProgress(
     .from("reading_progress")
     .select("*")
     .eq("user_id", userId)
-    .eq("theme_id", topicId);
+    .eq("topic_id", topicId);
   if (error) throw new Error(error.message);
   return data || [];
 }

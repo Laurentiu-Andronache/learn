@@ -6,7 +6,7 @@ import { type McpResult, ok, err } from "../utils.js";
 
 // ─── Schema definitions (hardcoded reference) ──────────────────────
 const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: boolean; note?: string }>> = {
-  themes: [
+  topics: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "title_en", type: "text" },
     { name: "title_es", type: "text" },
@@ -23,7 +23,7 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
   ],
   categories: [
     { name: "id", type: "uuid", note: "PK" },
-    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "topic_id", type: "uuid", note: "FK→topics" },
     { name: "name_en", type: "text" },
     { name: "name_es", type: "text" },
     { name: "slug", type: "text" },
@@ -109,7 +109,7 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
   quiz_attempts: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "user_id", type: "uuid" },
-    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "topic_id", type: "uuid", note: "FK→topics" },
     { name: "score", type: "integer" },
     { name: "total", type: "integer" },
     { name: "answers", type: "jsonb" },
@@ -158,7 +158,7 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
     { name: "reviewed_at", type: "timestamptz", nullable: true },
     { name: "reviewed_by", type: "uuid", nullable: true },
   ],
-  theme_proposals: [
+  topic_proposals: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "submitted_by", type: "uuid", nullable: true },
     { name: "title_en", type: "text" },
@@ -178,16 +178,16 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
     { name: "flashcard_id", type: "uuid", note: "FK→flashcards" },
     { name: "created_at", type: "timestamptz" },
   ],
-  hidden_themes: [
+  hidden_topics: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "user_id", type: "uuid", note: "FK→auth.users" },
-    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "topic_id", type: "uuid", note: "FK→topics" },
     { name: "created_at", type: "timestamptz" },
   ],
   reading_progress: [
     { name: "id", type: "uuid", note: "PK" },
     { name: "user_id", type: "uuid", note: "FK→auth.users" },
-    { name: "theme_id", type: "uuid", note: "FK→themes" },
+    { name: "topic_id", type: "uuid", note: "FK→topics" },
     { name: "completed", type: "boolean" },
     { name: "created_at", type: "timestamptz" },
     { name: "updated_at", type: "timestamptz" },
@@ -210,13 +210,13 @@ export async function handleAdminSummary(
   if (pqErr) return err(pqErr.message);
 
   const { count: proposalCount, error: tpErr } = await supabase
-    .from("theme_proposals")
+    .from("topic_proposals")
     .select("id", { count: "exact", head: true })
     .eq("status", "pending");
   if (tpErr) return err(tpErr.message);
 
   const { count: topicCount, error: thErr } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id", { count: "exact", head: true });
   if (thErr) return err(thErr.message);
 
@@ -250,7 +250,7 @@ export async function handleAdminSummary(
   return ok({
     pending_feedback: feedbackCount ?? 0,
     pending_proposed_questions: proposedQCount ?? 0,
-    pending_theme_proposals: proposalCount ?? 0,
+    pending_topic_proposals: proposalCount ?? 0,
     totals: {
       topics: topicCount ?? 0,
       categories: catCount ?? 0,

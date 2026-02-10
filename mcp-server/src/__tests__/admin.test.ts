@@ -30,10 +30,10 @@ describe("handleAdminSummary", () => {
       if (table === "proposed_questions") {
         return chainable({ data: [], error: null, count: 2 });
       }
-      if (table === "theme_proposals") {
+      if (table === "topic_proposals") {
         return chainable({ data: [], error: null, count: 1 });
       }
-      if (table === "themes") {
+      if (table === "topics") {
         return chainable({ data: [{ id: "t1" }], error: null, count: 5 });
       }
       if (table === "categories") {
@@ -52,7 +52,7 @@ describe("handleAdminSummary", () => {
     const json = extractJson(result) as any;
     expect(json.pending_feedback).toBeDefined();
     expect(json.pending_proposed_questions).toBeDefined();
-    expect(json.pending_theme_proposals).toBeDefined();
+    expect(json.pending_topic_proposals).toBeDefined();
     expect(json.totals).toBeDefined();
   });
 
@@ -88,9 +88,9 @@ describe("handleSchemaInfo", () => {
   });
 
   it("returns detailed info for a specific table", async () => {
-    const result = await handleSchemaInfo({ table_name: "themes" });
+    const result = await handleSchemaInfo({ table_name: "topics" });
     const json = extractJson(result) as any;
-    expect(json.table).toBe("themes");
+    expect(json.table).toBe("topics");
     expect(json.columns).toBeDefined();
     expect(json.columns.length).toBeGreaterThan(0);
   });
@@ -111,9 +111,9 @@ describe("handleSchemaInfo", () => {
 
   it("returns info for all known tables", async () => {
     const knownTables = [
-      "themes", "categories", "questions", "profiles", "admin_users",
+      "topics", "categories", "questions", "profiles", "admin_users",
       "user_card_state", "review_logs", "feedback", "question_reports",
-      "proposed_questions", "theme_proposals",
+      "proposed_questions", "topic_proposals",
     ];
     for (const table of knownTables) {
       const result = await handleSchemaInfo({ table_name: table });
@@ -134,7 +134,7 @@ describe("handleRunQuery", () => {
     mock.from.mockReturnValue(
       chainable({ data: [{ id: "t1", title_en: "Science" }], error: null })
     );
-    const result = await handleRunQuery(mock as any, { table: "themes" });
+    const result = await handleRunQuery(mock as any, { table: "topics" });
     const json = extractJson(result) as any;
     expect(json.data).toEqual([{ id: "t1", title_en: "Science" }]);
   });
@@ -143,8 +143,8 @@ describe("handleRunQuery", () => {
     mock.from.mockReturnValue(
       chainable({ data: [{ id: "t1" }], error: null })
     );
-    await handleRunQuery(mock as any, { table: "themes", select: "id" });
-    expect(mock.from).toHaveBeenCalledWith("themes");
+    await handleRunQuery(mock as any, { table: "topics", select: "id" });
+    expect(mock.from).toHaveBeenCalledWith("topics");
   });
 
   it("applies filters", async () => {
@@ -163,18 +163,18 @@ describe("handleRunQuery", () => {
       chainable({ data: [], error: null })
     );
     await handleRunQuery(mock as any, {
-      table: "themes",
+      table: "topics",
       order: { column: "created_at", ascending: false },
       limit: 10,
     });
-    expect(mock.from).toHaveBeenCalledWith("themes");
+    expect(mock.from).toHaveBeenCalledWith("topics");
   });
 
   it("returns error on DB failure", async () => {
     mock.from.mockReturnValue(
       chainable({ data: null, error: { message: "fail" } })
     );
-    const result = await handleRunQuery(mock as any, { table: "themes" });
+    const result = await handleRunQuery(mock as any, { table: "topics" });
     expect(extractText(result)).toContain("Error");
     expect(result.isError).toBe(true);
   });

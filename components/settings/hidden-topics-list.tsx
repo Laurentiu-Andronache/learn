@@ -19,11 +19,13 @@ interface HiddenTopicsListProps {
       color: string | null;
     } | null;
   }>;
+  onCountChange?: (count: number) => void;
 }
 
 export function HiddenTopicsList({
   userId,
   items: initial,
+  onCountChange,
 }: HiddenTopicsListProps) {
   const t = useTranslations("settings");
   const tTopics = useTranslations("topics");
@@ -36,7 +38,11 @@ export function HiddenTopicsList({
     setPending(topicId);
     startTransition(async () => {
       await unhideTopic(userId, topicId);
-      setItems((prev) => prev.filter((i) => i.topic?.id !== topicId));
+      setItems((prev) => {
+        const next = prev.filter((i) => i.topic?.id !== topicId);
+        onCountChange?.(next.length);
+        return next;
+      });
       setPending(null);
     });
   };

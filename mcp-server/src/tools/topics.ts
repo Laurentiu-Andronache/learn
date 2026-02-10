@@ -14,7 +14,7 @@ export async function handleListTopics(
   const offset = params.offset ?? 0;
 
   let query = supabase
-    .from("themes")
+    .from("topics")
     .select("*", { count: "exact" })
     .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false });
@@ -36,33 +36,33 @@ export async function handleListTopics(
   if (ids.length > 0) {
     const { data: catCounts } = await supabase
       .from("categories")
-      .select("theme_id, count:id", { count: "exact" })
-      .in("theme_id", ids);
+      .select("topic_id, count:id", { count: "exact" })
+      .in("topic_id", ids);
 
     for (const row of catCounts ?? []) {
-      catCountMap[(row as any).theme_id] = Number((row as any).count);
+      catCountMap[(row as any).topic_id] = Number((row as any).count);
     }
 
     // Question counts via categories
     const { data: qCounts } = await supabase
       .from("questions")
-      .select("category_id:categories!inner(theme_id), count:id")
-      .in("categories.theme_id", ids);
+      .select("category_id:categories!inner(topic_id), count:id")
+      .in("categories.topic_id", ids);
 
     for (const row of qCounts ?? []) {
-      const themeId = (row as any).theme_id ?? (row as any).category_id;
-      qCountMap[themeId] = Number((row as any).count);
+      const topicId = (row as any).topic_id ?? (row as any).category_id;
+      qCountMap[topicId] = Number((row as any).count);
     }
 
     // Flashcard counts via categories
     const { data: fcCounts } = await supabase
       .from("flashcards")
-      .select("category_id:categories!inner(theme_id), count:id")
-      .in("categories.theme_id", ids);
+      .select("category_id:categories!inner(topic_id), count:id")
+      .in("categories.topic_id", ids);
 
     for (const row of fcCounts ?? []) {
-      const themeId = (row as any).theme_id ?? (row as any).category_id;
-      fcCountMap[themeId] = Number((row as any).count);
+      const topicId = (row as any).topic_id ?? (row as any).category_id;
+      fcCountMap[topicId] = Number((row as any).count);
     }
   }
 
@@ -83,7 +83,7 @@ export async function handleGetTopic(
   params: { topic_id: string },
 ): Promise<McpResult> {
   const { data: topic, error } = await supabase
-    .from("themes")
+    .from("topics")
     .select("*")
     .eq("id", params.topic_id)
     .single();
@@ -93,7 +93,7 @@ export async function handleGetTopic(
   const { data: categories } = await supabase
     .from("categories")
     .select("*")
-    .eq("theme_id", params.topic_id)
+    .eq("topic_id", params.topic_id)
     .order("created_at", { ascending: true });
 
   const catIds = (categories ?? []).map((c: any) => c.id);
@@ -147,7 +147,7 @@ export async function handleCreateTopic(
     if (v !== undefined) insert[k] = v;
   }
 
-  const { data, error } = await supabase.from("themes").insert(insert).select().single();
+  const { data, error } = await supabase.from("topics").insert(insert).select().single();
   if (error) return err(error.message);
 
   console.error(`[audit] created topic ${data.id}: ${title_en}`);
@@ -174,7 +174,7 @@ export async function handleUpdateTopic(
   }
 
   const { data, error } = await supabase
-    .from("themes")
+    .from("topics")
     .update(updates)
     .eq("id", topic_id)
     .select()
@@ -193,7 +193,7 @@ export async function handleDeleteTopic(
   params: { topic_id: string },
 ): Promise<McpResult> {
   const { data, error } = await supabase
-    .from("themes")
+    .from("topics")
     .update({ is_active: false })
     .eq("id", params.topic_id)
     .select()
@@ -216,7 +216,7 @@ export async function handleHardDeleteTopic(
   }
 
   const { error } = await supabase
-    .from("themes")
+    .from("topics")
     .delete()
     .eq("id", params.topic_id);
 

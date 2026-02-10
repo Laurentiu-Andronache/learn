@@ -31,7 +31,7 @@ export default async function FlashcardsPage({
         .eq("email", user.email!)
         .maybeSingle(),
       supabase
-        .from("themes")
+        .from("topics")
         .select("id, title_en, title_es")
         .eq("id", id)
         .single(),

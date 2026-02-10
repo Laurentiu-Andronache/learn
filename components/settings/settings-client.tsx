@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,8 @@ export function SettingsClient({
 }: SettingsClientProps) {
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
+  const [suspendedCount, setSuspendedCount] = useState(suspendedFlashcards.length);
+  const [hiddenCount, setHiddenCount] = useState(hiddenTopics.length);
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 py-8 px-4">
@@ -152,16 +155,17 @@ export function SettingsClient({
             {t("suspendedQuestions")}
           </CardTitle>
           <CardDescription>
-            {suspendedFlashcards.length === 0
+            {suspendedCount === 0
               ? t("noSuspended")
-              : `${suspendedFlashcards.length} ${t("suspendedQuestions").toLowerCase()}`}
+              : `${suspendedCount} ${t("suspendedQuestions").toLowerCase()}`}
           </CardDescription>
         </CardHeader>
-        {suspendedFlashcards.length > 0 && (
+        {suspendedCount > 0 && (
           <CardContent>
             <SuspendedFlashcardsList
               userId={userId}
               items={suspendedFlashcards}
+              onCountChange={setSuspendedCount}
             />
           </CardContent>
         )}
@@ -175,14 +179,18 @@ export function SettingsClient({
             {t("hiddenTopics")}
           </CardTitle>
           <CardDescription>
-            {hiddenTopics.length === 0
+            {hiddenCount === 0
               ? t("noHidden")
-              : `${hiddenTopics.length} ${hiddenTopics.length === 1 ? "topic" : "topics"}`}
+              : `${hiddenCount} ${hiddenCount === 1 ? "topic" : "topics"}`}
           </CardDescription>
         </CardHeader>
-        {hiddenTopics.length > 0 && (
+        {hiddenCount > 0 && (
           <CardContent>
-            <HiddenTopicsList userId={userId} items={hiddenTopics} />
+            <HiddenTopicsList
+              userId={userId}
+              items={hiddenTopics}
+              onCountChange={setHiddenCount}
+            />
           </CardContent>
         )}
       </Card>

@@ -17,7 +17,7 @@ function mockSupabase() {
   return createMockSupabase();
 }
 
-const SAMPLE_THEME = {
+const SAMPLE_TOPIC = {
   id: "t1",
   title_en: "Science",
   title_es: "Ciencia",
@@ -29,7 +29,7 @@ const SAMPLE_CAT = {
   id: "cat1",
   name_en: "Biology",
   name_es: "Biología",
-  theme_id: "t1",
+  topic_id: "t1",
 };
 
 const SAMPLE_Q_FULL = {
@@ -70,7 +70,7 @@ describe("handleCheckTranslations", () => {
     mock.from.mockImplementation(() => {
       callNum++;
       if (callNum === 1)
-        return chainable({ data: SAMPLE_THEME, error: null }); // theme
+        return chainable({ data: SAMPLE_TOPIC, error: null }); // topic
       if (callNum === 2)
         return chainable({ data: [SAMPLE_CAT], error: null }); // categories
       return chainable({ data: [SAMPLE_Q_FULL], error: null }); // questions
@@ -87,7 +87,7 @@ describe("handleCheckTranslations", () => {
     mock.from.mockImplementation(() => {
       callNum++;
       if (callNum === 1)
-        return chainable({ data: SAMPLE_THEME, error: null });
+        return chainable({ data: SAMPLE_TOPIC, error: null });
       if (callNum === 2)
         return chainable({ data: [SAMPLE_CAT], error: null });
       return chainable({ data: [SAMPLE_Q_MISSING], error: null });
@@ -100,12 +100,12 @@ describe("handleCheckTranslations", () => {
     expect(json.missing.length).toBeGreaterThan(0);
   });
 
-  it("detects missing theme translations", async () => {
-    const theme = { ...SAMPLE_THEME, title_es: null };
+  it("detects missing topic translations", async () => {
+    const topic = { ...SAMPLE_TOPIC, title_es: null };
     let callNum = 0;
     mock.from.mockImplementation(() => {
       callNum++;
-      if (callNum === 1) return chainable({ data: theme, error: null });
+      if (callNum === 1) return chainable({ data: topic, error: null });
       if (callNum === 2)
         return chainable({ data: [SAMPLE_CAT], error: null });
       return chainable({ data: [], error: null });
@@ -117,7 +117,7 @@ describe("handleCheckTranslations", () => {
     expect(json.missing_count).toBeGreaterThan(0);
   });
 
-  it("returns error when theme not found", async () => {
+  it("returns error when topic not found", async () => {
     mock.from.mockReturnValue(
       chainable({ data: null, error: { message: "not found" } })
     );
@@ -142,9 +142,9 @@ describe("handleFindUntranslated", () => {
       callNum++;
       if (callNum === 1)
         return chainable({
-          data: [{ ...SAMPLE_THEME, title_es: null }],
+          data: [{ ...SAMPLE_TOPIC, title_es: null }],
           error: null,
-        }); // themes
+        }); // topics
       if (callNum === 2)
         return chainable({
           data: [{ ...SAMPLE_CAT, name_es: null }],
@@ -154,7 +154,7 @@ describe("handleFindUntranslated", () => {
     });
     const result = await handleFindUntranslated(mock as any, {});
     const json = extractJson(result) as any;
-    expect(json.themes.length).toBeGreaterThan(0);
+    expect(json.topics.length).toBeGreaterThan(0);
     expect(json.categories.length).toBeGreaterThan(0);
     expect(json.questions.length).toBeGreaterThan(0);
   });
@@ -163,7 +163,7 @@ describe("handleFindUntranslated", () => {
     mock.from.mockReturnValue(chainable({ data: [], error: null }));
     const result = await handleFindUntranslated(mock as any, {});
     const json = extractJson(result) as any;
-    expect(json.themes).toEqual([]);
+    expect(json.topics).toEqual([]);
     expect(json.categories).toEqual([]);
     expect(json.questions).toEqual([]);
   });

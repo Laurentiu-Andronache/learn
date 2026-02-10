@@ -8,7 +8,7 @@ type QuestionWithCategoryJoin = Question & {
     name_en: string;
     name_es: string;
     color: string | null;
-    theme_id: string;
+    topic_id: string;
   };
 };
 
@@ -33,9 +33,9 @@ export async function getOrderedQuestions(
     .from("questions")
     .select(`
       *,
-      categories!inner(id, name_en, name_es, color, theme_id)
+      categories!inner(id, name_en, name_es, color, topic_id)
     `)
-    .eq("categories.theme_id", topicId)
+    .eq("categories.topic_id", topicId)
     .returns<QuestionWithCategoryJoin[]>();
 
   if (qError || !questions || questions.length === 0) return [];
@@ -67,7 +67,7 @@ export async function getQuizQuestionCount(topicId: string): Promise<number> {
   const supabase = await createClient();
   const { count } = await supabase
     .from("questions")
-    .select("id, categories!inner(theme_id)", { count: "exact", head: true })
-    .eq("categories.theme_id", topicId);
+    .select("id, categories!inner(topic_id)", { count: "exact", head: true })
+    .eq("categories.topic_id", topicId);
   return count ?? 0;
 }

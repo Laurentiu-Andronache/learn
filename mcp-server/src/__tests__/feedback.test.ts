@@ -10,8 +10,8 @@ import {
   handleDeleteFeedback,
   handleListProposedQuestions,
   handleReviewProposedQuestion,
-  handleListThemeProposals,
-  handleReviewThemeProposal,
+  handleListTopicProposals,
+  handleReviewTopicProposal,
 } from "../tools/feedback.js";
 
 function mockSupabase() {
@@ -45,7 +45,7 @@ const SAMPLE_PROPOSED_Q = {
   created_at: "2026-01-01T00:00:00Z",
   reviewed_at: null,
   reviewed_by: null,
-  categories: { name_en: "Bio", name_es: "Bio", theme_id: "t1" },
+  categories: { name_en: "Bio", name_es: "Bio", topic_id: "t1" },
 };
 
 const SAMPLE_PROPOSAL = {
@@ -237,18 +237,18 @@ describe("handleReviewProposedQuestion", () => {
   });
 });
 
-// ─── learn_list_theme_proposals ────────────────────────────────────
-describe("handleListThemeProposals", () => {
+// ─── learn_list_topic_proposals ────────────────────────────────────
+describe("handleListTopicProposals", () => {
   let mock: ReturnType<typeof mockSupabase>;
   beforeEach(() => {
     mock = mockSupabase();
   });
 
-  it("returns theme proposals with defaults", async () => {
+  it("returns topic proposals with defaults", async () => {
     mock.from.mockReturnValue(
       chainable({ data: [SAMPLE_PROPOSAL], error: null })
     );
-    const result = await handleListThemeProposals(mock as any, {});
+    const result = await handleListTopicProposals(mock as any, {});
     const json = extractJson(result) as any;
     expect(json.proposals).toEqual([SAMPLE_PROPOSAL]);
   });
@@ -257,45 +257,45 @@ describe("handleListThemeProposals", () => {
     mock.from.mockReturnValue(
       chainable({ data: [], error: null })
     );
-    await handleListThemeProposals(mock as any, { status: "rejected" });
-    expect(mock.from).toHaveBeenCalledWith("theme_proposals");
+    await handleListTopicProposals(mock as any, { status: "rejected" });
+    expect(mock.from).toHaveBeenCalledWith("topic_proposals");
   });
 
   it("returns error on DB failure", async () => {
     mock.from.mockReturnValue(
       chainable({ data: null, error: { message: "fail" } })
     );
-    const result = await handleListThemeProposals(mock as any, {});
+    const result = await handleListTopicProposals(mock as any, {});
     expect(extractText(result)).toContain("Error");
     expect(result.isError).toBe(true);
   });
 });
 
-// ─── learn_review_theme_proposal ───────────────────────────────────
-describe("handleReviewThemeProposal", () => {
+// ─── learn_review_topic_proposal ───────────────────────────────────
+describe("handleReviewTopicProposal", () => {
   let mock: ReturnType<typeof mockSupabase>;
   beforeEach(() => {
     mock = mockSupabase();
   });
 
-  it("approves a theme proposal", async () => {
+  it("approves a topic proposal", async () => {
     mock.from.mockReturnValue(
       chainable({ data: { ...SAMPLE_PROPOSAL, status: "approved" }, error: null })
     );
-    const result = await handleReviewThemeProposal(mock as any, {
-      theme_proposal_id: "tp1",
+    const result = await handleReviewTopicProposal(mock as any, {
+      topic_proposal_id: "tp1",
       action: "approve",
     });
     const json = extractJson(result) as any;
     expect(json.status).toBe("approved");
   });
 
-  it("rejects a theme proposal with notes", async () => {
+  it("rejects a topic proposal with notes", async () => {
     mock.from.mockReturnValue(
       chainable({ data: { ...SAMPLE_PROPOSAL, status: "rejected", admin_notes: "Duplicate" }, error: null })
     );
-    const result = await handleReviewThemeProposal(mock as any, {
-      theme_proposal_id: "tp1",
+    const result = await handleReviewTopicProposal(mock as any, {
+      topic_proposal_id: "tp1",
       action: "reject",
       admin_notes: "Duplicate",
     });
@@ -312,8 +312,8 @@ describe("handleReviewThemeProposal", () => {
       }
       return chainable({ data: { id: "new-t1", title_en: "Genetics" }, error: null });
     });
-    const result = await handleReviewThemeProposal(mock as any, {
-      theme_proposal_id: "tp1",
+    const result = await handleReviewTopicProposal(mock as any, {
+      topic_proposal_id: "tp1",
       action: "approve",
       create_topic: true,
     });
@@ -326,8 +326,8 @@ describe("handleReviewThemeProposal", () => {
     mock.from.mockReturnValue(
       chainable({ data: null, error: { message: "fail" } })
     );
-    const result = await handleReviewThemeProposal(mock as any, {
-      theme_proposal_id: "tp1",
+    const result = await handleReviewTopicProposal(mock as any, {
+      topic_proposal_id: "tp1",
       action: "approve",
     });
     expect(extractText(result)).toContain("Error");

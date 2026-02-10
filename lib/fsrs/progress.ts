@@ -9,7 +9,7 @@ interface FlashcardWithCategory {
     name_en: string;
     name_es: string;
     color: string | null;
-    theme_id: string;
+    topic_id: string;
   };
 }
 
@@ -56,9 +56,9 @@ export async function getTopicProgress(
     .select(`
       id,
       category_id,
-      categories!inner(id, name_en, name_es, color, theme_id)
+      categories!inner(id, name_en, name_es, color, topic_id)
     `)
-    .eq("categories.theme_id", topicId)
+    .eq("categories.topic_id", topicId)
     .returns<FlashcardWithCategory[]>();
 
   if (!flashcards || flashcards.length === 0) {
@@ -182,17 +182,17 @@ export async function getAllTopicsProgress(
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  // 1. Fetch hidden themes + active themes in parallel
-  const [{ data: hiddenThemes }, activeThemesBase] = await Promise.all([
-    supabase.from("hidden_themes").select("theme_id").eq("user_id", userId),
-    supabase.from("themes").select("id").eq("is_active", true),
+  // 1. Fetch hidden topics + active topics in parallel
+  const [{ data: hiddenTopics }, activeTopicsBase] = await Promise.all([
+    supabase.from("hidden_topics").select("topic_id").eq("user_id", userId),
+    supabase.from("topics").select("id").eq("is_active", true),
   ]);
-  const hiddenIds = new Set((hiddenThemes || []).map((h) => h.theme_id));
-  const themeIds = (activeThemesBase.data || [])
+  const hiddenIds = new Set((hiddenTopics || []).map((h) => h.topic_id));
+  const topicIds = (activeTopicsBase.data || [])
     .map((t) => t.id)
     .filter((id) => !hiddenIds.has(id));
 
-  if (themeIds.length === 0) return [];
+  if (topicIds.length === 0) return [];
 
   // 2. Batch-fetch all flashcards, card states, and suspended in parallel
   const [
@@ -203,9 +203,9 @@ export async function getAllTopicsProgress(
     supabase
       .from("flashcards")
       .select(
-        "id, category_id, categories!inner(id, name_en, name_es, color, theme_id)",
+        "id, category_id, categories!inner(id, name_en, name_es, color, topic_id)",
       )
-      .in("categories.theme_id", themeIds)
+      .in("categories.topic_id", topicIds)
       .returns<FlashcardWithCategory[]>(),
     supabase
       .from("user_card_state")
@@ -223,17 +223,17 @@ export async function getAllTopicsProgress(
   );
   const suspendedSet = new Set((allSuspended ?? []).map((s) => s.flashcard_id));
 
-  // Group flashcards by theme_id
-  const flashcardsByTheme = new Map<string, FlashcardWithCategory[]>();
+  // Group flashcards by topic_id
+  const flashcardsByTopic = new Map<string, FlashcardWithCategory[]>();
   for (const f of allFlashcards ?? []) {
-    const themeId = f.categories.theme_id;
-    if (!flashcardsByTheme.has(themeId)) flashcardsByTheme.set(themeId, []);
-    flashcardsByTheme.get(themeId)!.push(f);
+    const topicId = f.categories.topic_id;
+    if (!flashcardsByTopic.has(topicId)) flashcardsByTopic.set(topicId, []);
+    flashcardsByTopic.get(topicId)!.push(f);
   }
 
-  // 4. Compute progress per theme in-memory
-  return themeIds.map((themeId) => {
-    const flashcards = flashcardsByTheme.get(themeId) || [];
+  // 4. Compute progress per topic in-memory
+  return topicIds.map((topicId) => {
+    const flashcards = flashcardsByTopic.get(topicId) || [];
     const categoryMap = new Map<string, CategoryProgress>();
     let lastStudied: string | null = null;
 
@@ -298,7 +298,7 @@ export async function getAllTopicsProgress(
       total > 0 ? Math.round((masteredCount / total) * 100) : 0;
 
     return {
-      topicId: themeId,
+      topicId,
       total,
       newCount,
       learningCount,

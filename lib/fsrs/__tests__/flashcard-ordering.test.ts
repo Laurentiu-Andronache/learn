@@ -59,7 +59,7 @@ function makeFlashcard(id: string, categoryId = "cat-1") {
       name_en: "Cat",
       name_es: "Gato",
       color: "#fff",
-      theme_id: "theme-1",
+      topic_id: "topic-1",
     },
   };
 }
@@ -125,7 +125,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
     });
     const ids = result.map((of) => of.flashcard.id);
@@ -153,7 +153,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
     });
     const ids = result.map((of) => of.flashcard.id);
@@ -172,7 +172,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
     });
     expect(result[0].flashcard.id).toBe("f-relearn"); // bucket 0 before new
@@ -198,7 +198,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
     });
     const ids = result.map((of) => of.flashcard.id);
@@ -218,7 +218,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       user_card_state: [],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
     });
     expect(result).toHaveLength(1);
@@ -236,7 +236,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       user_card_state: [],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
       limit: 3,
     });
@@ -250,7 +250,7 @@ describe("getOrderedFlashcards – bucket sorting", () => {
       user_card_state: [],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "full",
     });
     expect(result).toEqual([]);
@@ -275,7 +275,7 @@ describe("getOrderedFlashcards – spaced_repetition filter", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "spaced_repetition",
     });
     const ids = result.map((of) => of.flashcard.id);
@@ -295,7 +295,7 @@ describe("getOrderedFlashcards – spaced_repetition filter", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "spaced_repetition",
     });
     const ids = result.map((of) => of.flashcard.id);
@@ -311,7 +311,7 @@ describe("getOrderedFlashcards – spaced_repetition filter", () => {
       user_card_state: [],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "spaced_repetition",
     });
     expect(result).toHaveLength(0);
@@ -328,7 +328,7 @@ describe("getOrderedFlashcards – spaced_repetition filter", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "spaced_repetition",
     });
     expect(result).toHaveLength(0);
@@ -352,7 +352,7 @@ describe("getOrderedFlashcards – quick_review filter", () => {
       ],
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "quick_review",
     });
     expect(result).toHaveLength(1);
@@ -372,7 +372,7 @@ describe("getOrderedFlashcards – quick_review filter", () => {
       ),
     };
 
-    const result = await getOrderedFlashcards("user-1", "theme-1", {
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
       subMode: "quick_review",
     });
     expect(result).toHaveLength(20);
@@ -387,10 +387,10 @@ describe("getSubModeCounts", () => {
 
   it("returns correct counts", async () => {
     const flashcards = [
-      { id: "f-1", categories: { theme_id: "theme-1" } },
-      { id: "f-2", categories: { theme_id: "theme-1" } },
-      { id: "f-3", categories: { theme_id: "theme-1" } },
-      { id: "f-4", categories: { theme_id: "theme-1" } },
+      { id: "f-1", categories: { topic_id: "topic-1" } },
+      { id: "f-2", categories: { topic_id: "topic-1" } },
+      { id: "f-3", categories: { topic_id: "topic-1" } },
+      { id: "f-4", categories: { topic_id: "topic-1" } },
     ];
 
     tableData = {
@@ -407,7 +407,7 @@ describe("getSubModeCounts", () => {
       ],
     };
 
-    const counts = await getSubModeCounts("user-1", "theme-1");
+    const counts = await getSubModeCounts("user-1", "topic-1");
     expect(counts.full).toBe(4); // all active flashcards
     expect(counts.quickReview).toBe(3); // min(3 seen, 20)
     expect(counts.spacedRepetition).toBe(2); // review + relearning, NOT learning
@@ -415,8 +415,8 @@ describe("getSubModeCounts", () => {
 
   it("excludes suspended flashcards from full count", async () => {
     const flashcards = [
-      { id: "f-1", categories: { theme_id: "theme-1" } },
-      { id: "f-2", categories: { theme_id: "theme-1" } },
+      { id: "f-1", categories: { topic_id: "topic-1" } },
+      { id: "f-2", categories: { topic_id: "topic-1" } },
     ];
 
     tableData = {
@@ -425,7 +425,7 @@ describe("getSubModeCounts", () => {
       user_card_state: [],
     };
 
-    const counts = await getSubModeCounts("user-1", "theme-1");
+    const counts = await getSubModeCounts("user-1", "topic-1");
     expect(counts.full).toBe(1);
   });
 
@@ -436,7 +436,7 @@ describe("getSubModeCounts", () => {
       user_card_state: [],
     };
 
-    const counts = await getSubModeCounts("user-1", "theme-1");
+    const counts = await getSubModeCounts("user-1", "topic-1");
     expect(counts).toEqual({ full: 0, quickReview: 0, spacedRepetition: 0 });
   });
 });

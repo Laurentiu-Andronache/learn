@@ -24,7 +24,7 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   const isAdmin = !!adminRow;
 
   const { data: topic } = await supabase
-    .from("themes")
+    .from("topics")
     .select("id, title_en, title_es, intro_text_en, intro_text_es")
     .eq("id", id)
     .single();
