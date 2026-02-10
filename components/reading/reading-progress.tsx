@@ -2,7 +2,9 @@
 
 import { Check, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { updateReadingProgress } from "@/lib/services/user-preferences";
 
@@ -18,6 +20,7 @@ export function ReadingProgressBar({
   initialPercent,
 }: ReadingProgressBarProps) {
   const t = useTranslations("reading");
+  const router = useRouter();
   const [scrollPercent, setScrollPercent] = useState(0);
   const [completed, setCompleted] = useState(initialPercent >= 100);
   const [isPending, startTransition] = useTransition();
@@ -44,8 +47,10 @@ export function ReadingProgressBar({
     startTransition(async () => {
       await updateReadingProgress(userId, topicId, null, 1, 100);
       setCompleted(true);
+      toast.success(t("completed"));
+      setTimeout(() => router.push(`/topics/${topicId}`), 1500);
     });
-  }, [userId, topicId]);
+  }, [userId, topicId, t, router]);
 
   return (
     <>
@@ -78,13 +83,7 @@ export function ReadingProgressBar({
         </div>
       )}
 
-      {/* Completed badge */}
-      {completed && (
-        <div className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full bg-green-500/10 border border-green-500/30 px-3 py-1.5 text-green-600 dark:text-green-400 text-sm">
-          <Check size={14} />
-          {t("completed")}
-        </div>
-      )}
+      {/* Completed badge removed — toast + redirect handles the feedback */}
     </>
   );
 }
