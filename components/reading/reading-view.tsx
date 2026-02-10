@@ -6,6 +6,9 @@ import { useLocale, useTranslations } from "next-intl";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { preprocessTooltips } from "@/lib/markdown/preprocess-tooltips";
+import { GlossaryTerm } from "./glossary-term";
 import { ReadingProgressBar } from "./reading-progress";
 
 interface ReadingViewProps {
@@ -35,10 +38,11 @@ export function ReadingView({
   const locale = useLocale();
 
   const title = locale === "es" ? topic.title_es : topic.title_en;
-  const content =
+  const rawContent =
     locale === "es"
       ? topic.intro_text_es || topic.intro_text_en
       : topic.intro_text_en || topic.intro_text_es;
+  const content = rawContent ? preprocessTooltips(rawContent) : null;
 
   const totalProgress =
     progress.length > 0
@@ -72,9 +76,32 @@ export function ReadingView({
         </div>
 
         {content ? (
-          <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-7 prose-pre:bg-muted prose-pre:border prose-code:text-sm prose-code:before:content-none prose-code:after:content-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-          </article>
+          <TooltipProvider delayDuration={200}>
+            <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-7 prose-pre:bg-muted prose-pre:border prose-code:text-sm prose-code:before:content-none prose-code:after:content-none">
+              <ReactMarkdown
+                remarkPlugins={[remarkGfm]}
+                components={{
+                  a: ({ href, title, children }) => {
+                    if (href === "tooltip" && title) {
+                      return (
+                        <GlossaryTerm
+                          term={String(children)}
+                          explanation={title}
+                        />
+                      );
+                    }
+                    return (
+                      <a href={href} title={title}>
+                        {children}
+                      </a>
+                    );
+                  },
+                }}
+              >
+                {content}
+              </ReactMarkdown>
+            </article>
+          </TooltipProvider>
         ) : (
           <p className="text-muted-foreground text-center py-12">
             {tCommon("noResults")}

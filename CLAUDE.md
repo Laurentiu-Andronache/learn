@@ -100,6 +100,14 @@ Service functions use UI names (e.g. `createTopic`, `hideTopic`, `scheduleFlashc
 | `/admin/quizzes` | Admin quiz question CRUD |
 | `/settings` | User preferences |
 
+## Glossary Tooltips (Reading Mode)
+
+Reading content supports `{{term|explanation}}` syntax for hover/tap tooltips on technical terms. Preprocessed to markdown links, rendered via `GlossaryTerm` (Radix Tooltip). Only annotate first occurrence of each term.
+
+- `lib/markdown/preprocess-tooltips.ts` — converts `{{term|explanation}}` → `[term](tooltip "explanation")`, skips code blocks
+- `components/reading/glossary-term.tsx` — controlled Tooltip (hover + tap toggle), dotted underline + cursor-help
+- `components/reading/reading-view.tsx` — wraps ReactMarkdown in `TooltipProvider`, overrides `a` component to detect `href="tooltip"` links
+
 ## Component/Service Naming
 
 - `components/topics/topic-card.tsx`, `topic-grid.tsx`
@@ -176,8 +184,9 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `lib/services/__tests__/user-preferences.test.ts` | 18 | Suspend flashcards, hide topics, reading progress, profiles |
 | `components/quiz/quiz-logic.test.ts` | 18 | Shuffle, grading, results, retry |
 | `components/flashcards/flashcard-logic.test.ts` | 17 | 4-point grading, stack advance, categories |
+| `lib/markdown/__tests__/preprocess-tooltips.test.ts` | 12 | Tooltip syntax conversion, escaping, code block skipping |
 
-**Total: 163 tests across 14 test files.**
+**Total: 175 tests across 15 test files.**
 
 ## UX Patterns
 
