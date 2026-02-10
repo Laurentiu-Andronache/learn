@@ -99,6 +99,7 @@ export function QuizSession({
         setPhase("results");
       } else {
         setCurrentIndex((prev) => prev + 1);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     [questions, currentIndex, locale, userId, topicId, answers],
@@ -117,6 +118,7 @@ export function QuizSession({
     setAnswers([]);
     sessionStartTime.current = Date.now();
     setPhase("quiz");
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [answers, allQuestions]);
 
   // ── Save partial attempt on stop ──

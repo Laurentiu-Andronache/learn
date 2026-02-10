@@ -85,7 +85,7 @@ export function SessionToolbar({
     try {
       await onStop?.();
     } finally {
-      router.push("/topics");
+      router.push(`/topics/${topicId}`);
     }
   };
 

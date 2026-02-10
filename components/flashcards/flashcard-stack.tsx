@@ -66,6 +66,7 @@ export function FlashcardStack({
         setCurrentIndex(next);
         setIsFlipped(false);
         onIndexChange?.(next);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
   }, [
@@ -92,6 +93,7 @@ export function FlashcardStack({
         setCurrentIndex(prev);
         setIsFlipped(false);
         onIndexChange?.(prev);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
   }, [undoSignal, currentIndex, flashcards, onIndexChange]);
@@ -113,6 +115,7 @@ export function FlashcardStack({
         setCurrentIndex(nextIndex);
         setIsFlipped(false);
         onIndexChange?.(nextIndex);
+        window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
     [currentIndex, flashcards, ratings, onGrade, onComplete, onIndexChange],
