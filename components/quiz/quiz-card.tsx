@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,16 @@ export function QuizCard({
   const [phase, setPhase] = useState<Phase>("answering");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [reportOpen, setReportOpen] = useState(false);
+  const prevQuestionId = useRef(question.id);
+
+  // Reset state synchronously during render when question changes
+  // (useEffect runs after paint, causing a flash of stale feedback on the new question)
+  if (prevQuestionId.current !== question.id) {
+    prevQuestionId.current = question.id;
+    setPhase("answering");
+    setSelectedIndex(null);
+    startTime.current = Date.now();
+  }
 
   const questionText =
     locale === "es" ? question.question_es : question.question_en;
@@ -69,14 +79,6 @@ export function QuizCard({
       return { options: rawOptions, correctIndex: correctIdx };
     }
     return shuffleOptions(rawOptions, correctIdx);
-  }, [question.id]);
-
-  // Reset state when question changes
-  // biome-ignore lint/correctness/useExhaustiveDependencies: reset only on question change
-  useEffect(() => {
-    setPhase("answering");
-    setSelectedIndex(null);
-    startTime.current = Date.now();
   }, [question.id]);
 
   const wasCorrect =
