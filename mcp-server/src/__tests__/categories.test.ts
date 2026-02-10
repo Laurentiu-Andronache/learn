@@ -26,6 +26,7 @@ describe("handleListCategories", () => {
     ];
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null, count: 2 }));
     sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 10 }, { category_id: "c2", count: 5 }], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 3 }, { category_id: "c2", count: 2 }], error: null }));
 
     const result = await handleListCategories(sb as any, {});
     const json = extractJson(result) as any;
@@ -38,6 +39,7 @@ describe("handleListCategories", () => {
     const sb = mockSupabase();
     sb.from.mockReturnValueOnce(chainable({ data: [{ id: "c1", theme_id: "t1", name_en: "X", name_es: "Y", slug: "x" }], error: null, count: 1 }));
     sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 3 }], error: null }));
+    sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 1 }], error: null }));
 
     const result = await handleListCategories(sb as any, { topic_id: "t1" });
     const json = extractJson(result) as any;

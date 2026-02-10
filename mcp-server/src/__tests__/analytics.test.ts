@@ -125,65 +125,80 @@ describe("handleQuestionQualityReport", () => {
   });
 
   it("finds questions with quality issues", async () => {
-    mock.from.mockReturnValue(
-      chainable({
-        data: [
-          {
-            id: "q1",
-            type: "multiple_choice",
-            question_en: "What?",
-            question_es: "¿Qué?",
-            options_en: ["A", "B", "C", "D"],
-            options_es: null,
-            explanation_en: null,
-            explanation_es: null,
-            correct_index: 0,
-            category_id: "c1",
-          },
-          {
-            id: "q2",
-            type: "multiple_choice",
-            question_en: "Who?",
-            question_es: "¿Quién?",
-            options_en: ["A", "B"],
-            options_es: ["A", "B", "C"],
-            explanation_en: "Good",
-            explanation_es: "Bueno",
-            correct_index: 0,
-            category_id: "c1",
-          },
-        ],
-        error: null,
-      })
-    );
+    let callNum = 0;
+    mock.from.mockImplementation((table: string) => {
+      callNum++;
+      if (table === "questions") {
+        return chainable({
+          data: [
+            {
+              id: "q1",
+              type: "multiple_choice",
+              question_en: "What?",
+              question_es: "¿Qué?",
+              options_en: ["A", "B", "C", "D"],
+              options_es: null,
+              explanation_en: null,
+              explanation_es: null,
+              correct_index: 0,
+              category_id: "c1",
+            },
+            {
+              id: "q2",
+              type: "multiple_choice",
+              question_en: "Who?",
+              question_es: "¿Quién?",
+              options_en: ["A", "B"],
+              options_es: ["A", "B", "C"],
+              explanation_en: "Good",
+              explanation_es: "Bueno",
+              correct_index: 0,
+              category_id: "c1",
+            },
+          ],
+          error: null,
+        });
+      }
+      if (table === "flashcards") {
+        return chainable({ data: [], error: null });
+      }
+      return chainable({ data: [], error: null });
+    });
     const result = await handleQuestionQualityReport(mock as any, {});
     const json = extractJson(result) as any;
-    expect(json.issues.length).toBeGreaterThan(0);
+    expect(json.question_issues.length).toBeGreaterThan(0);
   });
 
   it("returns no issues for clean data", async () => {
-    mock.from.mockReturnValue(
-      chainable({
-        data: [
-          {
-            id: "q1",
-            type: "multiple_choice",
-            question_en: "What?",
-            question_es: "¿Qué?",
-            options_en: ["A", "B", "C", "D"],
-            options_es: ["A", "B", "C", "D"],
-            explanation_en: "Good",
-            explanation_es: "Bueno",
-            correct_index: 0,
-            category_id: "c1",
-          },
-        ],
-        error: null,
-      })
-    );
+    let callNum = 0;
+    mock.from.mockImplementation((table: string) => {
+      if (table === "questions") {
+        return chainable({
+          data: [
+            {
+              id: "q1",
+              type: "multiple_choice",
+              question_en: "What?",
+              question_es: "¿Qué?",
+              options_en: ["A", "B", "C", "D"],
+              options_es: ["A", "B", "C", "D"],
+              explanation_en: "Good",
+              explanation_es: "Bueno",
+              correct_index: 0,
+              category_id: "c1",
+            },
+          ],
+          error: null,
+        });
+      }
+      if (table === "flashcards") {
+        return chainable({ data: [], error: null });
+      }
+      return chainable({ data: [], error: null });
+    });
     const result = await handleQuestionQualityReport(mock as any, {});
     const json = extractJson(result) as any;
-    expect(json.issues).toEqual([]);
+    expect(json.question_issues).toEqual([]);
   });
 
   it("returns error on DB failure", async () => {
@@ -196,12 +211,15 @@ describe("handleQuestionQualityReport", () => {
   });
 
   it("filters by topic_id", async () => {
-    mock.from.mockReturnValue(
-      chainable({ data: [], error: null })
-    );
+    mock.from.mockImplementation((table: string) => {
+      if (table === "categories") {
+        return chainable({ data: [{ id: "c1" }], error: null });
+      }
+      return chainable({ data: [], error: null });
+    });
     const result = await handleQuestionQualityReport(mock as any, { topic_id: "t1" });
     const json = extractJson(result) as any;
-    expect(json.issues).toEqual([]);
+    expect(json.question_issues).toEqual([]);
     expect(mock.from).toHaveBeenCalledWith("questions");
   });
 });
@@ -217,9 +235,9 @@ describe("handleUserActivityStats", () => {
     mock.from.mockReturnValue(
       chainable({
         data: [
-          { user_id: "u1", mode: "quiz", was_correct: true, question_id: "q1", reviewed_at: "2026-01-01" },
-          { user_id: "u1", mode: "quiz", was_correct: false, question_id: "q1", reviewed_at: "2026-01-01" },
-          { user_id: "u2", mode: "flashcard", was_correct: true, question_id: "q2", reviewed_at: "2026-01-02" },
+          { user_id: "u1", was_correct: true, flashcard_id: "fc1", reviewed_at: "2026-01-01" },
+          { user_id: "u1", was_correct: false, flashcard_id: "fc1", reviewed_at: "2026-01-01" },
+          { user_id: "u2", was_correct: true, flashcard_id: "fc2", reviewed_at: "2026-01-02" },
         ],
         error: null,
       })
@@ -231,9 +249,16 @@ describe("handleUserActivityStats", () => {
   });
 
   it("filters by topic_id", async () => {
-    mock.from.mockReturnValue(
-      chainable({ data: [], error: null })
-    );
+    mock.from.mockImplementation((table: string) => {
+      if (table === "categories") {
+        return chainable({ data: [{ id: "c1" }], error: null });
+      }
+      if (table === "flashcards") {
+        return chainable({ data: [{ id: "fc1" }], error: null });
+      }
+      // review_logs
+      return chainable({ data: [], error: null });
+    });
     const result = await handleUserActivityStats(mock as any, { topic_id: "t1" });
     const json = extractJson(result) as any;
     expect(json.total_reviews).toBe(0);
@@ -257,21 +282,21 @@ describe("handleUserActivityStats", () => {
     expect(result.isError).toBe(true);
   });
 
-  it("identifies hardest questions", async () => {
+  it("identifies hardest flashcards", async () => {
     mock.from.mockReturnValue(
       chainable({
         data: [
-          { user_id: "u1", mode: "quiz", was_correct: false, question_id: "q1", reviewed_at: "2026-01-01" },
-          { user_id: "u2", mode: "quiz", was_correct: false, question_id: "q1", reviewed_at: "2026-01-02" },
-          { user_id: "u1", mode: "quiz", was_correct: true, question_id: "q2", reviewed_at: "2026-01-01" },
+          { user_id: "u1", was_correct: false, flashcard_id: "fc1", reviewed_at: "2026-01-01" },
+          { user_id: "u2", was_correct: false, flashcard_id: "fc1", reviewed_at: "2026-01-02" },
+          { user_id: "u1", was_correct: true, flashcard_id: "fc2", reviewed_at: "2026-01-01" },
         ],
         error: null,
       })
     );
     const result = await handleUserActivityStats(mock as any, {});
     const json = extractJson(result) as any;
-    expect(json.hardest_questions[0].question_id).toBe("q1");
-    expect(json.hardest_questions[0].incorrect_count).toBe(2);
+    expect(json.hardest_flashcards[0].flashcard_id).toBe("fc1");
+    expect(json.hardest_flashcards[0].incorrect_count).toBe(2);
   });
 });
 
@@ -286,10 +311,10 @@ describe("handleDifficultyAnalysis", () => {
     let callNum = 0;
     mock.from.mockImplementation((table: string) => {
       callNum++;
-      if (table === "questions") {
+      if (table === "flashcards") {
         return chainable({
           data: [
-            { id: "q1", difficulty: 5, question_en: "What?", categories: { theme_id: "t1" } },
+            { id: "fc1", difficulty: 5, question_en: "What?", categories: { theme_id: "t1" } },
           ],
           error: null,
         });
@@ -297,9 +322,9 @@ describe("handleDifficultyAnalysis", () => {
       if (table === "review_logs") {
         return chainable({
           data: [
-            { question_id: "q1", was_correct: true },
-            { question_id: "q1", was_correct: false },
-            { question_id: "q1", was_correct: true },
+            { flashcard_id: "fc1", was_correct: true },
+            { flashcard_id: "fc1", was_correct: false },
+            { flashcard_id: "fc1", was_correct: true },
           ],
           error: null,
         });
@@ -308,9 +333,9 @@ describe("handleDifficultyAnalysis", () => {
     });
     const result = await handleDifficultyAnalysis(mock as any, { topic_id: "t1" });
     const json = extractJson(result) as any;
-    expect(json.questions).toBeDefined();
-    expect(json.questions[0].assigned_difficulty).toBe(5);
-    expect(json.questions[0].actual_correct_pct).toBeCloseTo(66.67, 0);
+    expect(json.flashcards).toBeDefined();
+    expect(json.flashcards[0].assigned_difficulty).toBe(5);
+    expect(json.flashcards[0].actual_correct_pct).toBeCloseTo(66.67, 0);
   });
 
   it("returns error on DB failure", async () => {
@@ -322,12 +347,12 @@ describe("handleDifficultyAnalysis", () => {
     expect(result.isError).toBe(true);
   });
 
-  it("handles questions with no reviews", async () => {
+  it("handles flashcards with no reviews", async () => {
     mock.from.mockImplementation((table: string) => {
-      if (table === "questions") {
+      if (table === "flashcards") {
         return chainable({
           data: [
-            { id: "q1", difficulty: 5, question_en: "What?", categories: { theme_id: "t1" } },
+            { id: "fc1", difficulty: 5, question_en: "What?", categories: { theme_id: "t1" } },
           ],
           error: null,
         });
@@ -339,7 +364,7 @@ describe("handleDifficultyAnalysis", () => {
     });
     const result = await handleDifficultyAnalysis(mock as any, { topic_id: "t1" });
     const json = extractJson(result) as any;
-    expect(json.questions[0].total_reviews).toBe(0);
-    expect(json.questions[0].actual_correct_pct).toBe(null);
+    expect(json.flashcards[0].total_reviews).toBe(0);
+    expect(json.flashcards[0].actual_correct_pct).toBe(null);
   });
 });

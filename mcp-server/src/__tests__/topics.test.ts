@@ -30,6 +30,8 @@ describe("handleListTopics", () => {
     sb.from.mockReturnValueOnce(chainable({ data: [{ theme_id: "t1", count: 3 }, { theme_id: "t2", count: 1 }], error: null }));
     // question counts
     sb.from.mockReturnValueOnce(chainable({ data: [{ theme_id: "t1", count: 20 }, { theme_id: "t2", count: 5 }], error: null }));
+    // flashcard counts
+    sb.from.mockReturnValueOnce(chainable({ data: [{ theme_id: "t1", count: 15 }, { theme_id: "t2", count: 8 }], error: null }));
 
     const result = await handleListTopics(sb as any, {});
     const json = extractJson(result) as any;
@@ -86,6 +88,8 @@ describe("handleGetTopic", () => {
     sb.from.mockReturnValueOnce(chainable({ data: cats, error: null }));
     // question counts per category
     sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 10 }, { category_id: "c2", count: 5 }], error: null }));
+    // flashcard counts per category
+    sb.from.mockReturnValueOnce(chainable({ data: [{ category_id: "c1", count: 4 }, { category_id: "c2", count: 2 }], error: null }));
 
     const result = await handleGetTopic(sb as any, { topic_id: "t1" });
     const json = extractJson(result) as any;

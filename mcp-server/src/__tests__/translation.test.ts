@@ -193,9 +193,9 @@ describe("handleCompareTranslations", () => {
       topic_id: "t1",
     });
     const json = extractJson(result) as any;
-    expect(json).toHaveLength(1);
-    expect(json[0].fields.question.en).toBe("What?");
-    expect(json[0].fields.question.es).toBe("¿Qué?");
+    expect(json.questions).toHaveLength(1);
+    expect(json.questions[0].fields.question.en).toBe("What?");
+    expect(json.questions[0].fields.question.es).toBe("¿Qué?");
   });
 
   it("returns comparisons by question_ids", async () => {
@@ -206,7 +206,7 @@ describe("handleCompareTranslations", () => {
       question_ids: ["q1"],
     });
     const json = extractJson(result) as any;
-    expect(json).toHaveLength(1);
+    expect(json.questions).toHaveLength(1);
   });
 
   it("returns error when neither topic_id nor question_ids provided", async () => {
