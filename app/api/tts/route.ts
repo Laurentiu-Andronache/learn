@@ -17,7 +17,8 @@ const SILENCE_MP3 = Buffer.from(
 );
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+// LEARN_SERVICE_ROLE_KEY avoids collision with ~/.bashrc SUPABASE_SERVICE_ROLE_KEY (Launcher project)
+const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
 
 // In-memory rate limiter: userId → timestamps[]
 const rateLimits = new Map<string, number[]>();

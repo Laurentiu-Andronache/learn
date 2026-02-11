@@ -44,8 +44,7 @@ function TTSBlock({
         "block",
         className,
         "cursor-pointer transition-colors duration-200 rounded-sm",
-        isActive && !ttsPaused && "animate-tts-pulse",
-        isActive && ttsPaused && "bg-[hsl(var(--primary)/0.10)]",
+        isActive && "bg-[hsl(var(--primary)/0.10)]",
       )}
       onClick={(e) => {
         e.stopPropagation();
