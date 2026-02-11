@@ -2,6 +2,7 @@
 
 import {
   AlertTriangle,
+  ArrowLeft,
   BookX,
   Eye,
   Settings,
@@ -9,6 +10,7 @@ import {
   User,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -74,12 +76,16 @@ export function SettingsClient({
 }: SettingsClientProps) {
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
+  const router = useRouter();
   const [suspendedCount, setSuspendedCount] = useState(suspendedFlashcards.length);
   const [hiddenCount, setHiddenCount] = useState(hiddenTopics.length);
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col gap-6 py-8 px-4">
       <div className="flex items-center gap-3">
+        <Button variant="ghost" size="icon" onClick={() => router.back()}>
+          <ArrowLeft size={18} />
+        </Button>
         <Settings size={24} />
         <h1 className="text-2xl font-bold">{t("title")}</h1>
       </div>
