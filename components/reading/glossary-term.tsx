@@ -20,7 +20,7 @@ export function GlossaryTerm({ term, explanation }: GlossaryTermProps) {
       <TooltipTrigger asChild>
         <span
           className="underline decoration-dotted decoration-[hsl(var(--reading-accent)/0.4)] underline-offset-2 cursor-help"
-          onClick={() => setOpen((prev) => !prev)}
+          onClick={(e) => { e.stopPropagation(); setOpen((prev) => !prev); }}
         >
           {term}
         </span>

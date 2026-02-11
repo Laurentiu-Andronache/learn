@@ -109,6 +109,10 @@ export default {
           "0%": { backgroundPosition: "-200% 0" },
           "100%": { backgroundPosition: "200% 0" },
         },
+        "tts-pulse": {
+          "0%, 100%": { backgroundColor: "hsl(var(--primary) / 0.06)" },
+          "50%": { backgroundColor: "hsl(var(--primary) / 0.14)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.3s ease-out",
@@ -116,6 +120,7 @@ export default {
         "glow-pulse": "glow-pulse 2s ease-in-out infinite",
         shake: "shake 0.5s ease-in-out",
         shimmer: "shimmer 2s linear infinite",
+        "tts-pulse": "tts-pulse 1.5s ease-in-out infinite",
       },
     },
   },

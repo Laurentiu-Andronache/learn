@@ -6,6 +6,7 @@ import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useTTS } from "@/hooks/use-tts";
 import type { UserCardState } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import { FlashcardProgress } from "./flashcard-progress";
@@ -53,6 +54,7 @@ export function FlashcardStack({
   const t = useTranslations("feedback");
   const tf = useTranslations("flashcard");
   const tq = useTranslations("quiz");
+  const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
   const prevSkipSignal = useRef(skipSignal ?? 0);
   const prevUndoSignal = useRef(undoSignal ?? 0);
 
@@ -158,6 +160,12 @@ export function FlashcardStack({
     return () => window.removeEventListener("keydown", handler);
   }, [isFlipped, advance, reportOpen]);
 
+  // Stop TTS on card change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: stop TTS whenever card changes
+  useEffect(() => {
+    stopTTS();
+  }, [currentIndex]);
+
   const current = flashcards[currentIndex];
   if (!current) return null;
 
@@ -225,7 +233,7 @@ export function FlashcardStack({
               {answer && (
                 <div>
                   <p className="text-sm font-medium mb-1">{tf("answer")}</p>
-                  <MarkdownContent text={answer} className="text-sm text-muted-foreground" />
+                  <MarkdownContent text={answer} className="text-sm text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
                 </div>
               )}
               {extra && (
@@ -233,7 +241,7 @@ export function FlashcardStack({
                   <p className="text-xs font-medium text-[hsl(var(--flashcard-accent))] mb-1">
                     {tq("learnMore")}
                   </p>
-                  <MarkdownContent text={extra} className="text-xs text-muted-foreground" />
+                  <MarkdownContent text={extra} className="text-xs text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
                 </div>
               )}
             </div>

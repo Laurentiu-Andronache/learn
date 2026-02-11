@@ -359,6 +359,10 @@
     "questionDeleted": "Item deleted.",
     "questionUpdated": "Item updated."
   },
+  "tts": {
+    "error": "Could not play audio. Please try again.",
+    "rateLimited": "Too many requests. Please wait a moment."
+  },
   "footer": {
     "tagline": "Science-backed learning"
   },

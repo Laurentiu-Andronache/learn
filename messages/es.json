@@ -359,6 +359,10 @@
     "questionDeleted": "Elemento eliminado.",
     "questionUpdated": "Elemento actualizado."
   },
+  "tts": {
+    "error": "No se pudo reproducir el audio. Inténtalo de nuevo.",
+    "rateLimited": "Demasiadas solicitudes. Espera un momento."
+  },
   "footer": {
     "tagline": "Aprendizaje respaldado por la ciencia"
   },

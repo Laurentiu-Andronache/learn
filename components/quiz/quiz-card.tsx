@@ -1,12 +1,13 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useTTS } from "@/hooks/use-tts";
 import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export function QuizCard({
   const t = useTranslations("quiz");
   const tCommon = useTranslations("common");
   const tFeedback = useTranslations("feedback");
+  const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
   const startTime = useRef(Date.now());
 
   const [phase, setPhase] = useState<Phase>("answering");
@@ -62,6 +64,12 @@ export function QuizCard({
     setSelectedIndex(null);
     startTime.current = Date.now();
   }
+
+  // Stop TTS on question change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: stop TTS whenever question changes
+  useEffect(() => {
+    stopTTS();
+  }, [question.id]);
 
   const questionText =
     locale === "es" ? question.question_es : question.question_en;
@@ -214,7 +222,7 @@ export function QuizCard({
             {/* Explanation */}
             {explanation && (
               <div className="rounded-lg bg-muted p-4">
-                <MarkdownContent text={explanation} className="text-sm leading-relaxed" />
+                <MarkdownContent text={explanation} className="text-sm leading-relaxed" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
               </div>
             )}
 
@@ -225,7 +233,7 @@ export function QuizCard({
                   {t("learnMore")}
                 </summary>
                 <div className="px-4 pb-3 text-sm leading-relaxed">
-                  <MarkdownContent text={extra} className="text-sm leading-relaxed" />
+                  <MarkdownContent text={extra} className="text-sm leading-relaxed" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
                 </div>
               </details>
             )}
