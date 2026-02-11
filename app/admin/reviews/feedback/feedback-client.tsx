@@ -22,6 +22,17 @@ type EditTarget =
   | { type: "question"; questionId: string }
   | { type: "reading"; topicId: string };
 
+/** Shorten URL for display: strip origin, collapse UUIDs to "..." */
+function shortenUrl(url: string): string {
+  try {
+    const u = new URL(url);
+    // Replace UUIDs with "..."
+    return u.pathname.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "...") + u.search;
+  } catch {
+    return url;
+  }
+}
+
 function parseStudyUrl(
   url: string | null,
 ): { topicId: string; mode: string } | null {
@@ -136,9 +147,15 @@ export function FeedbackClient({ items }: { items: FeedbackItem[] }) {
               )}
               <p className="text-sm">{item.message}</p>
               {item.url && (
-                <p className="text-xs text-muted-foreground truncate">
-                  Page: {item.url}
-                </p>
+                <a
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-muted-foreground block truncate hover:text-primary hover:underline"
+                  title={item.url}
+                >
+                  Page: {shortenUrl(item.url)}
+                </a>
               )}
             </div>
           );
