@@ -1,49 +1,16 @@
-import Link from "next/link";
 import { getTranslations } from "next-intl/server";
+import { CollapsibleFooter } from "@/components/collapsible-footer";
 
 export async function Footer() {
   const tNav = await getTranslations("nav");
   const tFooter = await getTranslations("footer");
 
   return (
-    <footer className="border-t border-border/50 py-6">
-      <div className="container flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-muted-foreground pr-28">
-        <p className="ml-4">
-          <span className="font-display">LEARN</span> — {tFooter("tagline")}
-        </p>
-        <div className="flex items-center gap-4">
-          <Link
-            href="/about"
-            className="hover:text-primary transition-colors"
-          >
-            {tNav("about")}
-          </Link>
-          <a
-            href="https://launcher.finance"
-            target="_blank"
-            rel="noopener"
-            className="hover:text-primary transition-colors"
-          >
-            Launcher
-          </a>
-          <a
-            href="https://x.com/laur_science"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-primary transition-colors"
-            aria-label="X (Twitter)"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4 fill-current"
-              aria-hidden="true"
-            >
-              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
-            <span className="sr-only">X (Twitter)</span>
-          </a>
-        </div>
-      </div>
-    </footer>
+    <CollapsibleFooter
+      tagline={tFooter("tagline")}
+      aboutLabel={tNav("about")}
+      showLabel={tFooter("showFooter")}
+      hideLabel={tFooter("hideFooter")}
+    />
   );
 }

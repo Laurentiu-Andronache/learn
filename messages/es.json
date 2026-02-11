@@ -245,7 +245,11 @@
     "showIntervals": "Mostrar Previsualización de Intervalos",
     "showIntervalsDescription": "Mostrar el próximo tiempo de repaso en los botones de calificación.",
     "resetDefaults": "Restablecer Valores Predeterminados",
-    "saved": "Ajustes guardados."
+    "saved": "Ajustes guardados.",
+    "appearance": "Apariencia",
+    "fontSize": "Tamaño de Texto",
+    "fontSizeDescription": "Ajusta el tamaño base del texto en modos de estudio y menús.",
+    "fontSizePx": "{size}px"
   },
   "admin": {
     "title": "Panel de Administración",
@@ -370,7 +374,9 @@
     "rateLimited": "Demasiadas solicitudes. Espera un momento."
   },
   "footer": {
-    "tagline": "Aprendizaje respaldado por la ciencia"
+    "tagline": "Aprendizaje respaldado por la ciencia",
+    "showFooter": "Mostrar pie de página",
+    "hideFooter": "Ocultar pie de página"
   },
   "about": {
     "title": "Acerca de LEARN",

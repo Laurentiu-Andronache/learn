@@ -245,7 +245,11 @@
     "showIntervals": "Show Interval Previews",
     "showIntervalsDescription": "Display next review time on rating buttons.",
     "resetDefaults": "Reset to Defaults",
-    "saved": "Settings saved."
+    "saved": "Settings saved.",
+    "appearance": "Appearance",
+    "fontSize": "Text Size",
+    "fontSizeDescription": "Adjust the base text size across study modes and menus.",
+    "fontSizePx": "{size}px"
   },
   "admin": {
     "title": "Admin Panel",
@@ -370,7 +374,9 @@
     "rateLimited": "Too many requests. Please wait a moment."
   },
   "footer": {
-    "tagline": "Science-backed learning"
+    "tagline": "Science-backed learning",
+    "showFooter": "Show footer",
+    "hideFooter": "Hide footer"
   },
   "about": {
     "title": "About LEARN",
