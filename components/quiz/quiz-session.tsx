@@ -11,7 +11,7 @@ import { QuizCard } from "./quiz-card";
 import { QuizProgress } from "./quiz-progress";
 import { type QuizAnswer, QuizResults } from "./quiz-results";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// --- Types ---
 
 export interface QuizQuestionData {
   question: Question;
@@ -31,7 +31,7 @@ export interface QuizSessionProps {
 
 type SessionPhase = "quiz" | "results";
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// --- Component ---
 
 export function QuizSession({
   userId,
@@ -50,7 +50,7 @@ export function QuizSession({
   const sessionStartTime = useRef(Date.now());
   const [saving, setSaving] = useState(false);
 
-  // ── Answer handling (local only — no server calls during quiz) ──
+  // Answer handling (local only — no server calls during quiz)
   const handleAnswer = useCallback(
     (wasCorrect: boolean | null, timeMs: number) => {
       const q = questions[currentIndex];
@@ -105,7 +105,7 @@ export function QuizSession({
     [questions, currentIndex, locale, userId, topicId, answers],
   );
 
-  // ── Retry failed questions ──
+  // Retry failed questions
   const handleRetryFailed = useCallback(() => {
     const missedIds = new Set(
       answers.filter((a) => !a.wasCorrect).map((a) => a.questionId),
@@ -121,7 +121,7 @@ export function QuizSession({
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [answers, allQuestions]);
 
-  // ── Save partial attempt on stop ──
+  // Save partial attempt on stop
   const savePartialAttempt = useCallback(async () => {
     if (answers.length === 0) return;
     const score = answers.filter((a) => a.wasCorrect).length;
@@ -141,7 +141,7 @@ export function QuizSession({
     }
   }, [answers, userId, topicId]);
 
-  // ── Delete question (admin) ──
+  // Delete question (admin)
   const handleDeleteQuestion = useCallback(() => {
     const q = questions[currentIndex];
     deleteQuestion(q.question.id).catch(() => {});
@@ -154,7 +154,7 @@ export function QuizSession({
     }
   }, [questions, currentIndex, ts]);
 
-  // ── Render ──
+  // Render
 
   if (phase === "results") {
     return (
@@ -186,7 +186,7 @@ export function QuizSession({
     locale === "es" ? currentQ.categoryNameEs : currentQ.categoryNameEn;
 
   return (
-    <div className="w-full pb-16">
+    <div className="w-full pb-16 bg-[radial-gradient(ellipse_at_top,hsl(var(--quiz-accent)/0.04)_0%,transparent_50%)]">
       <QuizProgress
         current={currentIndex + 1}
         total={questions.length}

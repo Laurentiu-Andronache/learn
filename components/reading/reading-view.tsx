@@ -46,14 +46,14 @@ export function ReadingView({
       : 0;
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,hsl(var(--reading-accent)/0.04)_0%,transparent_50%)]">
       <ReadingProgressBar
         userId={userId}
         topicId={topic.id}
         initialPercent={totalProgress}
       />
 
-      <div className="max-w-[680px] mx-auto px-4 py-8">
+      <div className="max-w-[680px] mx-auto px-4 py-8 animate-fade-up">
         <div className="flex items-center gap-3 mb-8">
           <Button variant="ghost" size="icon-sm" asChild>
             <Link href={`/topics/${topic.id}`}>
@@ -71,7 +71,7 @@ export function ReadingView({
         </div>
 
         {rawContent ? (
-          <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-7 prose-pre:bg-muted prose-pre:border prose-code:text-sm prose-code:before:content-none prose-code:after:content-none">
+          <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-7 prose-pre:bg-muted prose-pre:border prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-a:text-reading-accent">
             <MarkdownContent text={rawContent} />
           </article>
         ) : (

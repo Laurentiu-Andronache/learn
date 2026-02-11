@@ -15,6 +15,20 @@ const badgeVariants = cva(
         destructive:
           "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
         outline: "text-foreground",
+        flashcard:
+          "border-[hsl(var(--flashcard-accent)/0.3)] bg-[hsl(var(--flashcard-accent)/0.1)] text-[hsl(var(--flashcard-accent))]",
+        quiz:
+          "border-[hsl(var(--quiz-accent)/0.3)] bg-[hsl(var(--quiz-accent)/0.1)] text-[hsl(var(--quiz-accent))]",
+        reading:
+          "border-[hsl(var(--reading-accent)/0.3)] bg-[hsl(var(--reading-accent)/0.1)] text-[hsl(var(--reading-accent))]",
+        again:
+          "border-[hsl(var(--rating-again)/0.3)] bg-[hsl(var(--rating-again)/0.1)] text-[hsl(var(--rating-again))]",
+        hard:
+          "border-[hsl(var(--rating-hard)/0.3)] bg-[hsl(var(--rating-hard)/0.1)] text-[hsl(var(--rating-hard))]",
+        good:
+          "border-[hsl(var(--rating-good)/0.3)] bg-[hsl(var(--rating-good)/0.1)] text-[hsl(var(--rating-good))]",
+        easy:
+          "border-[hsl(var(--rating-easy)/0.3)] bg-[hsl(var(--rating-easy)/0.1)] text-[hsl(var(--rating-easy))]",
       },
     },
     defaultVariants: {

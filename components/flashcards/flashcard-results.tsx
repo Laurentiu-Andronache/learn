@@ -3,8 +3,11 @@
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { useEffect } from "react";
+import { AnimatedScore } from "@/components/shared/animated-score";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { triggerCelebration } from "@/lib/confetti";
 
 interface CategoryBreakdown {
   name: string;
@@ -37,15 +40,20 @@ export function FlashcardResults({
   const recallPercent =
     total > 0 ? Math.round(((good + easy) / total) * 100) : 0;
 
+  useEffect(() => {
+    const cleanup = triggerCelebration("flashcard", recallPercent);
+    return cleanup;
+  }, [recallPercent]);
+
   return (
-    <div className="w-full max-w-lg mx-auto px-4 py-8 space-y-6">
+    <div className="w-full max-w-lg mx-auto px-4 py-8 space-y-6 animate-fade-up">
       <h1 className="text-2xl font-bold text-center">{t("title")}</h1>
 
       {/* Score card */}
       <Card>
         <CardContent className="pt-6 space-y-4">
           <div className="text-center space-y-2">
-            <p className="text-5xl font-bold">{recallPercent}%</p>
+            <AnimatedScore value={recallPercent} showRing />
             <p className="text-sm text-muted-foreground">{t("recallRate")}</p>
           </div>
 
@@ -54,25 +62,25 @@ export function FlashcardResults({
             <div className="flex h-3 rounded-full overflow-hidden">
               {again > 0 && (
                 <div
-                  className="bg-red-500"
+                  className="bg-rating-again"
                   style={{ width: `${(again / total) * 100}%` }}
                 />
               )}
               {hard > 0 && (
                 <div
-                  className="bg-amber-500"
+                  className="bg-rating-hard"
                   style={{ width: `${(hard / total) * 100}%` }}
                 />
               )}
               {good > 0 && (
                 <div
-                  className="bg-green-500"
+                  className="bg-rating-good"
                   style={{ width: `${(good / total) * 100}%` }}
                 />
               )}
               {easy > 0 && (
                 <div
-                  className="bg-blue-500"
+                  className="bg-rating-easy"
                   style={{ width: `${(easy / total) * 100}%` }}
                 />
               )}
@@ -82,19 +90,19 @@ export function FlashcardResults({
           {/* 4-rating counts */}
           <div className="grid grid-cols-4 gap-2 text-center">
             <div>
-              <p className="text-lg font-semibold text-red-500">{again}</p>
+              <p className="text-lg font-semibold text-rating-again">{again}</p>
               <p className="text-xs text-muted-foreground">{t("again")}</p>
             </div>
             <div>
-              <p className="text-lg font-semibold text-amber-500">{hard}</p>
+              <p className="text-lg font-semibold text-rating-hard">{hard}</p>
               <p className="text-xs text-muted-foreground">{t("hard")}</p>
             </div>
             <div>
-              <p className="text-lg font-semibold text-green-500">{good}</p>
+              <p className="text-lg font-semibold text-rating-good">{good}</p>
               <p className="text-xs text-muted-foreground">{t("good")}</p>
             </div>
             <div>
-              <p className="text-lg font-semibold text-blue-500">{easy}</p>
+              <p className="text-lg font-semibold text-rating-easy">{easy}</p>
               <p className="text-xs text-muted-foreground">{t("easy")}</p>
             </div>
           </div>
@@ -124,25 +132,25 @@ export function FlashcardResults({
                     <div className="flex h-1.5 rounded-full overflow-hidden">
                       {cat.again > 0 && (
                         <div
-                          className="bg-red-500"
+                          className="bg-rating-again"
                           style={{ width: `${(cat.again / catTotal) * 100}%` }}
                         />
                       )}
                       {cat.hard > 0 && (
                         <div
-                          className="bg-amber-500"
+                          className="bg-rating-hard"
                           style={{ width: `${(cat.hard / catTotal) * 100}%` }}
                         />
                       )}
                       {cat.good > 0 && (
                         <div
-                          className="bg-green-500"
+                          className="bg-rating-good"
                           style={{ width: `${(cat.good / catTotal) * 100}%` }}
                         />
                       )}
                       {cat.easy > 0 && (
                         <div
-                          className="bg-blue-500"
+                          className="bg-rating-easy"
                           style={{ width: `${(cat.easy / catTotal) * 100}%` }}
                         />
                       )}

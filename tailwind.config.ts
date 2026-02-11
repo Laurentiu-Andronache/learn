@@ -10,6 +10,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        display: ["var(--font-display)", "serif"],
+        sans: ["var(--font-body)", "sans-serif"],
+      },
       colors: {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
@@ -51,11 +55,67 @@ export default {
           "4": "hsl(var(--chart-4))",
           "5": "hsl(var(--chart-5))",
         },
+        flashcard: {
+          accent: "hsl(var(--flashcard-accent))",
+        },
+        quiz: {
+          accent: "hsl(var(--quiz-accent))",
+        },
+        reading: {
+          accent: "hsl(var(--reading-accent))",
+        },
+        rating: {
+          again: "hsl(var(--rating-again))",
+          hard: "hsl(var(--rating-hard))",
+          good: "hsl(var(--rating-good))",
+          easy: "hsl(var(--rating-easy))",
+        },
+        progress: {
+          mastered: "hsl(var(--progress-mastered))",
+          review: "hsl(var(--progress-review))",
+          learning: "hsl(var(--progress-learning))",
+          new: "hsl(var(--progress-new))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
+      },
+      boxShadow: {
+        "glow-sm": "0 0 10px -3px hsl(var(--primary) / 0.3)",
+        glow: "0 0 20px -5px hsl(var(--primary) / 0.35)",
+        "glow-lg": "0 0 30px -5px hsl(var(--primary) / 0.4)",
+      },
+      keyframes: {
+        "fade-up": {
+          "0%": { opacity: "0", transform: "translateY(10px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.95)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "glow-pulse": {
+          "0%, 100%": { boxShadow: "0 0 10px -3px hsl(var(--primary) / 0.3)" },
+          "50%": { boxShadow: "0 0 20px -3px hsl(var(--primary) / 0.5)" },
+        },
+        shake: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "10%, 30%, 50%, 70%, 90%": { transform: "translateX(-3px)" },
+          "20%, 40%, 60%, 80%": { transform: "translateX(3px)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+      },
+      animation: {
+        "fade-up": "fade-up 0.3s ease-out",
+        "scale-in": "scale-in 0.2s ease-out",
+        "glow-pulse": "glow-pulse 2s ease-in-out infinite",
+        shake: "shake 0.5s ease-in-out",
+        shimmer: "shimmer 2s linear infinite",
       },
     },
   },

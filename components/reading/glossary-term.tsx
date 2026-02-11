@@ -19,7 +19,7 @@ export function GlossaryTerm({ term, explanation }: GlossaryTermProps) {
     <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
         <span
-          className="underline decoration-dotted decoration-muted-foreground/50 underline-offset-2 cursor-help"
+          className="underline decoration-dotted decoration-[hsl(var(--reading-accent)/0.4)] underline-offset-2 cursor-help"
           onClick={() => setOpen((prev) => !prev)}
         >
           {term}

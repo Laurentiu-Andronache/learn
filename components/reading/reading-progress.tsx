@@ -57,14 +57,14 @@ export function ReadingProgressBar({
       {/* Top scroll progress bar */}
       <div className="fixed top-0 left-0 right-0 z-50 h-1 bg-muted">
         <div
-          className="h-full bg-primary transition-[width] duration-150"
+          className="h-full bg-gradient-to-r from-reading-accent/80 to-reading-accent transition-[width] duration-150"
           style={{ width: `${scrollPercent}%` }}
         />
       </div>
 
       {/* Bottom "Mark as Read" bar */}
       {!completed && scrollPercent > 80 && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border/50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 shadow-[0_-4px_20px_-5px_hsl(var(--reading-accent)/0.1)]">
           <div className="max-w-[680px] mx-auto px-4 py-3 flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
               {scrollPercent}%
@@ -82,8 +82,6 @@ export function ReadingProgressBar({
           </div>
         </div>
       )}
-
-      {/* Completed badge removed — toast + redirect handles the feedback */}
     </>
   );
 }

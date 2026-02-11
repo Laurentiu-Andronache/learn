@@ -29,10 +29,10 @@ export function FlashcardProgress({
           {current}/{total}
         </span>
         <div className="flex gap-2">
-          {again > 0 && <span className="text-red-500">{again}</span>}
-          {hard > 0 && <span className="text-amber-500">{hard}</span>}
-          {good > 0 && <span className="text-green-500">{good}</span>}
-          {easy > 0 && <span className="text-blue-500">{easy}</span>}
+          {again > 0 && <span className="text-rating-again">{again}</span>}
+          {hard > 0 && <span className="text-rating-hard">{hard}</span>}
+          {good > 0 && <span className="text-rating-good">{good}</span>}
+          {easy > 0 && <span className="text-rating-easy">{easy}</span>}
         </div>
       </div>
     </div>

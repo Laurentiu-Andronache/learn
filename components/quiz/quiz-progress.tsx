@@ -39,7 +39,7 @@ export function QuizProgress({
   const timeStr = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b pb-3 pt-2 px-1 space-y-2">
+    <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b border-border/50 pb-3 pt-2 px-1 space-y-2">
       <div className="flex items-center justify-between gap-x-2 gap-y-1 flex-wrap">
         <div className="flex items-center gap-2 min-w-0">
           {categoryName && (

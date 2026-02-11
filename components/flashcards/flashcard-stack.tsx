@@ -214,13 +214,13 @@ export function FlashcardStack({
           )}
         >
           {/* Front */}
-          <Card className="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center">
+          <Card className="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center border-[hsl(var(--flashcard-accent)/0.2)]">
             <p className="text-lg font-semibold mb-4">{questionText}</p>
             <p className="text-sm text-muted-foreground">{tf("tapToReveal")}</p>
           </Card>
 
           {/* Back */}
-          <Card className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto">
+          <Card className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto border-[hsl(var(--flashcard-accent)/0.2)]">
             <div className="flex-1 space-y-3">
               {answer && (
                 <div>
@@ -229,8 +229,8 @@ export function FlashcardStack({
                 </div>
               )}
               {extra && (
-                <div className="rounded-lg bg-blue-500/10 border border-blue-500/20 p-3">
-                  <p className="text-xs font-medium text-blue-600 dark:text-blue-400 mb-1">
+                <div className="rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)] border border-[hsl(var(--flashcard-accent)/0.2)] p-3">
+                  <p className="text-xs font-medium text-[hsl(var(--flashcard-accent))] mb-1">
                     {tq("learnMore")}
                   </p>
                   <MarkdownContent text={extra} className="text-xs text-muted-foreground" />
@@ -263,7 +263,7 @@ export function FlashcardStack({
                   }
                 }}
               >
-                ⊘ {tq("suspend")}
+                &#8856; {tq("suspend")}
               </Button>
             </div>
           </Card>
@@ -283,14 +283,14 @@ export function FlashcardStack({
 
       {/* 4-point FSRS rating buttons - only show when flipped */}
       {isFlipped && (
-        <div className="space-y-2">
+        <div className="space-y-2 animate-fade-up">
           <p className="text-xs text-center text-muted-foreground">
             {tf("ratingHint")}
           </p>
           <div className="grid grid-cols-4 gap-2">
             <Button
               variant="outline"
-              className="flex-col h-auto py-2 border-red-500/40 text-red-600 hover:bg-red-500/10 hover:text-red-600"
+              className="flex-col h-auto py-2 border-rating-again/40 text-rating-again hover:bg-rating-again/10 hover:text-rating-again hover:shadow-[0_0_10px_-3px_hsl(var(--rating-again)/0.4)]"
               onClick={() => advance(1)}
             >
               <span className="text-sm font-medium">{tf("again")}</span>
@@ -302,7 +302,7 @@ export function FlashcardStack({
             </Button>
             <Button
               variant="outline"
-              className="flex-col h-auto py-2 border-amber-500/40 text-amber-600 hover:bg-amber-500/10 hover:text-amber-600"
+              className="flex-col h-auto py-2 border-rating-hard/40 text-rating-hard hover:bg-rating-hard/10 hover:text-rating-hard hover:shadow-[0_0_10px_-3px_hsl(var(--rating-hard)/0.4)]"
               onClick={() => advance(2)}
             >
               <span className="text-sm font-medium">{tf("hard")}</span>
@@ -314,7 +314,7 @@ export function FlashcardStack({
             </Button>
             <Button
               variant="outline"
-              className="flex-col h-auto py-2 border-green-500/40 text-green-600 hover:bg-green-500/10 hover:text-green-600"
+              className="flex-col h-auto py-2 border-rating-good/40 text-rating-good hover:bg-rating-good/10 hover:text-rating-good hover:shadow-[0_0_10px_-3px_hsl(var(--rating-good)/0.4)]"
               onClick={() => advance(3)}
             >
               <span className="text-sm font-medium">{tf("good")}</span>
@@ -326,7 +326,7 @@ export function FlashcardStack({
             </Button>
             <Button
               variant="outline"
-              className="flex-col h-auto py-2 border-blue-500/40 text-blue-600 hover:bg-blue-500/10 hover:text-blue-600"
+              className="flex-col h-auto py-2 border-rating-easy/40 text-rating-easy hover:bg-rating-easy/10 hover:text-rating-easy hover:shadow-[0_0_10px_-3px_hsl(var(--rating-easy)/0.4)]"
               onClick={() => advance(4)}
             >
               <span className="text-sm font-medium">{tf("easy")}</span>

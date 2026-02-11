@@ -41,14 +41,19 @@ export function TopicGrid({
 
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {topics.map((topic) => (
-        <TopicCard
+      {topics.map((topic, index) => (
+        <div
           key={topic.id}
-          topic={topic}
-          progress={progressMap.get(topic.id) || null}
-          userId={userId}
-          locale={locale}
-        />
+          className="animate-fade-up"
+          style={{ animationDelay: `${index * 0.05}s`, animationFillMode: "backwards" }}
+        >
+          <TopicCard
+            topic={topic}
+            progress={progressMap.get(topic.id) || null}
+            userId={userId}
+            locale={locale}
+          />
+        </div>
       ))}
     </div>
   );

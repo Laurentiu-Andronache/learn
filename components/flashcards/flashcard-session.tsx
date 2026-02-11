@@ -206,7 +206,7 @@ export function FlashcardSession({
   const currentFc = flashcards[currentIdx];
 
   return (
-    <div className="w-full max-w-lg mx-auto px-4 py-8 pb-16 space-y-6">
+    <div className="w-full max-w-lg mx-auto px-4 py-8 pb-16 space-y-6 bg-[radial-gradient(ellipse_at_top,hsl(var(--flashcard-accent)/0.04)_0%,transparent_50%)]">
       <h1 className="text-xl font-bold text-center">
         {locale === "es" ? topicTitleEs : topicTitleEn}
       </h1>

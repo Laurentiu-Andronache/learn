@@ -1,11 +1,12 @@
 "use client";
 
-import confetti from "canvas-confetti";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
+import { AnimatedScore } from "@/components/shared/animated-score";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { triggerCelebration } from "@/lib/confetti";
 import { cn } from "@/lib/utils";
 
 export interface QuizAnswer {
@@ -65,34 +66,17 @@ export function QuizResults({
 
   // Confetti burst on good score
   useEffect(() => {
-    if (percent < 80) return;
-
-    let rafId: number | null = null;
-    const end = Date.now() + 1500;
-    const frame = () => {
-      confetti({
-        particleCount: 4,
-        angle: 60 + Math.random() * 60,
-        spread: 55,
-        origin: { x: Math.random(), y: Math.random() * 0.4 },
-      });
-      if (Date.now() < end) rafId = requestAnimationFrame(frame);
-    };
-    frame();
-
-    return () => {
-      if (rafId !== null) cancelAnimationFrame(rafId);
-      confetti.reset();
-    };
+    const cleanup = triggerCelebration("quiz", percent);
+    return cleanup;
   }, [percent]);
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 py-8 px-4">
+    <div className="max-w-2xl mx-auto space-y-6 py-8 px-4 animate-fade-up">
       {/* Score card */}
       <Card>
         <CardContent className="pt-6 text-center space-y-2">
           {percent >= 80 && <p className="text-2xl">{t("congratulations")}</p>}
-          <p className="text-5xl font-bold tabular-nums">{percent}%</p>
+          <AnimatedScore value={percent} showRing />
           <p className="text-muted-foreground">
             {t("score")}: {correct}/{total}
           </p>
@@ -151,18 +135,18 @@ export function QuizResults({
               key={a.questionId}
               className={cn(
                 "rounded-lg border p-3 space-y-1",
-                a.wasCorrect && "border-green-500/30 bg-green-500/5",
-                !a.wasCorrect && !a.wasIdk && "border-red-500/30 bg-red-500/5",
-                a.wasIdk && "border-yellow-500/30 bg-yellow-500/5",
+                a.wasCorrect && "border-rating-good/30 bg-rating-good/5",
+                !a.wasCorrect && !a.wasIdk && "border-rating-again/30 bg-rating-again/5",
+                a.wasIdk && "border-rating-hard/30 bg-rating-hard/5",
               )}
             >
               <div className="flex items-start gap-2">
                 <span
                   className={cn(
                     "text-sm font-bold shrink-0 mt-0.5",
-                    a.wasCorrect && "text-green-600",
-                    !a.wasCorrect && !a.wasIdk && "text-red-600",
-                    a.wasIdk && "text-yellow-600",
+                    a.wasCorrect && "text-rating-good",
+                    !a.wasCorrect && !a.wasIdk && "text-rating-again",
+                    a.wasIdk && "text-rating-hard",
                   )}
                 >
                   {a.wasCorrect ? "\u2713" : a.wasIdk ? "?" : "\u2717"}
@@ -175,16 +159,16 @@ export function QuizResults({
                   {!a.wasCorrect && (
                     <div className="mt-1 text-xs space-y-0.5">
                       {a.selectedIndex !== null && (
-                        <p className="text-red-600 dark:text-red-400">
+                        <p className="text-rating-again">
                           {t("yourAnswer")}: {a.options[a.selectedIndex]}
                         </p>
                       )}
                       {a.wasIdk && (
-                        <p className="text-yellow-600 dark:text-yellow-400 italic">
+                        <p className="text-rating-hard italic">
                           Skipped
                         </p>
                       )}
-                      <p className="text-green-600 dark:text-green-400">
+                      <p className="text-rating-good">
                         {t("correctAnswer")}: {a.options[a.correctIndex]}
                       </p>
                     </div>

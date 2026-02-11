@@ -111,7 +111,7 @@ export default async function TopicDetailPage({ params }: Props) {
       <div>
         <Link
           href="/topics"
-          className="text-sm text-muted-foreground hover:text-foreground"
+          className="text-sm text-muted-foreground hover:text-primary transition-colors"
         >{`\u2190 ${tTopics("backToTopics")}`}</Link>
         <div className="flex items-center gap-3 mt-2">
           <span className="text-4xl">{topic.icon}</span>
@@ -129,10 +129,10 @@ export default async function TopicDetailPage({ params }: Props) {
 
       {/* Fully Memorized */}
       {progress.fullyMemorized && (
-        <Card className="border-green-500/50 bg-green-500/5">
+        <Card className="border-progress-mastered/50 bg-progress-mastered/5">
           <CardContent className="pt-6 text-center space-y-2">
-            <p className="text-2xl">🏆</p>
-            <p className="font-semibold text-green-600">
+            <p className="text-2xl">&#127942;</p>
+            <p className="font-semibold text-progress-mastered">
               {tTopics("fullyMemorized")}
             </p>
             <p className="text-sm text-muted-foreground">
@@ -157,19 +157,19 @@ export default async function TopicDetailPage({ params }: Props) {
             {progress.total > 0 && (
               <>
                 <div
-                  className="bg-green-500"
+                  className="bg-progress-mastered"
                   style={{
                     width: `${(progress.masteredCount / progress.total) * 100}%`,
                   }}
                 />
                 <div
-                  className="bg-blue-500"
+                  className="bg-progress-review"
                   style={{
                     width: `${(progress.reviewCount / progress.total) * 100}%`,
                   }}
                 />
                 <div
-                  className="bg-yellow-500"
+                  className="bg-progress-learning"
                   style={{
                     width: `${(progress.learningCount / progress.total) * 100}%`,
                   }}
@@ -179,7 +179,7 @@ export default async function TopicDetailPage({ params }: Props) {
           </div>
           <div className="grid grid-cols-4 gap-2 text-center text-xs">
             <div>
-              <span className="block text-lg font-semibold">
+              <span className="block text-lg font-display font-semibold">
                 {progress.newCount}
               </span>
               <span className="text-muted-foreground">
@@ -187,7 +187,7 @@ export default async function TopicDetailPage({ params }: Props) {
               </span>
             </div>
             <div>
-              <span className="block text-lg font-semibold text-yellow-600">
+              <span className="block text-lg font-display font-semibold text-progress-learning">
                 {progress.learningCount}
               </span>
               <span className="text-muted-foreground">
@@ -195,7 +195,7 @@ export default async function TopicDetailPage({ params }: Props) {
               </span>
             </div>
             <div>
-              <span className="block text-lg font-semibold text-blue-600">
+              <span className="block text-lg font-display font-semibold text-progress-review">
                 {progress.reviewCount}
               </span>
               <span className="text-muted-foreground">
@@ -203,7 +203,7 @@ export default async function TopicDetailPage({ params }: Props) {
               </span>
             </div>
             <div>
-              <span className="block text-lg font-semibold text-green-600">
+              <span className="block text-lg font-display font-semibold text-progress-mastered">
                 {progress.masteredCount}
               </span>
               <span className="text-muted-foreground">
@@ -225,14 +225,14 @@ export default async function TopicDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Flashcards — Primary CTA */}
         <Link href={`/topics/${id}/flashcards`} className="sm:col-span-2">
-          <Card className="hover:shadow-md transition-shadow cursor-pointer border-primary/30">
+          <Card className="hover:shadow-glow-sm transition-all duration-200 cursor-pointer border-t-2 border-t-[hsl(var(--flashcard-accent)/0.5)]">
             <CardContent className="pt-6 text-center space-y-2">
-              <div className="text-4xl">🃏</div>
+              <div className="text-4xl">&#127171;</div>
               <h3 className="text-lg font-semibold">{tModes("flashcard")}</h3>
               <p className="text-sm text-muted-foreground">
                 {tModes("flashcardDescription")}
               </p>
-              <Badge variant="outline">
+              <Badge variant="flashcard">
                 {progress.total} {tTopics("flashcardCount")}
               </Badge>
               {progress.total > 0 && progress.newCount === progress.total && (
@@ -251,14 +251,14 @@ export default async function TopicDetailPage({ params }: Props) {
             href={`/topics/${id}/quiz?mode=remaining`}
             className="cursor-pointer"
           >
-            <Card className="hover:shadow-md transition-shadow h-full">
+            <Card className="hover:shadow-glow-sm transition-all duration-200 h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
               <CardContent className="pt-6 text-center space-y-2">
-                <div className="text-3xl">📝</div>
+                <div className="text-3xl">&#128221;</div>
                 <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
                 <p className="text-xs text-muted-foreground">
                   {tModes("quizDescription")}
                 </p>
-                <Badge variant="outline">
+                <Badge variant="quiz">
                   {quizQuestionCount ?? 0} {tTopics("questionCount")}
                 </Badge>
                 <p className="text-sm text-muted-foreground">
@@ -271,7 +271,7 @@ export default async function TopicDetailPage({ params }: Props) {
                   <span className="font-medium text-primary underline">
                     {tTopics("remainingTest")}
                   </span>
-                  <span className="text-muted-foreground">·</span>
+                  <span className="text-muted-foreground">&#183;</span>
                   <Link
                     href={`/topics/${id}/quiz`}
                     className="text-muted-foreground hover:text-primary hover:underline"
@@ -284,14 +284,14 @@ export default async function TopicDetailPage({ params }: Props) {
           </ClickableCard>
         ) : (
           <Link href={`/topics/${id}/quiz`}>
-            <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+            <Card className="hover:shadow-glow-sm transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
               <CardContent className="pt-6 text-center space-y-2">
-                <div className="text-3xl">📝</div>
+                <div className="text-3xl">&#128221;</div>
                 <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
                 <p className="text-xs text-muted-foreground">
                   {tModes("quizDescription")}
                 </p>
-                <Badge variant="outline">
+                <Badge variant="quiz">
                   {quizQuestionCount ?? 0} {tTopics("questionCount")}
                 </Badge>
                 {quizSummary.attemptCount > 0 && (
@@ -308,9 +308,9 @@ export default async function TopicDetailPage({ params }: Props) {
 
         {/* Reading */}
         <Link href={`/topics/${id}/reading`}>
-          <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+          <Card className="hover:shadow-glow-sm transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--reading-accent)/0.5)]">
             <CardContent className="pt-6 text-center space-y-2">
-              <div className="text-3xl">📖</div>
+              <div className="text-3xl">&#128214;</div>
               <h3 className="font-semibold">{tModes("reading")}</h3>
               <p className="text-xs text-muted-foreground">
                 {tModes("readingDescription")}
@@ -350,19 +350,19 @@ export default async function TopicDetailPage({ params }: Props) {
                     {cat.total > 0 && (
                       <>
                         <div
-                          className="bg-green-500"
+                          className="bg-progress-mastered"
                           style={{
                             width: `${(cat.masteredCount / cat.total) * 100}%`,
                           }}
                         />
                         <div
-                          className="bg-blue-500"
+                          className="bg-progress-review"
                           style={{
                             width: `${(cat.reviewCount / cat.total) * 100}%`,
                           }}
                         />
                         <div
-                          className="bg-yellow-500"
+                          className="bg-progress-learning"
                           style={{
                             width: `${(cat.learningCount / cat.total) * 100}%`,
                           }}

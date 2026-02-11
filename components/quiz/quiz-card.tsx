@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// --- Types ---
 
 type Phase = "answering" | "feedback";
 
@@ -22,7 +22,7 @@ export interface QuizCardProps {
   onAnswer: (wasCorrect: boolean | null, timeMs: number) => void;
 }
 
-// ─── Fisher-Yates Shuffle (skip for true/false) ─────────────────────────────
+// --- Fisher-Yates Shuffle (skip for true/false) ---
 
 function shuffleOptions(options: string[], correctIndex: number) {
   const indices = options.map((_, i) => i);
@@ -36,7 +36,7 @@ function shuffleOptions(options: string[], correctIndex: number) {
   };
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+// --- Component ---
 
 export function QuizCard({
   question,
@@ -56,7 +56,6 @@ export function QuizCard({
   const prevQuestionId = useRef(question.id);
 
   // Reset state synchronously during render when question changes
-  // (useEffect runs after paint, causing a flash of stale feedback on the new question)
   if (prevQuestionId.current !== question.id) {
     prevQuestionId.current = question.id;
     setPhase("answering");
@@ -103,13 +102,10 @@ export function QuizCard({
   const handleNext = useCallback(() => {
     const timeMs = Date.now() - startTime.current;
     if (selectedIndex === null) {
-      // IDK
       onAnswer(null, timeMs);
     } else if (selectedIndex === shuffled.correctIndex) {
-      // Correct
       onAnswer(true, timeMs);
     } else {
-      // Incorrect
       onAnswer(false, timeMs);
     }
   }, [selectedIndex, shuffled.correctIndex, onAnswer]);
@@ -141,6 +137,7 @@ export function QuizCard({
             const isSelected = selectedIndex === i;
             const isCorrectOption = i === shuffled.correctIndex;
             const showResult = phase === "feedback";
+            const isWrongSelected = showResult && isSelected && !isCorrectOption;
 
             return (
               <button
@@ -151,15 +148,13 @@ export function QuizCard({
                 className={cn(
                   "w-full text-left p-4 rounded-lg border-2 transition-all duration-200",
                   phase === "answering" &&
-                    "cursor-pointer hover:border-primary/50 hover:bg-muted/50",
+                    "cursor-pointer hover:border-[hsl(var(--quiz-accent)/0.4)] hover:bg-[hsl(var(--quiz-accent)/0.05)]",
                   phase === "feedback" && "cursor-default",
                   showResult &&
                     isCorrectOption &&
-                    "border-green-500 bg-green-500/10",
-                  showResult &&
-                    isSelected &&
-                    !isCorrectOption &&
-                    "border-red-500 bg-red-500/10",
+                    "border-rating-good bg-rating-good/10",
+                  isWrongSelected &&
+                    "border-rating-again bg-rating-again/10 animate-shake",
                   showResult && !isSelected && !isCorrectOption && "opacity-50",
                   !showResult && "border-border",
                 )}
@@ -170,23 +165,21 @@ export function QuizCard({
                       "flex-shrink-0 w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm font-medium",
                       showResult &&
                         isCorrectOption &&
-                        "border-green-500 text-green-600",
-                      showResult &&
-                        isSelected &&
-                        !isCorrectOption &&
-                        "border-red-500 text-red-600",
+                        "border-rating-good text-rating-good",
+                      isWrongSelected &&
+                        "border-rating-again text-rating-again",
                     )}
                   >
                     {String.fromCharCode(65 + i)}
                   </span>
                   <span className="text-sm">{option}</span>
                   {showResult && isCorrectOption && (
-                    <span className="ml-auto text-green-600 dark:text-green-400 font-bold">
+                    <span className="ml-auto text-rating-good font-bold">
                       &#10003;
                     </span>
                   )}
-                  {showResult && isSelected && !isCorrectOption && (
-                    <span className="ml-auto text-red-600 dark:text-red-400 font-bold">
+                  {isWrongSelected && (
+                    <span className="ml-auto text-rating-again font-bold">
                       &#10007;
                     </span>
                   )}
@@ -205,14 +198,14 @@ export function QuizCard({
 
         {/* Feedback section */}
         {phase === "feedback" && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="space-y-4 animate-fade-up">
             {/* Result banner */}
             <div
               className={cn(
-                "rounded-lg px-4 py-3 text-sm font-medium",
+                "rounded-lg px-4 py-3 text-sm font-medium border-l-4",
                 wasCorrect
-                  ? "bg-green-500/10 text-green-700 dark:text-green-300"
-                  : "bg-red-500/10 text-red-700 dark:text-red-300",
+                  ? "bg-rating-good/10 text-rating-good border-l-rating-good"
+                  : "bg-rating-again/10 text-rating-again border-l-rating-again",
               )}
             >
               {wasCorrect ? t("correct") : t("incorrect")}
@@ -227,11 +220,11 @@ export function QuizCard({
 
             {/* Extra: Learn More */}
             {extra && (
-              <details className="rounded-lg bg-blue-500/10 border border-blue-500/20">
-                <summary className="px-4 py-2.5 cursor-pointer text-sm font-medium text-blue-700 dark:text-blue-300">
+              <details className="rounded-lg bg-[hsl(var(--quiz-accent)/0.1)] border border-[hsl(var(--quiz-accent)/0.2)]">
+                <summary className="px-4 py-2.5 cursor-pointer text-sm font-medium text-[hsl(var(--quiz-accent))]">
                   {t("learnMore")}
                 </summary>
-                <div className="px-4 pb-3 text-sm leading-relaxed text-blue-900 dark:text-blue-200">
+                <div className="px-4 pb-3 text-sm leading-relaxed">
                   <MarkdownContent text={extra} className="text-sm leading-relaxed" />
                 </div>
               </details>

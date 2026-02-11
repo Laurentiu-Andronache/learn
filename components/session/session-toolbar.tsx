@@ -134,9 +134,13 @@ export function SessionToolbar({
     onDeleteQuestion();
   };
 
+  const glowColor = mode === "flashcard"
+    ? "shadow-[0_0_10px_-3px_hsl(var(--flashcard-accent)/0.3)]"
+    : "shadow-[0_0_10px_-3px_hsl(var(--quiz-accent)/0.3)]";
+
   return (
     <>
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-background/95 backdrop-blur-sm border shadow-lg px-2 py-1">
+      <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-lg border border-border/50 ${glowColor} px-2 py-1`}>
         <TooltipProvider>
           <Button
             variant="ghost"
