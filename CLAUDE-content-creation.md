@@ -67,10 +67,26 @@ Long-form content for topic `intro_text_en`/`intro_text_es`. Displayed in readin
 - Analogies are powerful — use them to explain mechanisms
 - Keep paragraphs short (3-4 sentences max)
 
+## Study References
+
+When citing published research, link to DOIs inline. DOI links are permanent and resolve to the canonical source.
+
+**Format:** `[descriptive text](https://doi.org/...)` — the link text should be natural prose, not a parenthetical citation.
+
+Example: `[The first](https://doi.org/10.1038/s41586-025-08800-x) found ~20% fewer dementia diagnoses...`
+
+- Supported in: reading material, quiz/flashcard explanations and extras
+- External links open in a new tab automatically
+- Use DOIs (`https://doi.org/...`), never direct journal URLs (those break)
+- Every factual claim from a specific study should have a DOI link on first mention
+- Subsequent mentions in the same text block can use plain `(Journal, Year)` without re-linking
+
 ## What NOT to Include
 
 - Protein names, gene codes, or chemical formulas unless truly useful for decision-making
-- Exact study statistics ("p=0.003") — summarize as "significantly reduced risk"
+- Inferential statistics (p-values, CIs, hazard ratios) — summarize direction + magnitude instead
+- When citing a study: one key number per study, not multiple adjusted/unadjusted variants
+- Effect sizes in plain language (percentages, risk reductions) ARE useful — keep them when they help a reader weigh a health decision
 - Historical dates unless they provide context
 - Filler phrases ("It's important to note that...")
 - Content that can't pass the test: "Would knowing this change someone's health behavior?"
