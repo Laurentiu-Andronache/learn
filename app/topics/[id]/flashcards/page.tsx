@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
 import type { SubMode } from "@/lib/fsrs/flashcard-ordering";
 import { getOrderedFlashcards } from "@/lib/fsrs/flashcard-ordering";
@@ -26,7 +27,7 @@ export default async function FlashcardsPage({
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) return <AutoGuestLogin />;
 
   const [{ data: adminRow }, topic, fsrsSettings] = await Promise.all([
     supabase

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { QuizSession } from "@/components/quiz/quiz-session";
 import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
@@ -31,7 +32,7 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) return <AutoGuestLogin />;
 
   const { data: adminRow } = await supabase
     .from("admin_users")

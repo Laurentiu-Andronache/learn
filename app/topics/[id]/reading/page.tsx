@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { ReadingView } from "@/components/reading/reading-view";
 import { getReadingProgress } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
@@ -19,7 +20,7 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) return <AutoGuestLogin />;
 
   const { data: adminRow } = await supabase
     .from("admin_users")

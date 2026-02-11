@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
+import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { ClickableCard } from "@/components/topics/clickable-card";
 import { StudyTipsDialog } from "@/components/topics/study-tips-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -75,7 +76,7 @@ export default async function TopicDetailPage({ params }: Props) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) redirect("/auth/login");
+  if (!user) return <AutoGuestLogin />;
 
   const locale = await getLocale();
   const tTopics = await getTranslations("topics");
@@ -334,6 +335,10 @@ export default async function TopicDetailPage({ params }: Props) {
           <p>
             <span className="mr-1">&#129504;</span>
             {tTopics("tips.speakAnswer")}
+          </p>
+          <p>
+            <span className="mr-1">&#128264;</span>
+            {tTopics("tips.listenAloud")}
           </p>
         </CardContent>
       </Card>
