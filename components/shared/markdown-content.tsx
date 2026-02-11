@@ -88,7 +88,7 @@ const markdownComponents = {
     );
   },
   p: ({ children }: { children?: React.ReactNode }) => (
-    <TTSBlock>{children}</TTSBlock>
+    <TTSBlock className="mb-1">{children}</TTSBlock>
   ),
   h1: ({ children }: { children?: React.ReactNode }) => (
     <TTSBlock className="text-2xl font-bold mt-6 mb-3">{children}</TTSBlock>
