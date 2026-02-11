@@ -139,7 +139,8 @@
     "anonymous": "Anónimo",
     "tips": {
       "readFirst": "\u00bfNuevo en este tema? Empieza con Lectura, luego pasa a Tarjetas. Despu\u00e9s de unos d\u00edas de pr\u00e1ctica, prueba el Quiz.",
-      "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente \u2014 o mejor a\u00fan, en voz alta \u2014 usando una oraci\u00f3n completa."
+      "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente \u2014 o mejor a\u00fan, en voz alta \u2014 usando una oraci\u00f3n completa.",
+      "listenAloud": "Toca cualquier párrafo en una respuesta, información extra o modo lectura para escucharlo en voz alta."
     },
     "progress": {
       "new": "Nuevo",

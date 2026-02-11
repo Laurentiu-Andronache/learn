@@ -43,6 +43,10 @@ export function StudyTipsDialog() {
             <span className="mr-1.5">&#129504;</span>
             {t("speakAnswer")}
           </p>
+          <p>
+            <span className="mr-1.5">&#128264;</span>
+            {t("listenAloud")}
+          </p>
         </div>
         <div className="flex justify-end pt-2">
           <Button size="sm" onClick={handleClose}>

@@ -139,7 +139,8 @@
     "anonymous": "Anonymous",
     "tips": {
       "readFirst": "New to this topic? Start with Reading, then move to Flashcards. After a few days of practice, try the Quiz.",
-      "speakAnswer": "Before revealing an answer, always try to respond in your mind — or better yet, out loud — using a complete sentence."
+      "speakAnswer": "Before revealing an answer, always try to respond in your mind — or better yet, out loud — using a complete sentence.",
+      "listenAloud": "Tap any paragraph in an answer, extra info, or reading mode to have it read out loud."
     },
     "progress": {
       "new": "New",
