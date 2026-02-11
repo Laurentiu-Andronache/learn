@@ -29,8 +29,16 @@ export function MarkdownContent({ text, className }: MarkdownContentProps) {
                   />
                 );
               }
+              const isExternal =
+                href?.startsWith("http://") || href?.startsWith("https://");
               return (
-                <a href={href} title={title}>
+                <a
+                  href={href}
+                  title={title}
+                  {...(isExternal
+                    ? { target: "_blank", rel: "noopener noreferrer" }
+                    : {})}
+                >
                   {children}
                 </a>
               );
