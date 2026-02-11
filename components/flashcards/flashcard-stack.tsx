@@ -247,12 +247,12 @@ export function FlashcardStack({
                 </div>
               )}
               {extra && (
-                <details key={current.id} className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)] border border-[hsl(var(--flashcard-accent)/0.2)]">
-                  <summary className="px-3 py-2 cursor-pointer text-sm font-medium text-[hsl(var(--flashcard-accent))] list-none flex items-center gap-1">
+                <details key={current.id} className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)]">
+                  <summary className="pl-1 py-2 cursor-pointer text-sm font-medium text-[hsl(var(--flashcard-accent))] list-none flex items-center gap-1">
                     <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                     {tq("learnMore")}
                   </summary>
-                  <div className="px-3 pb-3">
+                  <div className="pl-1 pb-3">
                     <MarkdownContent text={extra} className="text-sm text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
                   </div>
                 </details>
