@@ -137,6 +137,10 @@
     "noProgressToReset": "No progress to reset for this topic.",
     "createdBy": "by {creator}",
     "anonymous": "Anonymous",
+    "tips": {
+      "readFirst": "New to this topic? Start with Reading, then move to Flashcards. After a few days of practice, try the Quiz.",
+      "speakAnswer": "Before revealing an answer, always try to respond in your mind — or better yet, out loud — using a complete sentence."
+    },
     "progress": {
       "new": "New",
       "learning": "Learning",
@@ -234,6 +238,9 @@
     "maxIntervalDescription": "The longest gap allowed between reviews of a card.",
     "newCardsPerDay": "New Cards Per Day",
     "newCardsPerDayDescription": "Maximum new cards introduced per day per topic.",
+    "rampUp": "Gradual Introduction",
+    "rampUpDescription": "Start with fewer new cards and gradually increase over the first 5 days of each topic (6\u21927\u21928\u21929\u219210).",
+    "newCardsAfterRampUp": "Cards Per Day After Ramp-Up",
     "showIntervals": "Show Interval Previews",
     "showIntervalsDescription": "Display next review time on rating buttons.",
     "resetDefaults": "Reset to Defaults",

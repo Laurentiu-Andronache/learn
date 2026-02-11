@@ -137,6 +137,10 @@
     "noProgressToReset": "No hay progreso que restablecer para este tema.",
     "createdBy": "por {creator}",
     "anonymous": "Anónimo",
+    "tips": {
+      "readFirst": "\u00bfNuevo en este tema? Empieza con Lectura, luego pasa a Tarjetas. Despu\u00e9s de unos d\u00edas de pr\u00e1ctica, prueba el Quiz.",
+      "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente \u2014 o mejor a\u00fan, en voz alta \u2014 usando una oraci\u00f3n completa."
+    },
     "progress": {
       "new": "Nuevo",
       "learning": "Aprendiendo",
@@ -234,6 +238,9 @@
     "maxIntervalDescription": "El intervalo más largo permitido entre repasos de una tarjeta.",
     "newCardsPerDay": "Tarjetas Nuevas Por Día",
     "newCardsPerDayDescription": "Máximo de tarjetas nuevas introducidas por día por tema.",
+    "rampUp": "Introducci\u00f3n Gradual",
+    "rampUpDescription": "Comienza con menos tarjetas nuevas y aumenta gradualmente durante los primeros 5 d\u00edas de cada tema (6\u21927\u21928\u21929\u219210).",
+    "newCardsAfterRampUp": "Tarjetas Por D\u00eda Despu\u00e9s del Aumento",
     "showIntervals": "Mostrar Previsualización de Intervalos",
     "showIntervalsDescription": "Mostrar el próximo tiempo de repaso en los botones de calificación.",
     "resetDefaults": "Restablecer Valores Predeterminados",

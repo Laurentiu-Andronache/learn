@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { ClickableCard } from "@/components/topics/clickable-card";
+import { StudyTipsDialog } from "@/components/topics/study-tips-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -268,16 +269,16 @@ export default async function TopicDetailPage({ params }: Props) {
                   })}
                 </p>
                 <div className="flex items-center justify-center gap-3 text-xs">
-                  <span className="font-medium text-primary underline">
-                    {tTopics("remainingTest")}
-                  </span>
-                  <span className="text-muted-foreground">&#183;</span>
                   <Link
                     href={`/topics/${id}/quiz`}
-                    className="text-muted-foreground hover:text-primary hover:underline"
+                    className="font-medium text-primary underline"
                   >
                     {tTopics("fullTest")}
                   </Link>
+                  <span className="text-muted-foreground">&#183;</span>
+                  <span className="text-muted-foreground">
+                    {tTopics("remainingTest")}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -319,6 +320,22 @@ export default async function TopicDetailPage({ params }: Props) {
           </Card>
         </Link>
       </div>
+
+      {/* Study Tips */}
+      <Card className="bg-muted/30 border-dashed">
+        <CardContent className="pt-4 space-y-2 text-sm text-muted-foreground">
+          <p>
+            <span className="mr-1">&#128161;</span>
+            {tTopics("tips.readFirst")}
+          </p>
+          <p>
+            <span className="mr-1">&#129504;</span>
+            {tTopics("tips.speakAnswer")}
+          </p>
+        </CardContent>
+      </Card>
+
+      <StudyTipsDialog />
 
       {/* Categories */}
       {progress.categories.length > 0 && (
