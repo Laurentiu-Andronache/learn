@@ -116,18 +116,18 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 **Architecture**: Client click → `useTTS` hook → browser Cache API check → `POST /api/tts` → Supabase Storage cache check → ElevenLabs SDK → cache & return audio.
 
 **Files:**
-- `app/api/tts/route.ts` — API route: auth, rate limit (30/min/user), Supabase Storage cache, ElevenLabs SDK
-- `hooks/use-tts.ts` — Client hook: browser Cache API, Audio playback, pause/resume, state via refs (not closure state) to avoid stale closures in debounced callbacks
-- `components/shared/markdown-content.tsx` — `TTSBlock` sub-component wraps p/h1-h6/li, `onBlockClick`/`playingEl`/`ttsPaused` props
+- `app/api/tts/route.ts` — API route: auth, rate limit (30/min/user), raw fetch for Supabase Storage (bypasses SDK + Next.js fetch patching), `after()` for upload, ~200ms silent MP3 prefix for anti-clipping
+- `hooks/use-tts.ts` — Client hook: browser Cache API, Audio playback, pause/resume, state via refs
+- `components/shared/markdown-content.tsx` — TTSContext + stable module-level `markdownComponents` constant (prevents React remounting TTSBlock on re-render, preserving ref identity for pause/resume)
 - `components/reading/glossary-term.tsx` — `e.stopPropagation()` prevents TTS when clicking tooltip terms
 
-**ElevenLabs config**: Voice Matilda (`XrExE9yKIg1WjnnlVkGX`), model `eleven_multilingual_v2`, `outputFormat: "mp3_44100_128"`, narration-optimized voice settings (stability 0.7, similarityBoost 0.5). Prepends `"... "` to text to prevent audio clipping at start.
+**ElevenLabs config**: Voice Matilda (`XrExE9yKIg1WjnnlVkGX`), model `eleven_multilingual_v2`, `outputFormat: "mp3_44100_128"`, narration-optimized voice settings (stability 0.7, similarityBoost 0.5).
 
-**Caching**: Two layers — browser Cache API (`tts-audio-v1`) for instant replay, Supabase Storage bucket (`tts-audio`) for cross-device/cross-session persistence. Cache key = SHA-256 of `voiceId:text`.
+**Anti-clipping**: Server-side ~200ms silent MP3 prepended to ALL audio responses (both cached and fresh). Deterministic fix for ElevenLabs first-word clipping bug — model-independent, unlike text-based workarounds (`previousText`, SSML `<break>`).
 
-**Known issue**: Supabase Storage upload from Next.js API routes fails with "signature verification failed" when using `createClient` from `@supabase/supabase-js`. The same key works from standalone Node.js scripts and curl. Root cause unresolved — likely Next.js runtime interference with the SDK's fetch/auth handling. Browser cache layer works fine as a workaround.
+**Caching**: Two layers — browser Cache API (`tts-audio-v1`) for instant replay, Supabase Storage bucket (`tts-audio`) for cross-device/cross-session persistence. Cache key = SHA-256 of `voiceId:text`. Upload uses `after()` from `next/server` (runs after response sent with kept-alive context) + raw `fetch` with `cache: "no-store"` to bypass Next.js fetch patching that broke Supabase SDK signature verification.
 
-**Known issue**: Pause/resume on same-paragraph tap not working yet — stale closure problem in debounced `setTimeout` callback. Refs are set up (`playingElRef`, `pausedRef`) but the comparison `playingElRef.current === el` may fail due to React re-renders creating new DOM elements.
+**Pause/resume**: Works via stable component identity. `markdownComponents` is a module-level constant → ReactMarkdown always sees same component references → React reconciles TTSBlock in place → `useRef` persists → DOM element identity preserved → `playingElRef.current === el` succeeds on second click. Previous bug: inline `components={{...}}` created new function references each render → React unmounted/remounted TTSBlock → new refs → identity comparison always failed.
 
 **Env vars**: `ELEVENLABS_API_KEY`, `ELEVENLABS_VOICE_ID` — set in both `.env.local` and Vercel dashboard.
 
@@ -235,7 +235,7 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 
 **Settings list components (hidden topics, suspended flashcards)**: Parent passes server-fetched data as initial prop + `onCountChange` callback. Child manages local state with `useState(initial)` and calls `onCountChange` on mutations so the parent's count/visibility stays in sync.
 
-**Supabase Storage from Next.js API routes**: `createClient` from `@supabase/supabase-js` with service role key fails "signature verification" in Next.js API route context despite the same key working from standalone Node.js and curl. Unresolved — may be Next.js fetch patching or SDK auth state interference. If you need to fix this, test from within the actual API route, not standalone scripts.
+**Supabase Storage from Next.js API routes**: Next.js patches `globalThis.fetch` with caching/revalidation headers. The Supabase SDK uses `fetch` internally — the extra headers break signature verification on POST. Fix: use raw `fetch` with `cache: "no-store"` + Bearer token instead of SDK. Also use `after()` from `next/server` for fire-and-forget uploads (prevents context GC before completion).
 
 **MarkdownContent inside `<p>` tags**: `MarkdownContent` renders `<span className="block">` instead of `<p>` to avoid React hydration errors from nested `<p>` elements. If you render markdown in a context that's already inside a `<p>`, this is handled automatically.
 
