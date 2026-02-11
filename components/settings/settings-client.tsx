@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
+import { FontSizeSetting } from "./font-size-setting";
 import { FsrsSettingsCard } from "./fsrs-settings";
 import { HiddenTopicsList } from "./hidden-topics-list";
 import { ProfileEditor } from "./profile-editor";
@@ -62,6 +63,7 @@ interface SettingsClientProps {
     } | null;
   }>;
   fsrsSettings?: FsrsSettings | null;
+  baseFontSize?: number;
 }
 
 export function SettingsClient({
@@ -73,6 +75,7 @@ export function SettingsClient({
   suspendedFlashcards,
   hiddenTopics,
   fsrsSettings,
+  baseFontSize = 14,
 }: SettingsClientProps) {
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
@@ -108,7 +111,7 @@ export function SettingsClient({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Eye size={18} />
-            {t("language")} & {t("theme")}
+            {t("appearance")}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -121,6 +124,8 @@ export function SettingsClient({
             <span className="text-sm font-medium">{t("theme")}</span>
             <ThemeSwitcher />
           </div>
+          <Separator />
+          <FontSizeSetting userId={userId} initialSize={baseFontSize} />
         </CardContent>
       </Card>
 

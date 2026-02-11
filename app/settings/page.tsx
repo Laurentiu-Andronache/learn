@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { SettingsClient } from "@/components/settings/settings-client";
 import {
+  getBaseFontSize,
   getFsrsSettings,
   getHiddenTopics,
   getProfile,
   getSuspendedFlashcards,
+  updateBaseFontSize,
 } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,13 +37,28 @@ export default async function SettingsPage() {
 
   const isAnonymous = user.is_anonymous ?? false;
 
-  const [profile, suspendedFlashcards, hiddenTopics, fsrsSettings] =
+  const cookieStore = await cookies();
+  const cookieFont = parseInt(
+    cookieStore.get("base_font_size")?.value || "0",
+    10,
+  );
+  const validCookieFont =
+    cookieFont >= 12 && cookieFont <= 18 ? cookieFont : null;
+
+  const [profile, suspendedFlashcards, hiddenTopics, fsrsSettings, dbFontSize] =
     await Promise.all([
       getProfile(user.id).catch(() => null),
       getSuspendedFlashcards(user.id).catch(() => []),
       getHiddenTopics(user.id).catch(() => []),
       getFsrsSettings(user.id).catch(() => null),
+      getBaseFontSize(user.id).catch(() => 14),
     ]);
+
+  // Cookie is the source of truth (works without DB); sync to DB if they differ
+  const baseFontSize = validCookieFont ?? dbFontSize;
+  if (validCookieFont && validCookieFont !== dbFontSize) {
+    updateBaseFontSize(user.id, validCookieFont).catch(() => {});
+  }
 
   return (
     <SettingsClient
@@ -52,6 +70,7 @@ export default async function SettingsPage() {
       suspendedFlashcards={suspendedFlashcards}
       hiddenTopics={hiddenTopics}
       fsrsSettings={fsrsSettings}
+      baseFontSize={baseFontSize}
     />
   );
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import { Geist } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
@@ -31,8 +32,14 @@ export default async function RootLayout({
   const locale = await getLocale();
   const messages = await getMessages();
 
+  const cookieStore = await cookies();
+  const bfs = parseInt(cookieStore.get("base_font_size")?.value || "14", 10);
+  const htmlStyle = bfs !== 14
+    ? ({ "--text-sm": `${bfs / 16}rem` } as React.CSSProperties)
+    : undefined;
+
   return (
-    <html lang={locale} suppressHydrationWarning>
+    <html lang={locale} suppressHydrationWarning style={htmlStyle}>
       <body className={`${geistSans.variable} font-sans antialiased`}>
         <StructuredData baseUrl={getBaseUrl()} locale={locale} />
         <AnalyticsProvider />

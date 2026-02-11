@@ -264,6 +264,31 @@ export async function updateFsrsSettings(
   if (error) throw new Error(error.message);
 }
 
+// ============ BASE FONT SIZE ============
+
+export async function getBaseFontSize(userId: string): Promise<number> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("base_font_size")
+    .eq("id", userId)
+    .single();
+  if (error || !data) return 14;
+  return data.base_font_size ?? 14;
+}
+
+export async function updateBaseFontSize(
+  userId: string,
+  size: number,
+): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("profiles")
+    .update({ base_font_size: size, updated_at: new Date().toISOString() })
+    .eq("id", userId);
+  if (error) throw new Error(error.message);
+}
+
 // ============ PROFILE ============
 
 export async function updateProfile(

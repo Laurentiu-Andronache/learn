@@ -10,6 +10,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontSize: {
+        sm: ["var(--text-sm, 0.875rem)", { lineHeight: "1.43" }],
+      },
       fontFamily: {
         display: ["var(--font-body)", "sans-serif"],
         sans: ["var(--font-body)", "sans-serif"],

@@ -4,6 +4,7 @@
 
 @layer base {
   :root {
+    --text-sm: 0.875rem;
     --background: 210 20% 98%;
     --foreground: 220 15% 10%;
     --card: 210 20% 100%;
@@ -98,6 +99,11 @@
   ::selection {
     background: hsl(var(--primary) / 0.25);
   }
+}
+
+/* Override prose-sm base font-size with CSS variable */
+.prose-sm {
+  font-size: var(--text-sm, 0.875rem);
 }
 
 /* Custom scrollbar */

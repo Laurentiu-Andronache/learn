@@ -73,6 +73,10 @@ All SEO features are implemented following Next.js App Router best practices:
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
 - **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings.
 
+## Profile Auto-Creation
+
+DB trigger `on_auth_user_created` (`handle_new_user()`) auto-creates a `profiles` row for every new `auth.users` entry (including anonymous). All profile writes can assume the row exists.
+
 ## DB Naming
 
 DB tables use `topics`, `hidden_topics`, `topic_proposals` — matching UI terminology directly. No mapping needed.
@@ -181,9 +185,11 @@ Flashcard grading: Again (1, red) / Hard (2, orange) / Good (3, green) / Easy (4
 
 ## Per-User FSRS Settings
 
-Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true).
+Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true), `base_font_size` (12-18, default 14).
 
 **Ramp-up**: When `new_cards_ramp_up` is true, new cards are capped at `5 + dayNumber` for the first 5 days of a topic (6/7/8/9/10), then `new_cards_per_day`. Day number is calculated from the user's earliest review log for that topic's flashcards.
+
+**Text Size**: `base_font_size` overrides Tailwind's `text-sm` via CSS variable `--text-sm` on `<html>`. Cookie is the source of truth (works for anonymous/guest users without DB); DB is a backup for cross-device sync. Cookie read in `layout.tsx` for flash-free SSR. Settings page syncs cookie→DB on load. Slider applies instantly via `document.documentElement.style.setProperty`. `prose-sm` also overridden in `globals.css`.
 
 `createUserScheduler()` in `scheduler.ts` creates FSRS instances with custom retention/interval. Used in `scheduleFlashcardReview` and `getIntervalPreviews`. Settings UI at `/settings` via `components/settings/fsrs-settings.tsx`.
 

@@ -41,8 +41,7 @@ export function UpgradeAccountForm() {
       if (user) {
         await supabase
           .from("profiles")
-          .update({ is_anonymous: false })
-          .eq("id", user.id);
+          .upsert({ id: user.id, is_anonymous: false }, { onConflict: "id" });
       }
 
       window.location.href = "/topics";
