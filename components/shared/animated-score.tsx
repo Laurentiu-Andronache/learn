@@ -40,7 +40,11 @@ export function AnimatedScore({ value, className, showRing = false }: AnimatedSc
   const strokeDashoffset = circumference - (circumference * display) / 100;
 
   return (
-    <div className={cn("relative inline-flex items-center justify-center", className)}>
+    <div className={cn(
+      "relative inline-flex items-center justify-center",
+      showRing && "w-[120px] h-[120px]",
+      className
+    )}>
       {showRing && (
         <svg className="absolute -rotate-90" width="120" height="120" viewBox="0 0 100 100">
           <circle
