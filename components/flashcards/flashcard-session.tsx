@@ -219,7 +219,7 @@ export function FlashcardSession({
     : { 1: "", 2: "", 3: "", 4: "" };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-4 py-8 space-y-6 bg-[radial-gradient(ellipse_at_top,hsl(var(--flashcard-accent)/0.04)_0%,transparent_50%)]">
+    <div className="w-full max-w-2xl mx-auto px-4 py-4 flex-1 flex flex-col gap-4 bg-[radial-gradient(ellipse_at_top,hsl(var(--flashcard-accent)/0.04)_0%,transparent_50%)]">
       <h1 className="text-xl font-bold text-center">
         {locale === "es" ? topicTitleEs : topicTitleEn}
       </h1>
@@ -238,9 +238,9 @@ export function FlashcardSession({
         rateSignal={rateSignal}
       />
 
-      <div className="sticky bottom-0 z-20 -mx-4 px-4 pt-3 pb-4 bg-gradient-to-t from-background from-80% to-transparent">
+      <div className="shrink-0 pt-3 pb-4">
         {isFlipped && currentFc && (
-          <div className="max-w-lg mx-auto space-y-2 animate-fade-up mb-3">
+          <div className="space-y-2 animate-fade-up mb-3">
             <p className="text-xs text-center text-muted-foreground">
               {tf("ratingHint")}
             </p>

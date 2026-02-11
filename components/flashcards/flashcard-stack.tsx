@@ -202,7 +202,7 @@ export function FlashcardStack({
   const easyCount = [...ratings.values()].filter((r) => r === 4).length;
 
   return (
-    <div className="w-full max-w-lg mx-auto space-y-4">
+    <div className="w-full flex-1 flex flex-col min-h-0 gap-3">
       <FlashcardProgress
         current={currentIndex}
         total={flashcards.length}
@@ -217,7 +217,7 @@ export function FlashcardStack({
       <div
         role="button"
         tabIndex={0}
-        className="relative w-full aspect-[3/2] cursor-pointer"
+        className="relative w-full flex-1 min-h-0 cursor-pointer"
         style={{ perspective: "1000px" }}
         onClick={handleFlip}
         onKeyDown={(e) => {

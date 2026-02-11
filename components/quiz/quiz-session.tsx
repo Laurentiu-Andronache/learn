@@ -186,7 +186,7 @@ export function QuizSession({
     locale === "es" ? currentQ.categoryNameEs : currentQ.categoryNameEn;
 
   return (
-    <div className="w-full bg-[radial-gradient(ellipse_at_top,hsl(var(--quiz-accent)/0.04)_0%,transparent_50%)]">
+    <div className="w-full flex-1 flex flex-col bg-[radial-gradient(ellipse_at_top,hsl(var(--quiz-accent)/0.04)_0%,transparent_50%)]">
       <QuizProgress
         current={currentIndex + 1}
         total={questions.length}
@@ -195,7 +195,7 @@ export function QuizSession({
         categoryName={catName}
         categoryColor={currentQ.categoryColor}
       />
-      <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="max-w-3xl mx-auto px-4 py-6 flex-1">
         <QuizCard
           question={currentQ.question}
           locale={locale}
@@ -204,7 +204,7 @@ export function QuizSession({
           onAnswer={handleAnswer}
         />
       </div>
-      <div className="sticky bottom-0 z-20 pt-3 pb-4 bg-gradient-to-t from-background from-80% to-transparent">
+      <div className="shrink-0 pt-3 pb-4">
         <SessionToolbar
           userId={userId}
           topicId={topicId}
