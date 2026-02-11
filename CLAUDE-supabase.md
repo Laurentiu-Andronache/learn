@@ -7,6 +7,7 @@
 - **Dashboard**: https://app.supabase.com/project/hqathtprnfdovjyrlyfb
 - **URL**: https://hqathtprnfdovjyrlyfb.supabase.co
 - **Credentials**: `.env.local` (not in git) — requires `SUPABASE_ACCESS_TOKEN` and `SUPABASE_SERVICE_ROLE_KEY`
+- **Session Pooler**: `postgresql://postgres.hqathtprnfdovjyrlyfb:gEDjfl3ED%23%23@aws-1-us-east-1.pooler.supabase.com:5432/postgres`
 
 ## Migration Workflow
 
