@@ -31,6 +31,7 @@ export interface OrderingOptions {
   categoryId?: string;
   limit?: number;
   newCardsPerDay?: number;
+  newCardsRampUp?: boolean;
 }
 
 export async function getOrderedFlashcards(
@@ -175,7 +176,33 @@ export async function getOrderedFlashcards(
     const newCardsToday = new Set(
       (todayNewLogs || []).map((l) => l.flashcard_id),
     ).size;
-    const remaining = Math.max(0, options.newCardsPerDay - newCardsToday);
+
+    // Calculate effective limit with optional ramp-up
+    let effectiveLimit = options.newCardsPerDay;
+    if (options.newCardsRampUp) {
+      // Find earliest review for this user + topic's flashcards
+      const { data: earliestLog } = await supabase
+        .from("review_logs")
+        .select("reviewed_at")
+        .eq("user_id", userId)
+        .in("flashcard_id", flashcardIds)
+        .order("reviewed_at", { ascending: true })
+        .limit(1);
+
+      if (earliestLog && earliestLog.length > 0) {
+        const dayNumber = Math.floor(
+          (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) / 86400000
+        ) + 1;
+        if (dayNumber <= 5) {
+          effectiveLimit = Math.min(options.newCardsPerDay, 5 + dayNumber);
+        }
+      } else {
+        // No reviews yet — day 1: cap at 6
+        effectiveLimit = Math.min(options.newCardsPerDay, 6);
+      }
+    }
+
+    const remaining = Math.max(0, effectiveLimit - newCardsToday);
 
     // Filter bucket 1 (new/unseen cards) to remaining allowance
     let newCardCount = 0;

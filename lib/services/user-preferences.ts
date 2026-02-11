@@ -218,13 +218,15 @@ export interface FsrsSettings {
   desired_retention: number;
   max_review_interval: number;
   new_cards_per_day: number;
+  new_cards_ramp_up: boolean;
   show_review_time: boolean;
 }
 
 const FSRS_DEFAULTS: FsrsSettings = {
   desired_retention: 0.9,
   max_review_interval: 36500,
-  new_cards_per_day: 20,
+  new_cards_per_day: 10,
+  new_cards_ramp_up: true,
   show_review_time: true,
 };
 
@@ -233,7 +235,7 @@ export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "desired_retention, max_review_interval, new_cards_per_day, show_review_time",
+      "desired_retention, max_review_interval, new_cards_per_day, new_cards_ramp_up, show_review_time",
     )
     .eq("id", userId)
     .single();
@@ -244,6 +246,8 @@ export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
       data.max_review_interval ?? FSRS_DEFAULTS.max_review_interval,
     new_cards_per_day:
       data.new_cards_per_day ?? FSRS_DEFAULTS.new_cards_per_day,
+    new_cards_ramp_up:
+      data.new_cards_ramp_up ?? FSRS_DEFAULTS.new_cards_ramp_up,
     show_review_time: data.show_review_time ?? FSRS_DEFAULTS.show_review_time,
   };
 }

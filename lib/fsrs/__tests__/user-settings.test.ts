@@ -44,6 +44,7 @@ describe("getFsrsSettings", () => {
         desired_retention: 0.85,
         max_review_interval: 180,
         new_cards_per_day: 10,
+        new_cards_ramp_up: false,
         show_review_time: false,
       },
       error: null,
@@ -54,6 +55,7 @@ describe("getFsrsSettings", () => {
       desired_retention: 0.85,
       max_review_interval: 180,
       new_cards_per_day: 10,
+      new_cards_ramp_up: false,
       show_review_time: false,
     });
   });
@@ -64,6 +66,7 @@ describe("getFsrsSettings", () => {
         desired_retention: null,
         max_review_interval: null,
         new_cards_per_day: null,
+        new_cards_ramp_up: null,
         show_review_time: null,
       },
       error: null,
@@ -73,7 +76,8 @@ describe("getFsrsSettings", () => {
     expect(result).toEqual({
       desired_retention: 0.9,
       max_review_interval: 36500,
-      new_cards_per_day: 20,
+      new_cards_per_day: 10,
+      new_cards_ramp_up: true,
       show_review_time: true,
     });
   });
@@ -88,7 +92,8 @@ describe("getFsrsSettings", () => {
     expect(result).toEqual({
       desired_retention: 0.9,
       max_review_interval: 36500,
-      new_cards_per_day: 20,
+      new_cards_per_day: 10,
+      new_cards_ramp_up: true,
       show_review_time: true,
     });
   });

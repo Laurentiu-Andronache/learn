@@ -21,7 +21,8 @@ import { updateFsrsSettings } from "@/lib/services/user-preferences";
 const DEFAULTS: FsrsSettings = {
   desired_retention: 0.9,
   max_review_interval: 36500,
-  new_cards_per_day: 20,
+  new_cards_per_day: 10,
+  new_cards_ramp_up: true,
   show_review_time: true,
 };
 
@@ -36,6 +37,7 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
   const [retention, setRetention] = useState(settings.desired_retention);
   const [maxInterval, setMaxInterval] = useState(settings.max_review_interval);
   const [newCards, setNewCards] = useState(settings.new_cards_per_day);
+  const [rampUp, setRampUp] = useState(settings.new_cards_ramp_up);
   const [showIntervals, setShowIntervals] = useState(settings.show_review_time);
   const [saving, setSaving] = useState(false);
 
@@ -46,6 +48,7 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
         desired_retention: retention,
         max_review_interval: maxInterval,
         new_cards_per_day: newCards,
+        new_cards_ramp_up: rampUp,
         show_review_time: showIntervals,
       });
       toast.success(t("saved"));
@@ -54,12 +57,13 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
     } finally {
       setSaving(false);
     }
-  }, [userId, retention, maxInterval, newCards, showIntervals, t, tc]);
+  }, [userId, retention, maxInterval, newCards, rampUp, showIntervals, t, tc]);
 
   const handleReset = useCallback(() => {
     setRetention(DEFAULTS.desired_retention);
     setMaxInterval(DEFAULTS.max_review_interval);
     setNewCards(DEFAULTS.new_cards_per_day);
+    setRampUp(DEFAULTS.new_cards_ramp_up);
     setShowIntervals(DEFAULTS.show_review_time);
   }, []);
 
@@ -119,9 +123,26 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
 
         <Separator />
 
+        {/* Gradual Introduction Toggle */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="rampUp">{t("rampUp")}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t("rampUpDescription")}
+            </p>
+          </div>
+          <Switch
+            id="rampUp"
+            checked={rampUp}
+            onCheckedChange={setRampUp}
+          />
+        </div>
+
         {/* New Cards Per Day */}
         <div className="flex flex-col gap-2">
-          <Label htmlFor="newCards">{t("newCardsPerDay")}</Label>
+          <Label htmlFor="newCards">
+            {rampUp ? t("newCardsAfterRampUp") : t("newCardsPerDay")}
+          </Label>
           <Input
             id="newCards"
             type="number"

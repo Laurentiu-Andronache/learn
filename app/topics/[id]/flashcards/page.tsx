@@ -47,6 +47,7 @@ export default async function FlashcardsPage({
     subMode,
     categoryId: category,
     newCardsPerDay: fsrsSettings.new_cards_per_day,
+    newCardsRampUp: fsrsSettings.new_cards_ramp_up,
   });
 
   if (ordered.length === 0) redirect("/topics");
