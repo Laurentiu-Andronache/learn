@@ -34,7 +34,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className={`${geistSans.variable} font-sans antialiased`}>
-        <StructuredData baseUrl={defaultUrl} locale={locale} />
+        <StructuredData baseUrl={getBaseUrl()} locale={locale} />
         <AnalyticsProvider />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider
