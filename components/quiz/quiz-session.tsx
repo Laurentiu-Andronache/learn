@@ -186,7 +186,7 @@ export function QuizSession({
     locale === "es" ? currentQ.categoryNameEs : currentQ.categoryNameEn;
 
   return (
-    <div className="w-full pb-16 bg-[radial-gradient(ellipse_at_top,hsl(var(--quiz-accent)/0.04)_0%,transparent_50%)]">
+    <div className="w-full bg-[radial-gradient(ellipse_at_top,hsl(var(--quiz-accent)/0.04)_0%,transparent_50%)]">
       <QuizProgress
         current={currentIndex + 1}
         total={questions.length}
@@ -204,18 +204,20 @@ export function QuizSession({
           onAnswer={handleAnswer}
         />
       </div>
-      <SessionToolbar
-        userId={userId}
-        topicId={topicId}
-        mode="quiz"
-        isAdmin={isAdmin}
-        currentQuestion={currentQ.question}
-        onBury={() => {}}
-        onUndo={() => {}}
-        onDeleteQuestion={handleDeleteQuestion}
-        canUndo={false}
-        onStop={savePartialAttempt}
-      />
+      <div className="sticky bottom-0 z-20 pt-3 pb-4 bg-gradient-to-t from-background from-80% to-transparent">
+        <SessionToolbar
+          userId={userId}
+          topicId={topicId}
+          mode="quiz"
+          isAdmin={isAdmin}
+          currentQuestion={currentQ.question}
+          onBury={() => {}}
+          onUndo={() => {}}
+          onDeleteQuestion={handleDeleteQuestion}
+          canUndo={false}
+          onStop={savePartialAttempt}
+        />
+      </div>
     </div>
   );
 }

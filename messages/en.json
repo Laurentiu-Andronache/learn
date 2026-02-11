@@ -357,7 +357,13 @@
     "delete": "Delete",
     "deleteConfirm": "Delete this item permanently?",
     "questionDeleted": "Item deleted.",
-    "questionUpdated": "Item updated."
+    "questionUpdated": "Item updated.",
+    "help": "Help",
+    "helpTitle": "Toolbar Guide",
+    "helpStop": "Stop session and return to topic page",
+    "helpNextTopic": "Jump to the next topic with cards due today",
+    "helpBury": "Postpone this card until tomorrow",
+    "helpUndo": "Undo last answer and go back one card"
   },
   "tts": {
     "error": "Could not play audio. Please try again.",

@@ -357,7 +357,13 @@
     "delete": "Eliminar",
     "deleteConfirm": "¿Eliminar este elemento permanentemente?",
     "questionDeleted": "Elemento eliminado.",
-    "questionUpdated": "Elemento actualizado."
+    "questionUpdated": "Elemento actualizado.",
+    "help": "Ayuda",
+    "helpTitle": "Guía de la Barra",
+    "helpStop": "Detener la sesión y volver a la página del tema",
+    "helpNextTopic": "Saltar al siguiente tema con tarjetas pendientes",
+    "helpBury": "Posponer esta tarjeta hasta mañana",
+    "helpUndo": "Deshacer la última respuesta y retroceder una tarjeta"
   },
   "tts": {
     "error": "No se pudo reproducir el audio. Inténtalo de nuevo.",

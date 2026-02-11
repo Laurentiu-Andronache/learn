@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
+import { Button } from "@/components/ui/button";
 import {
   buryFlashcard,
   scheduleFlashcardReview,
@@ -53,8 +54,11 @@ export function FlashcardSession({
 }: FlashcardSessionProps) {
   const locale = useLocale();
   const tq = useTranslations("quiz");
+  const tf = useTranslations("flashcard");
   const ts = useTranslations("session");
   const [sessionKey, setSessionKey] = useState(0);
+  const [isFlipped, setIsFlipped] = useState(false);
+  const [rateSignal, setRateSignal] = useState({ count: 0, rating: 3 as 1 | 2 | 3 | 4 });
   const [flashcards, setFlashcards] = useState(initialFlashcards);
   const [results, setResults] = useState<Map<string, 1 | 2 | 3 | 4> | null>(
     null,
@@ -116,6 +120,11 @@ export function FlashcardSession({
     [],
   );
 
+  const handleFlipChange = useCallback((flipped: boolean) => setIsFlipped(flipped), []);
+  const handleRate = useCallback((rating: 1 | 2 | 3 | 4) => {
+    setRateSignal(prev => ({ count: prev.count + 1, rating }));
+  }, []);
+
   const handleReviewAgain = useCallback(() => {
     if (!results) return;
     const againIds = new Set(
@@ -126,6 +135,7 @@ export function FlashcardSession({
     setResults(null);
     setSessionKey((k) => k + 1);
     setCurrentIdx(0);
+    setIsFlipped(false);
   }, [results, flashcards]);
 
   const handleIndexChange = useCallback((index: number) => {
@@ -204,9 +214,12 @@ export function FlashcardSession({
   }
 
   const currentFc = flashcards[currentIdx];
+  const currentPreviews = currentFc
+    ? (intervalPreviews.get(currentFc.id) ?? { 1: "", 2: "", 3: "", 4: "" })
+    : { 1: "", 2: "", 3: "", 4: "" };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-4 py-8 pb-16 space-y-6 bg-[radial-gradient(ellipse_at_top,hsl(var(--flashcard-accent)/0.04)_0%,transparent_50%)]">
+    <div className="w-full max-w-lg mx-auto px-4 py-8 space-y-6 bg-[radial-gradient(ellipse_at_top,hsl(var(--flashcard-accent)/0.04)_0%,transparent_50%)]">
       <h1 className="text-xl font-bold text-center">
         {locale === "es" ? topicTitleEs : topicTitleEn}
       </h1>
@@ -215,38 +228,97 @@ export function FlashcardSession({
         key={sessionKey}
         flashcards={flashcards}
         locale={locale as "en" | "es"}
-        intervalPreviews={intervalPreviews}
-        showIntervalPreviews={showIntervalPreviews}
         onGrade={handleGrade}
         onSuspend={handleSuspend}
         onComplete={handleComplete}
         skipSignal={skipSignal}
         undoSignal={undoSignal}
         onIndexChange={handleIndexChange}
+        onFlipChange={handleFlipChange}
+        rateSignal={rateSignal}
       />
 
-      {currentFc && (
-        <SessionToolbar
-          userId={userId}
-          topicId={topicId}
-          mode="flashcard"
-          isAdmin={isAdmin}
-          currentFlashcard={{
-            id: currentFc.id,
-            question_en: currentFc.question_en,
-            question_es: currentFc.question_es,
-            answer_en: currentFc.answer_en,
-            answer_es: currentFc.answer_es,
-            extra_en: currentFc.extra_en,
-            extra_es: currentFc.extra_es,
-            difficulty: 5,
-          }}
-          onBury={handleBury}
-          onUndo={handleUndo}
-          onDeleteQuestion={handleDeleteQuestion}
-          canUndo={currentIdx > 0}
-        />
-      )}
+      <div className="sticky bottom-0 z-20 -mx-4 px-4 pt-3 pb-4 bg-gradient-to-t from-background from-80% to-transparent">
+        {isFlipped && currentFc && (
+          <div className="max-w-lg mx-auto space-y-2 animate-fade-up mb-3">
+            <p className="text-xs text-center text-muted-foreground">
+              {tf("ratingHint")}
+            </p>
+            <div className="grid grid-cols-4 gap-2">
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-2 border-rating-again/40 text-rating-again hover:bg-rating-again/10 hover:text-rating-again hover:shadow-[0_0_10px_-3px_hsl(var(--rating-again)/0.4)]"
+                onClick={() => handleRate(1)}
+              >
+                <span className="text-sm font-medium">{tf("again")}</span>
+                {showIntervalPreviews && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {currentPreviews[1]}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-2 border-rating-hard/40 text-rating-hard hover:bg-rating-hard/10 hover:text-rating-hard hover:shadow-[0_0_10px_-3px_hsl(var(--rating-hard)/0.4)]"
+                onClick={() => handleRate(2)}
+              >
+                <span className="text-sm font-medium">{tf("hard")}</span>
+                {showIntervalPreviews && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {currentPreviews[2]}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-2 border-rating-good/40 text-rating-good hover:bg-rating-good/10 hover:text-rating-good hover:shadow-[0_0_10px_-3px_hsl(var(--rating-good)/0.4)]"
+                onClick={() => handleRate(3)}
+              >
+                <span className="text-sm font-medium">{tf("good")}</span>
+                {showIntervalPreviews && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {currentPreviews[3]}
+                  </span>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-col h-auto py-2 border-rating-easy/40 text-rating-easy hover:bg-rating-easy/10 hover:text-rating-easy hover:shadow-[0_0_10px_-3px_hsl(var(--rating-easy)/0.4)]"
+                onClick={() => handleRate(4)}
+              >
+                <span className="text-sm font-medium">{tf("easy")}</span>
+                {showIntervalPreviews && (
+                  <span className="text-[10px] text-muted-foreground">
+                    {currentPreviews[4]}
+                  </span>
+                )}
+              </Button>
+            </div>
+          </div>
+        )}
+        {currentFc && (
+          <SessionToolbar
+            userId={userId}
+            topicId={topicId}
+            mode="flashcard"
+            isAdmin={isAdmin}
+            currentFlashcard={{
+              id: currentFc.id,
+              question_en: currentFc.question_en,
+              question_es: currentFc.question_es,
+              answer_en: currentFc.answer_en,
+              answer_es: currentFc.answer_es,
+              extra_en: currentFc.extra_en,
+              extra_es: currentFc.extra_es,
+              difficulty: 5,
+            }}
+            onBury={handleBury}
+            onUndo={handleUndo}
+            onDeleteQuestion={handleDeleteQuestion}
+            canUndo={currentIdx > 0}
+          />
+        )}
+      </div>
     </div>
   );
 }

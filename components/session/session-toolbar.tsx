@@ -2,6 +2,7 @@
 
 import {
   ArrowDownToLine,
+  CircleHelp,
   Pencil,
   SkipForward,
   Square,
@@ -72,6 +73,7 @@ export function SessionToolbar({
   const router = useRouter();
   const t = useTranslations("session");
   const [editOpen, setEditOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [findingNext, setFindingNext] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -140,8 +142,18 @@ export function SessionToolbar({
 
   return (
     <>
-      <div className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-lg border border-border/50 ${glowColor} px-2 py-1`}>
+      <div className={`mx-auto w-fit flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-lg border border-border/50 ${glowColor} px-2 py-1`}>
         <TooltipProvider>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setHelpOpen(true)}
+            className="rounded-full px-2"
+          >
+            <CircleHelp className="size-4" />
+            <span className="sr-only">{t("help")}</span>
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
@@ -224,6 +236,39 @@ export function SessionToolbar({
           )}
         </TooltipProvider>
       </div>
+
+      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{t("helpTitle")}</DialogTitle>
+            <DialogDescription className="sr-only">
+              Toolbar button descriptions
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="flex items-center gap-3">
+              <Square className="size-4 shrink-0" />
+              <span>{t("helpStop")}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <SkipForward className="size-4 shrink-0" />
+              <span>{t("helpNextTopic")}</span>
+            </div>
+            {mode !== "quiz" && (
+              <>
+                <div className="flex items-center gap-3">
+                  <ArrowDownToLine className="size-4 shrink-0" />
+                  <span>{t("helpBury")}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Undo2 className="size-4 shrink-0" />
+                  <span>{t("helpUndo")}</span>
+                </div>
+              </>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {isAdmin && (
         <Dialog open={editOpen} onOpenChange={setEditOpen}>

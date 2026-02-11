@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
@@ -25,27 +26,27 @@ interface FlashcardData {
 interface FlashcardStackProps {
   flashcards: FlashcardData[];
   locale: "en" | "es";
-  intervalPreviews: Map<string, Record<1 | 2 | 3 | 4, string>>;
-  showIntervalPreviews?: boolean;
   onGrade: (flashcardId: string, rating: 1 | 2 | 3 | 4) => void;
   onSuspend: (flashcardId: string) => void;
   onComplete: (results: Map<string, 1 | 2 | 3 | 4>) => void;
   skipSignal?: number;
   undoSignal?: number;
   onIndexChange?: (index: number) => void;
+  onFlipChange?: (flipped: boolean) => void;
+  rateSignal?: { count: number; rating: 1 | 2 | 3 | 4 };
 }
 
 export function FlashcardStack({
   flashcards,
   locale,
-  intervalPreviews,
-  showIntervalPreviews = true,
   onGrade,
   onSuspend,
   onComplete,
   skipSignal,
   undoSignal,
   onIndexChange,
+  onFlipChange,
+  rateSignal,
 }: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -57,6 +58,7 @@ export function FlashcardStack({
   const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
   const prevSkipSignal = useRef(skipSignal ?? 0);
   const prevUndoSignal = useRef(undoSignal ?? 0);
+  const prevRateSignal = useRef(rateSignal?.count ?? 0);
 
   // Skip signal — advance without grading
   useEffect(() => {
@@ -68,6 +70,7 @@ export function FlashcardStack({
         const next = currentIndex + 1;
         setCurrentIndex(next);
         setIsFlipped(false);
+        onFlipChange?.(false);
         onIndexChange?.(next);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
@@ -79,6 +82,7 @@ export function FlashcardStack({
     ratings,
     onComplete,
     onIndexChange,
+    onFlipChange,
   ]);
 
   // Undo signal — go back to previous card
@@ -95,11 +99,12 @@ export function FlashcardStack({
         });
         setCurrentIndex(prev);
         setIsFlipped(false);
+        onFlipChange?.(false);
         onIndexChange?.(prev);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     }
-  }, [undoSignal, currentIndex, flashcards, onIndexChange]);
+  }, [undoSignal, currentIndex, flashcards, onIndexChange, onFlipChange]);
 
   const advance = useCallback(
     (rating: 1 | 2 | 3 | 4) => {
@@ -117,12 +122,21 @@ export function FlashcardStack({
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
         setIsFlipped(false);
+        onFlipChange?.(false);
         onIndexChange?.(nextIndex);
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
-    [currentIndex, flashcards, ratings, onGrade, onComplete, onIndexChange],
+    [currentIndex, flashcards, ratings, onGrade, onComplete, onIndexChange, onFlipChange],
   );
+
+  // Rate signal — grade from parent
+  useEffect(() => {
+    if (rateSignal && rateSignal.count > prevRateSignal.current) {
+      prevRateSignal.current = rateSignal.count;
+      advance(rateSignal.rating);
+    }
+  }, [rateSignal, advance]);
 
   // Keyboard hotkeys: 1=Again, 2=Hard, 3/Space=Good, 4=Easy (only when flipped)
   useEffect(() => {
@@ -174,15 +188,11 @@ export function FlashcardStack({
   const answer = locale === "es" ? current.answer_es : current.answer_en;
   const extra = locale === "es" ? current.extra_es : current.extra_en;
 
-  const previews = intervalPreviews.get(current.id) ?? {
-    1: "",
-    2: "",
-    3: "",
-    4: "",
-  };
-
   const handleFlip = () => {
-    if (!isFlipped) setIsFlipped(true);
+    if (!isFlipped) {
+      setIsFlipped(true);
+      onFlipChange?.(true);
+    }
   };
 
   // Count ratings by type
@@ -237,12 +247,15 @@ export function FlashcardStack({
                 </div>
               )}
               {extra && (
-                <div className="rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)] border border-[hsl(var(--flashcard-accent)/0.2)] p-3">
-                  <p className="text-xs font-medium text-[hsl(var(--flashcard-accent))] mb-1">
+                <details key={current.id} className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)] border border-[hsl(var(--flashcard-accent)/0.2)]">
+                  <summary className="px-3 py-2 cursor-pointer text-sm font-medium text-[hsl(var(--flashcard-accent))] list-none flex items-center gap-1">
+                    <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                     {tq("learnMore")}
-                  </p>
-                  <MarkdownContent text={extra} className="text-xs text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
-                </div>
+                  </summary>
+                  <div className="px-3 pb-3">
+                    <MarkdownContent text={extra} className="text-sm text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
+                  </div>
+                </details>
               )}
             </div>
             <div className="mt-2 flex justify-between">
@@ -289,64 +302,6 @@ export function FlashcardStack({
         onOpenChange={setReportOpen}
       />
 
-      {/* 4-point FSRS rating buttons - only show when flipped */}
-      {isFlipped && (
-        <div className="space-y-2 animate-fade-up">
-          <p className="text-xs text-center text-muted-foreground">
-            {tf("ratingHint")}
-          </p>
-          <div className="grid grid-cols-4 gap-2">
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-2 border-rating-again/40 text-rating-again hover:bg-rating-again/10 hover:text-rating-again hover:shadow-[0_0_10px_-3px_hsl(var(--rating-again)/0.4)]"
-              onClick={() => advance(1)}
-            >
-              <span className="text-sm font-medium">{tf("again")}</span>
-              {showIntervalPreviews && (
-                <span className="text-[10px] text-muted-foreground">
-                  {previews[1]}
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-2 border-rating-hard/40 text-rating-hard hover:bg-rating-hard/10 hover:text-rating-hard hover:shadow-[0_0_10px_-3px_hsl(var(--rating-hard)/0.4)]"
-              onClick={() => advance(2)}
-            >
-              <span className="text-sm font-medium">{tf("hard")}</span>
-              {showIntervalPreviews && (
-                <span className="text-[10px] text-muted-foreground">
-                  {previews[2]}
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-2 border-rating-good/40 text-rating-good hover:bg-rating-good/10 hover:text-rating-good hover:shadow-[0_0_10px_-3px_hsl(var(--rating-good)/0.4)]"
-              onClick={() => advance(3)}
-            >
-              <span className="text-sm font-medium">{tf("good")}</span>
-              {showIntervalPreviews && (
-                <span className="text-[10px] text-muted-foreground">
-                  {previews[3]}
-                </span>
-              )}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-col h-auto py-2 border-rating-easy/40 text-rating-easy hover:bg-rating-easy/10 hover:text-rating-easy hover:shadow-[0_0_10px_-3px_hsl(var(--rating-easy)/0.4)]"
-              onClick={() => advance(4)}
-            >
-              <span className="text-sm font-medium">{tf("easy")}</span>
-              {showIntervalPreviews && (
-                <span className="text-[10px] text-muted-foreground">
-                  {previews[4]}
-                </span>
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
