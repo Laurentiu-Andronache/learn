@@ -113,7 +113,8 @@ DB tables use `topics`, `hidden_topics`, `topic_proposals` — matching UI termi
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based)
 - `lib/services/quiz-attempts.ts` — `saveQuizAttempt`, `getLatestQuizAttempt`
 - `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, `getFsrsSettings`, `updateFsrsSettings`, etc.
-- `components/settings/fsrs-settings.tsx` — Study settings card (retention slider, max interval, new cards/day, show intervals)
+- `components/settings/fsrs-settings.tsx` — Study settings card (retention slider, max interval, ramp-up toggle, new cards/day, show intervals)
+- `components/topics/study-tips-dialog.tsx` — First-visit study tips popup (localStorage-gated)
 
 ## Admin Editing (shared components)
 
@@ -141,7 +142,9 @@ Flashcard grading: Again (1, red) / Hard (2, orange) / Good (3, green) / Easy (4
 
 ## Per-User FSRS Settings
 
-Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 20), `show_review_time` (default true).
+Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true).
+
+**Ramp-up**: When `new_cards_ramp_up` is true, new cards are capped at `5 + dayNumber` for the first 5 days of a topic (6/7/8/9/10), then `new_cards_per_day`. Day number is calculated from the user's earliest review log for that topic's flashcards.
 
 `createUserScheduler()` in `scheduler.ts` creates FSRS instances with custom retention/interval. Used in `scheduleFlashcardReview` and `getIntervalPreviews`. Settings UI at `/settings` via `components/settings/fsrs-settings.tsx`.
 
