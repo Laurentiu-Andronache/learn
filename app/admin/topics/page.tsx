@@ -35,6 +35,11 @@ export default async function AdminTopicsPage() {
                 <p className="text-sm text-muted-foreground truncate">
                   {topic.title_es}
                 </p>
+                {topic.slug && (
+                  <p className="text-xs text-muted-foreground/60 truncate font-mono">
+                    /{topic.slug}
+                  </p>
+                )}
               </div>
               <div className="flex gap-1.5">
                 {!topic.is_active && (

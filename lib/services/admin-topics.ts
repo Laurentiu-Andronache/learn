@@ -8,6 +8,7 @@ export interface TopicFormData {
   title_es: string;
   description_en: string | null;
   description_es: string | null;
+  slug: string | null;
   icon: string | null;
   color: string | null;
   intro_text_en: string | null;

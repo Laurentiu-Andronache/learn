@@ -26,6 +26,10 @@ const topicSchema = z.object({
   title_es: z.string().min(1, "Spanish title is required"),
   description_en: z.string().nullable(),
   description_es: z.string().nullable(),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9-]*$/, "Only lowercase letters, numbers, and hyphens")
+    .nullable(),
   icon: z.string().nullable(),
   color: z
     .string()
@@ -35,6 +39,15 @@ const topicSchema = z.object({
   intro_text_es: z.string().nullable(),
   is_active: z.boolean(),
 });
+
+function generateSlug(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
 
 interface TopicFormProps {
   mode: "create" | "edit";
@@ -89,6 +102,7 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
       title_es: "",
       description_en: null,
       description_es: null,
+      slug: null,
       icon: null,
       color: null,
       intro_text_en: null,
@@ -121,6 +135,7 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
           ...merged,
           description_en: merged.description_en || null,
           description_es: merged.description_es || null,
+          slug: merged.slug || null,
           icon: merged.icon || null,
           color: merged.color || null,
           intro_text_en: merged.intro_text_en || null,
@@ -208,6 +223,36 @@ export function TopicForm({ mode, topicId, defaultValues }: TopicFormProps) {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Slug */}
+      <div>
+        <Label htmlFor="slug">{t("admin.slug")}</Label>
+        <div className="flex gap-2 mt-1">
+          <Input
+            id="slug"
+            {...register("slug")}
+            placeholder="e.g. vaccines-and-immunity"
+            className="flex-1"
+          />
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              const title = watch("title_en");
+              if (title) setValue("slug", generateSlug(title));
+            }}
+          >
+            {t("admin.generateSlug")}
+          </Button>
+        </div>
+        {errors.slug && (
+          <p className="text-sm text-red-500 mt-1">{errors.slug.message}</p>
+        )}
+        <p className="text-xs text-muted-foreground mt-1">
+          {t("admin.slugHelp")}
+        </p>
+      </div>
 
       {/* Appearance */}
       <Card>

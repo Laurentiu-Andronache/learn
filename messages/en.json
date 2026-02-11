@@ -300,6 +300,9 @@
     "saveQuestion": "Save",
     "saveFlashcard": "Save",
     "cancelEdit": "Cancel",
+    "slug": "URL Slug",
+    "generateSlug": "Generate",
+    "slugHelp": "Optional. Lowercase letters, numbers, and hyphens only. Used for friendly URLs like /topics/vaccines.",
     "translate": {
       "title": "Auto-Translate",
       "description": "Auto-translate your changes to {targetLang}?",

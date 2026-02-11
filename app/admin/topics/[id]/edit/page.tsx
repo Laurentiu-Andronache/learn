@@ -27,6 +27,7 @@ export default async function EditTopicPage({
           title_es: topic.title_es,
           description_en: topic.description_en,
           description_es: topic.description_es,
+          slug: topic.slug,
           icon: topic.icon,
           color: topic.color,
           intro_text_en: topic.intro_text_en,

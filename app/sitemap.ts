@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const { data: topics } = await supabase
     .from("topics")
-    .select("id, updated_at")
+    .select("id, slug, updated_at")
     .eq("status", "published");
 
   const staticPages: MetadataRoute.Sitemap = [
@@ -36,7 +36,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const topicPages: MetadataRoute.Sitemap =
     topics?.map((topic) => ({
-      url: `${baseUrl}/topics/${topic.id}`,
+      url: `${baseUrl}/topics/${topic.slug || topic.id}`,
       lastModified: topic.updated_at ? new Date(topic.updated_at) : new Date(),
       changeFrequency: "weekly",
       priority: 0.7,

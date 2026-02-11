@@ -4,6 +4,11 @@ import type { SubMode } from "@/lib/fsrs/flashcard-ordering";
 import { getOrderedFlashcards } from "@/lib/fsrs/flashcard-ordering";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
+import {
+  isUuidParam,
+  resolveTopicSelect,
+} from "@/lib/topics/resolve-topic";
+import { topicUrl } from "@/lib/topics/topic-url";
 
 interface FlashcardsPageProps {
   params: Promise<{ id: string }>;
@@ -23,27 +28,31 @@ export default async function FlashcardsPage({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  const [{ data: adminRow }, { data: topic }, fsrsSettings] = await Promise.all(
-    [
-      supabase
-        .from("admin_users")
-        .select("id")
-        .eq("email", user.email!)
-        .maybeSingle(),
-      supabase
-        .from("topics")
-        .select("id, title_en, title_es")
-        .eq("id", id)
-        .single(),
-      getFsrsSettings(user.id),
-    ],
-  );
+  const [{ data: adminRow }, topic, fsrsSettings] = await Promise.all([
+    supabase
+      .from("admin_users")
+      .select("id")
+      .eq("email", user.email!)
+      .maybeSingle(),
+    resolveTopicSelect<{
+      id: string;
+      title_en: string;
+      title_es: string;
+      slug: string | null;
+    }>(id, "id, title_en, title_es, slug"),
+    getFsrsSettings(user.id),
+  ]);
 
   const isAdmin = !!adminRow;
   if (!topic) redirect("/topics");
 
+  // Canonical redirect: UUID in URL but topic has a slug
+  if (topic.slug && isUuidParam(id)) {
+    redirect(topicUrl(topic, "flashcards"));
+  }
+
   const subMode = (mode as SubMode) || "full";
-  const ordered = await getOrderedFlashcards(user.id, id, {
+  const ordered = await getOrderedFlashcards(user.id, topic.id, {
     subMode,
     categoryId: category,
     newCardsPerDay: fsrsSettings.new_cards_per_day,
@@ -55,7 +64,7 @@ export default async function FlashcardsPage({
   return (
     <FlashcardSession
       userId={user.id}
-      topicId={id}
+      topicId={topic.id}
       topicTitleEn={topic.title_en}
       topicTitleEs={topic.title_es}
       isAdmin={isAdmin}

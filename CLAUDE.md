@@ -90,6 +90,16 @@ DB tables use `topics`, `hidden_topics`, `topic_proposals` — matching UI termi
 | `/admin/quizzes` | Admin quiz question CRUD |
 | `/settings` | User preferences |
 
+`[id]` accepts both UUIDs and slugs. Topics with a `slug` column set get friendly URLs (e.g. `/topics/vaccines`). UUID URLs auto-redirect to slug URLs when a slug exists.
+
+## Topic Slug System
+
+- `topics.slug` — optional unique column for SEO-friendly URLs
+- `lib/topics/resolve-topic.ts` — `resolveTopic(param)` / `resolveTopicSelect(param, select)` detect UUID vs slug and query accordingly
+- `lib/topics/topic-url.ts` — `topicUrl(topic, sub?)` generates URLs preferring slug over id
+- All `app/topics/[id]/*` pages use resolve helpers + canonical redirect (UUID→slug)
+- Admin topic form has slug field with auto-generate from English title
+
 ## Glossary Tooltips
 
 `{{term|explanation}}` syntax renders hover/tap tooltips on technical terms. Supported in **reading mode, flashcard answers/extras, and quiz explanations/extras**. Authoring rules in `CLAUDE-content-creation.md`.
@@ -100,6 +110,8 @@ DB tables use `topics`, `hidden_topics`, `topic_proposals` — matching UI termi
 
 ## Component/Service Naming
 
+- `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
+- `lib/topics/topic-url.ts` — `topicUrl(topic, sub?)`
 - `components/topics/topic-card.tsx`, `topic-grid.tsx`
 - `components/flashcards/` — flashcard session, stack (4-point grading), progress, results
 - `components/quiz/` — quiz session, card, progress, results

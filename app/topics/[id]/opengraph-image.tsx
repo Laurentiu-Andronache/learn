@@ -1,5 +1,5 @@
 import { ImageResponse } from "next/og";
-import { createClient } from "@/lib/supabase/server";
+import { resolveTopicSelect } from "@/lib/topics/resolve-topic";
 
 export const runtime = "edge";
 
@@ -18,13 +18,12 @@ interface Props {
 
 export default async function Image({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
 
-  const { data: topic } = await supabase
-    .from("topics")
-    .select("title_en, title_es, icon")
-    .eq("id", id)
-    .single();
+  const topic = await resolveTopicSelect<{
+    title_en: string;
+    title_es: string | null;
+    icon: string | null;
+  }>(id, "title_en, title_es, icon");
 
   const title = topic?.title_en || "LEARN";
   const icon = topic?.icon || "📚";

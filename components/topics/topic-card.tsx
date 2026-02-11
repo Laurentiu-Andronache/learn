@@ -30,9 +30,11 @@ import {
   hideTopic,
   unsuspendAllFlashcardsForTopic,
 } from "@/lib/services/user-preferences";
+import { topicUrl } from "@/lib/topics/topic-url";
 
 interface TopicData {
   id: string;
+  slug: string | null;
   title_en: string;
   title_es: string | null;
   description_en: string | null;
@@ -76,7 +78,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
   };
 
   const handleShareLink = async () => {
-    const url = `${window.location.origin}/topics/${topic.id}`;
+    const url = `${window.location.origin}${topicUrl(topic)}`;
     await navigator.clipboard.writeText(url);
     toast.success(t("linkCopied"));
   };
@@ -120,7 +122,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
         className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full"
         onClick={() => {
           if (menuInteracting.current) return;
-          router.push(`/topics/${topic.id}`);
+          router.push(topicUrl(topic));
         }}
       >
         <CardHeader className="pb-3">

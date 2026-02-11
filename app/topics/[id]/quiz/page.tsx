@@ -2,6 +2,11 @@ import { redirect } from "next/navigation";
 import { QuizSession } from "@/components/quiz/quiz-session";
 import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
+import {
+  isUuidParam,
+  resolveTopicSelect,
+} from "@/lib/topics/resolve-topic";
+import { topicUrl } from "@/lib/topics/topic-url";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
@@ -35,13 +40,19 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
     .maybeSingle();
   const isAdmin = !!adminRow;
 
-  const { data: topic } = await supabase
-    .from("topics")
-    .select("id, title_en, title_es")
-    .eq("id", id)
-    .single();
+  const topic = await resolveTopicSelect<{
+    id: string;
+    title_en: string;
+    title_es: string;
+    slug: string | null;
+  }>(id, "id, title_en, title_es, slug");
 
   if (!topic) redirect("/topics");
+
+  // Canonical redirect: UUID in URL but topic has a slug
+  if (topic.slug && isUuidParam(id)) {
+    redirect(topicUrl(topic, "quiz"));
+  }
 
   // Fetch all questions for this topic via categories join
   const { data: questionsRaw } = await supabase
@@ -49,25 +60,25 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
     .select(
       "*, category:categories!inner(id, name_en, name_es, color, topic_id)",
     )
-    .eq("category.topic_id", id);
+    .eq("category.topic_id", topic.id);
 
   let filtered = questionsRaw || [];
 
   // In "remaining" mode, exclude questions already answered correctly
   if (mode === "remaining") {
-    const correctIds = new Set(await getCorrectQuestionIds(user.id, id));
+    const correctIds = new Set(await getCorrectQuestionIds(user.id, topic.id));
     filtered = filtered.filter((q) => !correctIds.has(q.id));
-    if (filtered.length === 0) redirect(`/topics/${id}`);
+    if (filtered.length === 0) redirect(topicUrl(topic));
   }
 
   const questions = shuffleArray(filtered);
 
-  if (questions.length === 0) redirect(`/topics/${id}`);
+  if (questions.length === 0) redirect(topicUrl(topic));
 
   return (
     <QuizSession
       userId={user.id}
-      topicId={id}
+      topicId={topic.id}
       topicTitleEn={topic.title_en}
       topicTitleEs={topic.title_es}
       questions={questions.map((q) => {

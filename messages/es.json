@@ -300,6 +300,9 @@
     "saveQuestion": "Guardar",
     "saveFlashcard": "Guardar",
     "cancelEdit": "Cancelar",
+    "slug": "Slug de URL",
+    "generateSlug": "Generar",
+    "slugHelp": "Opcional. Solo letras minúsculas, números y guiones. Se usa para URLs amigables como /topics/vacunas.",
     "translate": {
       "title": "Auto-Traducir",
       "description": "¿Traducir automáticamente tus cambios al {targetLang}?",

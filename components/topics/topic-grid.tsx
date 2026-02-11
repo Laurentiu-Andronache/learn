@@ -6,6 +6,7 @@ import type { TopicProgress } from "@/lib/fsrs/progress";
 
 interface TopicData {
   id: string;
+  slug: string | null;
   title_en: string;
   title_es: string | null;
   description_en: string | null;

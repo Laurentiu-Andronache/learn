@@ -11,15 +11,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTopicProgress } from "@/lib/fsrs/progress";
 import { getQuizSummary } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
+import { isUuidParam, resolveTopic } from "@/lib/topics/resolve-topic";
+import { topicUrl } from "@/lib/topics/topic-url";
 
-const getTopicById = cache(async (id: string) => {
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("topics")
-    .select("*, creator:profiles!creator_id(display_name)")
-    .eq("id", id)
-    .single();
-  return data;
+const getTopicById = cache(async (param: string) => {
+  return resolveTopic(param);
 });
 
 interface Props {
@@ -48,6 +44,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000";
 
+  const canonicalPath = topicUrl(topic);
+
   return {
     title: `${title} | LEARN`,
     description:
@@ -56,7 +54,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title: `${title} | LEARN`,
       description:
         description || `Study ${title} with science-backed spaced repetition`,
-      url: `${baseUrl}/topics/${id}`,
+      url: `${baseUrl}${canonicalPath}`,
       type: "website",
     },
     twitter: {
@@ -66,7 +64,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         description || `Study ${title} with science-backed spaced repetition`,
     },
     alternates: {
-      canonical: `${baseUrl}/topics/${id}`,
+      canonical: `${baseUrl}${canonicalPath}`,
     },
   };
 }
@@ -87,17 +85,22 @@ export default async function TopicDetailPage({ params }: Props) {
 
   if (!topic) redirect("/topics");
 
+  // Canonical redirect: UUID in URL but topic has a slug → redirect to slug URL
+  if (topic.slug && isUuidParam(id)) {
+    redirect(topicUrl(topic));
+  }
+
   const [progress, { count: quizQuestionCount }] = await Promise.all([
-    getTopicProgress(user.id, id),
+    getTopicProgress(user.id, topic.id),
     supabase
       .from("questions")
       .select("id, categories!inner(topic_id)", {
         count: "exact",
         head: true,
       })
-      .eq("categories.topic_id", id),
+      .eq("categories.topic_id", topic.id),
   ]);
-  const quizSummary = await getQuizSummary(user.id, id);
+  const quizSummary = await getQuizSummary(user.id, topic.id);
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
@@ -140,7 +143,7 @@ export default async function TopicDetailPage({ params }: Props) {
               {tTopics("masteredAll")}
             </p>
             <Button asChild variant="outline" size="sm">
-              <Link href={`/topics/${id}/flashcards?subMode=full`}>
+              <Link href={`${topicUrl(topic, "flashcards")}?subMode=full`}>
                 {tTopics("reviewAnyway")}
               </Link>
             </Button>
@@ -225,7 +228,7 @@ export default async function TopicDetailPage({ params }: Props) {
       {/* Study Modes */}
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Flashcards — Primary CTA */}
-        <Link href={`/topics/${id}/flashcards`} className="sm:col-span-2">
+        <Link href={topicUrl(topic, "flashcards")} className="sm:col-span-2">
           <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer border-t-2 border-t-[hsl(var(--flashcard-accent)/0.5)]">
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-4xl">&#127171;</div>
@@ -249,7 +252,7 @@ export default async function TopicDetailPage({ params }: Props) {
         {quizSummary.attemptCount > 0 &&
         quizSummary.uniqueCorrectCount < (quizQuestionCount ?? 0) ? (
           <ClickableCard
-            href={`/topics/${id}/quiz?mode=remaining`}
+            href={`${topicUrl(topic, "quiz")}?mode=remaining`}
             className="cursor-pointer"
           >
             <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
@@ -270,7 +273,7 @@ export default async function TopicDetailPage({ params }: Props) {
                 </p>
                 <div className="flex items-center justify-center gap-3 text-xs">
                   <Link
-                    href={`/topics/${id}/quiz`}
+                    href={topicUrl(topic, "quiz")}
                     className="font-medium text-primary underline"
                   >
                     {tTopics("fullTest")}
@@ -284,7 +287,7 @@ export default async function TopicDetailPage({ params }: Props) {
             </Card>
           </ClickableCard>
         ) : (
-          <Link href={`/topics/${id}/quiz`}>
+          <Link href={topicUrl(topic, "quiz")}>
             <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
               <CardContent className="pt-6 text-center space-y-2">
                 <div className="text-3xl">&#128221;</div>
@@ -308,7 +311,7 @@ export default async function TopicDetailPage({ params }: Props) {
         )}
 
         {/* Reading */}
-        <Link href={`/topics/${id}/reading`}>
+        <Link href={topicUrl(topic, "reading")}>
           <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--reading-accent)/0.5)]">
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-3xl">&#128214;</div>
