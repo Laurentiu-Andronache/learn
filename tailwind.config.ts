@@ -11,7 +11,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        display: ["var(--font-display)", "serif"],
+        display: ["var(--font-body)", "sans-serif"],
         sans: ["var(--font-body)", "sans-serif"],
       },
       colors: {

@@ -225,7 +225,7 @@ export default async function TopicDetailPage({ params }: Props) {
       <div className="grid gap-4 sm:grid-cols-2">
         {/* Flashcards — Primary CTA */}
         <Link href={`/topics/${id}/flashcards`} className="sm:col-span-2">
-          <Card className="hover:shadow-glow-sm transition-all duration-200 cursor-pointer border-t-2 border-t-[hsl(var(--flashcard-accent)/0.5)]">
+          <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer border-t-2 border-t-[hsl(var(--flashcard-accent)/0.5)]">
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-4xl">&#127171;</div>
               <h3 className="text-lg font-semibold">{tModes("flashcard")}</h3>
@@ -251,7 +251,7 @@ export default async function TopicDetailPage({ params }: Props) {
             href={`/topics/${id}/quiz?mode=remaining`}
             className="cursor-pointer"
           >
-            <Card className="hover:shadow-glow-sm transition-all duration-200 h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
+            <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
               <CardContent className="pt-6 text-center space-y-2">
                 <div className="text-3xl">&#128221;</div>
                 <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
@@ -284,7 +284,7 @@ export default async function TopicDetailPage({ params }: Props) {
           </ClickableCard>
         ) : (
           <Link href={`/topics/${id}/quiz`}>
-            <Card className="hover:shadow-glow-sm transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
+            <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
               <CardContent className="pt-6 text-center space-y-2">
                 <div className="text-3xl">&#128221;</div>
                 <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
@@ -308,7 +308,7 @@ export default async function TopicDetailPage({ params }: Props) {
 
         {/* Reading */}
         <Link href={`/topics/${id}/reading`}>
-          <Card className="hover:shadow-glow-sm transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--reading-accent)/0.5)]">
+          <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--reading-accent)/0.5)]">
             <CardContent className="pt-6 text-center space-y-2">
               <div className="text-3xl">&#128214;</div>
               <h3 className="font-semibold">{tModes("reading")}</h3>

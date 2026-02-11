@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Instrument_Serif } from "next/font/google";
+import { Geist } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { ThemeProvider } from "next-themes";
@@ -27,13 +27,6 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const instrumentSerif = Instrument_Serif({
-  variable: "--font-display",
-  display: "swap",
-  subsets: ["latin"],
-  weight: "400",
-});
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -44,7 +37,7 @@ export default async function RootLayout({
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${instrumentSerif.variable} font-sans antialiased`}>
+      <body className={`${geistSans.variable} font-sans antialiased`}>
         <StructuredData baseUrl={defaultUrl} locale={locale} />
         <AnalyticsProvider />
         <NextIntlClientProvider locale={locale} messages={messages}>
