@@ -3,13 +3,12 @@ import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { TopicGrid } from "@/components/topics/topic-grid";
 import { getAllTopicsProgress } from "@/lib/fsrs/progress";
+import { getBaseUrl } from "@/lib/seo/metadata-utils";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   return {
     title: locale === "es" ? "Temas - LEARN" : "Topics - LEARN",

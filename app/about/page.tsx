@@ -8,12 +8,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getBaseUrl } from "@/lib/seo/metadata-utils";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("about");
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   return {
     title: t("title"),
@@ -32,9 +31,7 @@ export default async function AboutPage() {
   const locale = await getLocale();
   const t = await getTranslations("about");
   const tm = await getTranslations("modes");
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   return (
     <>

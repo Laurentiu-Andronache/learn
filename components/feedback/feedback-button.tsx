@@ -1,5 +1,6 @@
 "use client";
 
+import { MessageSquarePlus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -25,13 +26,23 @@ export function FeedbackButton() {
 
   return (
     <>
+      {/* Desktop: text button */}
       <Button
         onClick={() => setOpen(true)}
         variant="outline"
         size="sm"
-        className="fixed bottom-4 right-4 z-50 rounded-full shadow-lg"
+        className="fixed bottom-4 right-4 z-50 rounded-full shadow-lg hidden sm:inline-flex"
       >
         Feedback
+      </Button>
+      {/* Mobile: compact icon */}
+      <Button
+        onClick={() => setOpen(true)}
+        variant="outline"
+        size="icon-sm"
+        className="fixed bottom-3 right-3 z-50 rounded-full shadow-lg sm:hidden"
+      >
+        <MessageSquarePlus className="size-4" />
       </Button>
       <FeedbackModal
         open={open}

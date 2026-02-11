@@ -23,7 +23,7 @@ learn-app/
 
 - Dev server: `npm run dev` on `:4000` (it should already be running)
 - Tests: `npm run test` (Vitest)
-- Deploy: `npm run build`; if it succeeds, then push to main → Vercel auto-deploys to https://learn-seven-peach.vercel.app
+- Deploy: `npm run build`; if it succeeds, then push to main → Vercel auto-deploys to https://learn.gift
 - All env vars must be configured in Vercel dashboard
 
 ## Architecture: Quiz vs Flashcard Split

@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
 
+export function getBaseUrl(): string {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`;
+  return "http://localhost:4000";
+}
+
 const defaultTitle = "LEARN";
 const defaultDescription =
   "Learn what you need to know to boost your cognition and live a longer, healthier life.";

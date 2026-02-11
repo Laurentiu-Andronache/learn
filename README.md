@@ -176,7 +176,7 @@ npm run test
 ### Vercel Deployment
 
 The app is deployed to Vercel at:
-- **Production**: https://learn-seven-peach.vercel.app
+- **Production**: https://learn.gift
 
 Environment variables are configured in Vercel. Code pushed to `main` auto-deploys.
 

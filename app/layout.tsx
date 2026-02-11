@@ -9,16 +9,12 @@ import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
 import { StructuredData } from "@/components/seo/structured-data";
 import { Toaster } from "@/components/ui/sonner";
-import { generateBaseMetadata } from "@/lib/seo/metadata-utils";
+import { generateBaseMetadata, getBaseUrl } from "@/lib/seo/metadata-utils";
 import "./globals.css";
-
-const defaultUrl = process.env.VERCEL_URL
-  ? `https://${process.env.VERCEL_URL}`
-  : "http://localhost:3000";
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
-  return generateBaseMetadata(defaultUrl, locale);
+  return generateBaseMetadata(getBaseUrl(), locale);
 }
 
 const geistSans = Geist({

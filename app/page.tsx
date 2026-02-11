@@ -52,11 +52,11 @@ export default async function HomePage() {
                 {t("landing.subtitle")}
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm mx-auto">
-              <Button asChild size="lg" className="flex-1 shadow-glow hover:shadow-glow-lg">
+            <div className="flex flex-row gap-3 w-full max-w-sm mx-auto">
+              <Button asChild size="lg" className="flex-1 min-h-[2.75rem] shadow-glow hover:shadow-glow-lg">
                 <Link href="/auth/sign-up">{t("landing.cta")}</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="flex-1">
+              <Button asChild variant="outline" size="lg" className="flex-1 min-h-[2.75rem]">
                 <Link href="/auth/login">{t("nav.login")}</Link>
               </Button>
             </div>

@@ -8,6 +8,7 @@ import { ClickableCard } from "@/components/topics/clickable-card";
 import { StudyTipsDialog } from "@/components/topics/study-tips-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getBaseUrl } from "@/lib/seo/metadata-utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getTopicProgress } from "@/lib/fsrs/progress";
 import { getQuizSummary } from "@/lib/services/quiz-attempts";
@@ -41,9 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       ? topic.description_es || topic.description_en
       : topic.description_en;
 
-  const baseUrl = process.env.VERCEL_URL
-    ? `https://${process.env.VERCEL_URL}`
-    : "http://localhost:3000";
+  const baseUrl = getBaseUrl();
 
   const canonicalPath = topicUrl(topic);
 
