@@ -25,7 +25,7 @@ export interface QuizCardProps {
 
 // --- Fisher-Yates Shuffle (skip for true/false) ---
 
-function shuffleOptions(options: string[], correctIndex: number) {
+export function shuffleOptions(options: string[], correctIndex: number) {
   const indices = options.map((_, i) => i);
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));

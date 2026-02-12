@@ -1,19 +1,5 @@
 import { describe, expect, it } from "vitest";
-
-// ─── Fisher-Yates shuffle logic (extracted for testing) ─────────────────────
-// This mirrors the shuffleOptions function in quiz-card.tsx
-
-function shuffleOptions(options: string[], correctIndex: number) {
-  const indices = options.map((_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-  return {
-    options: indices.map((i) => options[i]),
-    correctIndex: indices.indexOf(correctIndex),
-  };
-}
+import { shuffleOptions } from "./quiz-card";
 
 // ─── Quiz answer grading logic (mirrors handleNext in quiz-card.tsx) ────────
 

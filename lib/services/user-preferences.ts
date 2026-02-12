@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
 // ============ SUSPENDED FLASHCARDS ============
 
@@ -67,28 +68,13 @@ export async function unsuspendAllFlashcardsForTopic(
   topicId: string,
 ): Promise<number> {
   const supabase = await createClient();
-  // Get flashcard IDs for this topic
-  const { data: cats } = await supabase
-    .from("categories")
-    .select("id")
-    .eq("topic_id", topicId);
-  if (!cats?.length) return 0;
-  const { data: flashcards } = await supabase
-    .from("flashcards")
-    .select("id")
-    .in(
-      "category_id",
-      cats.map((c) => c.id),
-    );
-  if (!flashcards?.length) return 0;
+  const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
+  if (!flashcardIds.length) return 0;
   const { data: deleted } = await supabase
     .from("suspended_flashcards")
     .delete()
     .eq("user_id", userId)
-    .in(
-      "flashcard_id",
-      flashcards.map((f) => f.id),
-    )
+    .in("flashcard_id", flashcardIds)
     .select("id");
   return deleted?.length ?? 0;
 }

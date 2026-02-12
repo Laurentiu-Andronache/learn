@@ -6,6 +6,7 @@ import { getAllTopicsProgress } from "@/lib/fsrs/progress";
 import { createUserScheduler, Rating } from "@/lib/fsrs/scheduler";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
+import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
 export async function scheduleFlashcardReview(
   userId: string,
@@ -210,23 +211,6 @@ export async function undoLastReview(userId: string, flashcardId: string) {
       .eq("user_id", userId)
       .eq("flashcard_id", flashcardId);
   }
-}
-
-async function getFlashcardIdsForTopic(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  topicId: string,
-): Promise<string[]> {
-  const { data: cats } = await supabase
-    .from("categories")
-    .select("id")
-    .eq("topic_id", topicId);
-  if (!cats?.length) return [];
-  const catIds = cats.map((c) => c.id);
-  const { data: flashcards } = await supabase
-    .from("flashcards")
-    .select("id")
-    .in("category_id", catIds);
-  return flashcards?.map((f) => f.id) ?? [];
 }
 
 export async function resetTodayProgress(

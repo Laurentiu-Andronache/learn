@@ -88,12 +88,10 @@ export interface QuizSummary {
   uniqueCorrectCount: number;
 }
 
-/** Returns IDs of questions correctly answered in ANY attempt */
-export async function getCorrectQuestionIds(
-  userId: string,
-  topicId: string,
-): Promise<string[]> {
-  const attempts = await getQuizAttempts(userId, topicId, 100);
+/** Collect unique correct question IDs from a list of attempts. */
+function collectCorrectIds(
+  attempts: Awaited<ReturnType<typeof getQuizAttempts>>,
+): Set<string> {
   const correctIds = new Set<string>();
   for (const attempt of attempts) {
     const answers = attempt.answers as Array<{
@@ -105,7 +103,16 @@ export async function getCorrectQuestionIds(
       if (a.was_correct) correctIds.add(a.question_id);
     }
   }
-  return [...correctIds];
+  return correctIds;
+}
+
+/** Returns IDs of questions correctly answered in ANY attempt */
+export async function getCorrectQuestionIds(
+  userId: string,
+  topicId: string,
+): Promise<string[]> {
+  const attempts = await getQuizAttempts(userId, topicId, 100);
+  return [...collectCorrectIds(attempts)];
 }
 
 /** Returns { attemptCount, uniqueCorrectCount } across all attempts */
@@ -114,16 +121,8 @@ export async function getQuizSummary(
   topicId: string,
 ): Promise<QuizSummary> {
   const attempts = await getQuizAttempts(userId, topicId, 100);
-  const correctIds = new Set<string>();
-  for (const attempt of attempts) {
-    const answers = attempt.answers as Array<{
-      question_id: string;
-      was_correct: boolean;
-    }> | null;
-    if (!answers) continue;
-    for (const a of answers) {
-      if (a.was_correct) correctIds.add(a.question_id);
-    }
-  }
-  return { attemptCount: attempts.length, uniqueCorrectCount: correctIds.size };
+  return {
+    attemptCount: attempts.length,
+    uniqueCorrectCount: collectCorrectIds(attempts).size,
+  };
 }
