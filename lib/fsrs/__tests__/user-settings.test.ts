@@ -46,6 +46,7 @@ describe("getFsrsSettings", () => {
         new_cards_per_day: 10,
         new_cards_ramp_up: false,
         show_review_time: false,
+        read_questions_aloud: true,
       },
       error: null,
     };
@@ -57,6 +58,7 @@ describe("getFsrsSettings", () => {
       new_cards_per_day: 10,
       new_cards_ramp_up: false,
       show_review_time: false,
+      read_questions_aloud: true,
     });
   });
 
@@ -68,6 +70,7 @@ describe("getFsrsSettings", () => {
         new_cards_per_day: null,
         new_cards_ramp_up: null,
         show_review_time: null,
+        read_questions_aloud: null,
       },
       error: null,
     };
@@ -79,6 +82,7 @@ describe("getFsrsSettings", () => {
       new_cards_per_day: 10,
       new_cards_ramp_up: true,
       show_review_time: true,
+      read_questions_aloud: false,
     });
   });
 
@@ -95,6 +99,7 @@ describe("getFsrsSettings", () => {
       new_cards_per_day: 10,
       new_cards_ramp_up: true,
       show_review_time: true,
+      read_questions_aloud: false,
     });
   });
 });

@@ -24,6 +24,7 @@ const DEFAULTS: FsrsSettings = {
   new_cards_per_day: 10,
   new_cards_ramp_up: true,
   show_review_time: true,
+  read_questions_aloud: false,
 };
 
 interface FsrsSettingsCardProps {
@@ -39,6 +40,7 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
   const [newCards, setNewCards] = useState(settings.new_cards_per_day);
   const [rampUp, setRampUp] = useState(settings.new_cards_ramp_up);
   const [showIntervals, setShowIntervals] = useState(settings.show_review_time);
+  const [readAloud, setReadAloud] = useState(settings.read_questions_aloud);
   const [saving, setSaving] = useState(false);
 
   const handleSave = useCallback(async () => {
@@ -50,6 +52,7 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
         new_cards_per_day: newCards,
         new_cards_ramp_up: rampUp,
         show_review_time: showIntervals,
+        read_questions_aloud: readAloud,
       });
       toast.success(t("saved"));
     } catch {
@@ -57,7 +60,7 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
     } finally {
       setSaving(false);
     }
-  }, [userId, retention, maxInterval, newCards, rampUp, showIntervals, t, tc]);
+  }, [userId, retention, maxInterval, newCards, rampUp, showIntervals, readAloud, t, tc]);
 
   const handleReset = useCallback(() => {
     setRetention(DEFAULTS.desired_retention);
@@ -65,6 +68,7 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
     setNewCards(DEFAULTS.new_cards_per_day);
     setRampUp(DEFAULTS.new_cards_ramp_up);
     setShowIntervals(DEFAULTS.show_review_time);
+    setReadAloud(DEFAULTS.read_questions_aloud);
   }, []);
 
   return (
@@ -174,6 +178,23 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
             id="showIntervals"
             checked={showIntervals}
             onCheckedChange={setShowIntervals}
+          />
+        </div>
+
+        <Separator />
+
+        {/* Read Questions Aloud */}
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-1">
+            <Label htmlFor="readAloud">{t("readAloud")}</Label>
+            <p className="text-xs text-muted-foreground">
+              {t("readAloudDescription")}
+            </p>
+          </div>
+          <Switch
+            id="readAloud"
+            checked={readAloud}
+            onCheckedChange={setReadAloud}
           />
         </div>
 

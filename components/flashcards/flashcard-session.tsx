@@ -236,6 +236,7 @@ export function FlashcardSession({
         onIndexChange={handleIndexChange}
         onFlipChange={handleFlipChange}
         rateSignal={rateSignal}
+        readQuestionsAloud={fsrsSettings?.read_questions_aloud === true}
       />
 
       <div className="shrink-0 pt-3 pb-4">

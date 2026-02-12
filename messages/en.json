@@ -244,6 +244,8 @@
     "newCardsAfterRampUp": "Cards Per Day After Ramp-Up",
     "showIntervals": "Show Interval Previews",
     "showIntervalsDescription": "Display next review time on rating buttons.",
+    "readAloud": "Auto-Read Questions",
+    "readAloudDescription": "Automatically read questions aloud when they appear in quiz and flashcard modes.",
     "resetDefaults": "Reset to Defaults",
     "saved": "Settings saved.",
     "appearance": "Appearance",

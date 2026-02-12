@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { QuizSession } from "@/components/quiz/quiz-session";
 import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
+import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 import {
   isUuidParam,
@@ -76,12 +77,15 @@ export default async function QuizPage({ params, searchParams }: QuizPageProps) 
 
   if (questions.length === 0) redirect(topicUrl(topic));
 
+  const fsrsSettings = await getFsrsSettings(user.id);
+
   return (
     <QuizSession
       userId={user.id}
       topicId={topic.id}
       topicTitleEn={topic.title_en}
       topicTitleEs={topic.title_es}
+      fsrsSettings={fsrsSettings}
       questions={questions.map((q) => {
         const cat = q.category as unknown as {
           id: string;

@@ -21,6 +21,7 @@ export interface QuizCardProps {
   categoryName: string;
   categoryColor: string | null;
   onAnswer: (wasCorrect: boolean | null, timeMs: number) => void;
+  readQuestionsAloud?: boolean;
 }
 
 // --- Fisher-Yates Shuffle (skip for true/false) ---
@@ -45,11 +46,13 @@ export function QuizCard({
   categoryName,
   categoryColor,
   onAnswer,
+  readQuestionsAloud = false,
 }: QuizCardProps) {
   const t = useTranslations("quiz");
   const tCommon = useTranslations("common");
   const tFeedback = useTranslations("feedback");
   const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
+  const questionRef = useRef<HTMLParagraphElement>(null);
   const startTime = useRef(Date.now());
 
   const [phase, setPhase] = useState<Phase>("answering");
@@ -65,10 +68,13 @@ export function QuizCard({
     startTime.current = Date.now();
   }
 
-  // Stop TTS on question change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: stop TTS whenever question changes
+  // Stop TTS on question change, then auto-read if enabled
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on question change
   useEffect(() => {
     stopTTS();
+    if (readQuestionsAloud && questionRef.current) {
+      handleBlockClick(questionRef.current);
+    }
   }, [question.id]);
 
   const questionText =
@@ -137,7 +143,17 @@ export function QuizCard({
         </div>
 
         {/* Question text */}
-        <p className="text-xl font-semibold leading-relaxed">{questionText}</p>
+        <p
+          ref={questionRef}
+          className={cn(
+            "text-xl font-semibold leading-relaxed transition-colors duration-200",
+            readQuestionsAloud && "cursor-pointer",
+            playingEl === questionRef.current && "bg-[hsl(var(--primary)/0.10)] rounded-md px-1 -mx-1",
+          )}
+          onClick={readQuestionsAloud ? () => questionRef.current && handleBlockClick(questionRef.current) : undefined}
+        >
+          {questionText}
+        </p>
 
         {/* Options */}
         <div className="space-y-3">

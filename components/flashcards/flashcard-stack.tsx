@@ -34,6 +34,7 @@ interface FlashcardStackProps {
   onIndexChange?: (index: number) => void;
   onFlipChange?: (flipped: boolean) => void;
   rateSignal?: { count: number; rating: 1 | 2 | 3 | 4 };
+  readQuestionsAloud?: boolean;
 }
 
 export function FlashcardStack({
@@ -47,6 +48,7 @@ export function FlashcardStack({
   onIndexChange,
   onFlipChange,
   rateSignal,
+  readQuestionsAloud = false,
 }: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
@@ -56,6 +58,7 @@ export function FlashcardStack({
   const tf = useTranslations("flashcard");
   const tq = useTranslations("quiz");
   const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
+  const questionRef = useRef<HTMLParagraphElement>(null);
   const prevSkipSignal = useRef(skipSignal ?? 0);
   const prevUndoSignal = useRef(undoSignal ?? 0);
   const prevRateSignal = useRef(rateSignal?.count ?? 0);
@@ -174,11 +177,22 @@ export function FlashcardStack({
     return () => window.removeEventListener("keydown", handler);
   }, [isFlipped, advance, reportOpen]);
 
-  // Stop TTS on card change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: stop TTS whenever card changes
+  // Stop TTS on card change, then auto-read question if enabled
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on card change
   useEffect(() => {
     stopTTS();
+    if (readQuestionsAloud && questionRef.current) {
+      handleBlockClick(questionRef.current);
+    }
   }, [currentIndex]);
+
+  // Stop TTS when card is flipped (frees TTS for answer/extra on back side)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: stop TTS on flip
+  useEffect(() => {
+    if (isFlipped) {
+      stopTTS();
+    }
+  }, [isFlipped]);
 
   const current = flashcards[currentIndex];
   if (!current) return null;
@@ -233,7 +247,15 @@ export function FlashcardStack({
         >
           {/* Front */}
           <Card className="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center border-[hsl(var(--flashcard-accent)/0.2)]">
-            <p className="text-lg font-semibold mb-4">{questionText}</p>
+            <p
+              ref={questionRef}
+              className={cn(
+                "text-lg font-semibold mb-4 transition-colors duration-200",
+                playingEl === questionRef.current && "bg-[hsl(var(--primary)/0.10)] rounded-md px-2 -mx-2",
+              )}
+            >
+              {questionText}
+            </p>
             <p className="text-sm text-muted-foreground">{tf("tapToReveal")}</p>
           </Card>
 

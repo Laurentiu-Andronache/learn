@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
 import { deleteQuestion } from "@/lib/services/admin-reviews";
 import { saveQuizAttempt } from "@/lib/services/quiz-attempts";
+import type { FsrsSettings } from "@/lib/services/user-preferences";
 import type { Language, Question } from "@/lib/types/database";
 import { QuizCard } from "./quiz-card";
 import { QuizProgress } from "./quiz-progress";
@@ -27,6 +28,7 @@ export interface QuizSessionProps {
   topicTitleEs: string;
   questions: QuizQuestionData[];
   isAdmin?: boolean;
+  fsrsSettings?: FsrsSettings | null;
 }
 
 type SessionPhase = "quiz" | "results";
@@ -38,6 +40,7 @@ export function QuizSession({
   topicId,
   questions: allQuestions,
   isAdmin = false,
+  fsrsSettings = null,
 }: QuizSessionProps) {
   const locale = useLocale() as Language;
   const _tq = useTranslations("quiz");
@@ -202,6 +205,7 @@ export function QuizSession({
           categoryName={catName}
           categoryColor={currentQ.categoryColor}
           onAnswer={handleAnswer}
+          readQuestionsAloud={fsrsSettings?.read_questions_aloud === true}
         />
       </div>
       <div className="shrink-0 pt-3 pb-4">

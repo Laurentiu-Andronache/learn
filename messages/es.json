@@ -244,6 +244,8 @@
     "newCardsAfterRampUp": "Tarjetas Por D\u00eda Despu\u00e9s del Aumento",
     "showIntervals": "Mostrar Previsualización de Intervalos",
     "showIntervalsDescription": "Mostrar el próximo tiempo de repaso en los botones de calificación.",
+    "readAloud": "Leer Preguntas en Voz Alta",
+    "readAloudDescription": "Leer automáticamente las preguntas en voz alta cuando aparecen en modos de cuestionario y tarjetas.",
     "resetDefaults": "Restablecer Valores Predeterminados",
     "saved": "Ajustes guardados.",
     "appearance": "Apariencia",

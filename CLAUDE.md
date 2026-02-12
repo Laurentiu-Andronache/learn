@@ -137,6 +137,8 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 
 **Animation**: Static `bg-[hsl(var(--primary)/0.10)]` highlight on playing paragraph (no pulse/flash).
 
+**Auto-Read Questions**: `read_questions_aloud` profile setting (default false). When enabled, questions are auto-read via `handleBlockClick(ref)` on appear. Quiz: auto-read on question change + click question to pause/resume. Flashcard: auto-read on front side, stop on flip (no click-to-control — would conflict with card flip handler). Setting in `/settings` study settings card.
+
 ## Component/Service Naming
 
 - `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
@@ -185,7 +187,7 @@ Flashcard grading: Again (1, red) / Hard (2, orange) / Good (3, green) / Easy (4
 
 ## Per-User FSRS Settings
 
-Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true), `base_font_size` (12-18, default 14).
+Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true), `read_questions_aloud` (default false), `base_font_size` (12-18, default 14).
 
 **Ramp-up**: When `new_cards_ramp_up` is true, new cards are capped at `5 + dayNumber` for the first 5 days of a topic (6/7/8/9/10), then `new_cards_per_day`. Day number is calculated from the user's earliest review log for that topic's flashcards.
 
@@ -224,7 +226,7 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `components/flashcards/flashcard-logic.test.ts` | 17 | 4-point grading, stack advance, categories |
 | `lib/markdown/__tests__/preprocess-tooltips.test.ts` | 12 | Tooltip syntax conversion, escaping, code block skipping |
 
-**Total: 175 tests across 15 test files.**
+**Total: 230 tests across 20 test files.**
 
 ## UX Patterns
 
