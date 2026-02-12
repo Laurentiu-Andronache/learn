@@ -13,6 +13,7 @@ import {
 import { FlashcardEditForm } from "@/components/admin/flashcard-edit-form";
 import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -81,6 +82,8 @@ export function FlashcardsClient({
   const [categoryId, setCategoryId] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [searchAnswers, setSearchAnswers] = useState(false);
+  const [searchExtra, setSearchExtra] = useState(false);
 
   // Flashcards list
   const [flashcards, setFlashcards] =
@@ -138,17 +141,23 @@ export function FlashcardsClient({
           topicId?: string;
           categoryId?: string;
           search?: string;
+          searchAnswers?: boolean;
+          searchExtra?: boolean;
         } = {};
         if (topicId !== "all") filters.topicId = topicId;
         if (categoryId !== "all") filters.categoryId = categoryId;
-        if (debouncedSearch) filters.search = debouncedSearch;
+        if (debouncedSearch) {
+          filters.search = debouncedSearch;
+          filters.searchAnswers = searchAnswers;
+          filters.searchExtra = searchExtra;
+        }
         const data = await getFlashcardsList(filters);
         setFlashcards(data as FlashcardItem[]);
       } catch {
         // Auth error from requireAdmin() — layout already handles access control
       }
     });
-  }, [topicId, categoryId, debouncedSearch]);
+  }, [topicId, categoryId, debouncedSearch, searchAnswers, searchExtra]);
 
   useEffect(() => {
     fetchFlashcards();
@@ -195,40 +204,59 @@ export function FlashcardsClient({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <Select value={topicId} onValueChange={setTopicId}>
-          <SelectTrigger>
-            <SelectValue placeholder={t("admin.allTopics")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("admin.allTopics")}</SelectItem>
-            {topics.map((th) => (
-              <SelectItem key={th.id} value={th.id}>
-                {th.title_en}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="space-y-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <Select value={topicId} onValueChange={setTopicId}>
+            <SelectTrigger>
+              <SelectValue placeholder={t("admin.allTopics")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("admin.allTopics")}</SelectItem>
+              {topics.map((th) => (
+                <SelectItem key={th.id} value={th.id}>
+                  {th.title_en}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={categoryId} onValueChange={setCategoryId}>
-          <SelectTrigger>
-            <SelectValue placeholder={t("admin.allCategories")} />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">{t("admin.allCategories")}</SelectItem>
-            {filteredCategories.map((cat) => (
-              <SelectItem key={cat.id} value={cat.id}>
-                {cat.name_en}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={categoryId} onValueChange={setCategoryId}>
+            <SelectTrigger>
+              <SelectValue placeholder={t("admin.allCategories")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">{t("admin.allCategories")}</SelectItem>
+              {filteredCategories.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>
+                  {cat.name_en}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-        <Input
-          placeholder={t("admin.searchFlashcards")}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+            <Checkbox
+              checked={searchAnswers}
+              onCheckedChange={(v) => setSearchAnswers(v === true)}
+            />
+            {t("admin.searchAnswers")}
+          </label>
+          <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+            <Checkbox
+              checked={searchExtra}
+              onCheckedChange={(v) => setSearchExtra(v === true)}
+            />
+            {t("admin.searchExtra")}
+          </label>
+          <Input
+            className="flex-1 min-w-[180px]"
+            placeholder={t("admin.searchFlashcards")}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
 
       {isPending && (
@@ -252,7 +280,7 @@ export function FlashcardsClient({
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium">{f.question_en}</p>
-                <p className="text-xs text-muted-foreground mt-1 truncate">
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-3">
                   {f.answer_en}
                 </p>
               </div>

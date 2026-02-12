@@ -193,6 +193,7 @@
   },
   "flashcard": {
     "tapToReveal": "Toca para revelar",
+    "tapToSeeAnswer": "Toca para ver respuesta",
     "answer": "Respuesta",
     "cardOf": "Tarjeta {current} de {total}",
     "again": "Otra vez",
@@ -301,6 +302,8 @@
     "allTypes": "Todos los Tipos",
     "searchQuestions": "Buscar preguntas...",
     "searchFlashcards": "Buscar tarjetas...",
+    "searchAnswers": "Respuestas",
+    "searchExtra": "Extra",
     "editQuestion": "Editar Pregunta",
     "editFlashcard": "Editar Tarjeta",
     "editReading": "Editar Lectura",
@@ -369,7 +372,12 @@
     "helpStop": "Detener la sesión y volver a la página del tema",
     "helpNextTopic": "Saltar al siguiente tema con tarjetas pendientes",
     "helpBury": "Posponer esta tarjeta hasta mañana",
-    "helpUndo": "Deshacer la última respuesta y retroceder una tarjeta"
+    "helpUndo": "Deshacer la última respuesta y retroceder una tarjeta",
+    "helpShortcutsTitle": "Atajos de Teclado",
+    "helpShortcutAgain": "Otra vez",
+    "helpShortcutHard": "Difícil",
+    "helpShortcutGood": "Bien",
+    "helpShortcutEasy": "Fácil"
   },
   "tts": {
     "error": "No se pudo reproducir el audio. Inténtalo de nuevo.",

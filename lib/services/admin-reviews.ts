@@ -107,6 +107,8 @@ export async function getQuestionsList(filters?: {
   categoryId?: string;
   type?: string;
   search?: string;
+  searchAnswers?: boolean;
+  searchExtra?: boolean;
 }) {
   const { supabase } = await requireAdmin();
   const selectStr = filters?.topicId
@@ -129,7 +131,12 @@ export async function getQuestionsList(filters?: {
     query = query.eq("type", filters.type);
   }
   if (filters?.search) {
-    query = query.ilike("question_en", `%${filters.search}%`);
+    const conditions = [`question_en.ilike.%${filters.search}%`];
+    if (filters.searchAnswers)
+      conditions.push(`explanation_en.ilike.%${filters.search}%`);
+    if (filters.searchExtra)
+      conditions.push(`extra_en.ilike.%${filters.search}%`);
+    query = query.or(conditions.join(","));
   }
 
   const { data, error } = await query;
@@ -194,6 +201,8 @@ export async function getFlashcardsList(filters?: {
   topicId?: string;
   categoryId?: string;
   search?: string;
+  searchAnswers?: boolean;
+  searchExtra?: boolean;
 }) {
   const { supabase } = await requireAdmin();
   const selectStr = filters?.topicId
@@ -207,8 +216,14 @@ export async function getFlashcardsList(filters?: {
   if (filters?.topicId)
     query = query.eq("categories.topic_id", filters.topicId);
   if (filters?.categoryId) query = query.eq("category_id", filters.categoryId);
-  if (filters?.search)
-    query = query.ilike("question_en", `%${filters.search}%`);
+  if (filters?.search) {
+    const conditions = [`question_en.ilike.%${filters.search}%`];
+    if (filters.searchAnswers)
+      conditions.push(`answer_en.ilike.%${filters.search}%`);
+    if (filters.searchExtra)
+      conditions.push(`extra_en.ilike.%${filters.search}%`);
+    query = query.or(conditions.join(","));
+  }
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return data || [];

@@ -52,6 +52,7 @@ export function FlashcardStack({
 }: FlashcardStackProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [hasBeenRevealed, setHasBeenRevealed] = useState(false);
   const [ratings, setRatings] = useState<Map<string, 1 | 2 | 3 | 4>>(new Map());
   const [reportOpen, setReportOpen] = useState(false);
   const t = useTranslations("feedback");
@@ -73,6 +74,7 @@ export function FlashcardStack({
         const next = currentIndex + 1;
         setCurrentIndex(next);
         setIsFlipped(false);
+        setHasBeenRevealed(false);
         onFlipChange?.(false);
         onIndexChange?.(next);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -102,6 +104,7 @@ export function FlashcardStack({
         });
         setCurrentIndex(prev);
         setIsFlipped(false);
+        setHasBeenRevealed(false);
         onFlipChange?.(false);
         onIndexChange?.(prev);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -125,6 +128,7 @@ export function FlashcardStack({
         const nextIndex = currentIndex + 1;
         setCurrentIndex(nextIndex);
         setIsFlipped(false);
+        setHasBeenRevealed(false);
         onFlipChange?.(false);
         onIndexChange?.(nextIndex);
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -141,10 +145,10 @@ export function FlashcardStack({
     }
   }, [rateSignal, advance]);
 
-  // Keyboard hotkeys: 1=Again, 2=Hard, 3/Space=Good, 4=Easy (only when flipped)
+  // Keyboard hotkeys: 1=Again, 2=Hard, 3/Space=Good, 4=Easy (only after first reveal)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (!isFlipped) return;
+      if (!hasBeenRevealed) return;
       if (reportOpen) return;
       // Don't capture if user is typing in an input
       if (
@@ -175,7 +179,7 @@ export function FlashcardStack({
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [isFlipped, advance, reportOpen]);
+  }, [hasBeenRevealed, advance, reportOpen]);
 
   // Stop TTS on card change, then auto-read question if enabled
   // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on card change
@@ -186,14 +190,6 @@ export function FlashcardStack({
     }
   }, [currentIndex]);
 
-  // Stop TTS when card is flipped (frees TTS for answer/extra on back side)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: stop TTS on flip
-  useEffect(() => {
-    if (isFlipped) {
-      stopTTS();
-    }
-  }, [isFlipped]);
-
   const current = flashcards[currentIndex];
   if (!current) return null;
 
@@ -203,9 +199,15 @@ export function FlashcardStack({
   const extra = locale === "es" ? current.extra_es : current.extra_en;
 
   const handleFlip = () => {
-    if (!isFlipped) {
+    stopTTS();
+    if (!hasBeenRevealed) {
       setIsFlipped(true);
+      setHasBeenRevealed(true);
       onFlipChange?.(true);
+    } else {
+      const next = !isFlipped;
+      setIsFlipped(next);
+      onFlipChange?.(next);
     }
   };
 
@@ -256,7 +258,7 @@ export function FlashcardStack({
             >
               {questionText}
             </p>
-            <p className="text-sm text-muted-foreground">{tf("tapToReveal")}</p>
+            <p className="text-sm text-muted-foreground">{hasBeenRevealed ? tf("tapToSeeAnswer") : tf("tapToReveal")}</p>
           </Card>
 
           {/* Back */}
@@ -269,7 +271,7 @@ export function FlashcardStack({
                 </div>
               )}
               {extra && (
-                <details key={current.id} className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)]">
+                <details key={current.id} className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)]" onClick={(e) => e.stopPropagation()}>
                   <summary className="pl-1 py-2 cursor-pointer text-sm font-medium text-[hsl(var(--flashcard-accent))] list-none flex items-center gap-1">
                     <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                     {tq("learnMore")}
@@ -303,6 +305,7 @@ export function FlashcardStack({
                   } else {
                     setCurrentIndex(currentIndex + 1);
                     setIsFlipped(false);
+                    setHasBeenRevealed(false);
                   }
                 }}
               >

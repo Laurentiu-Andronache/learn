@@ -120,7 +120,11 @@ export function FlashcardSession({
     [],
   );
 
-  const handleFlipChange = useCallback((flipped: boolean) => setIsFlipped(flipped), []);
+  const [hasRevealed, setHasRevealed] = useState(false);
+  const handleFlipChange = useCallback((flipped: boolean) => {
+    setIsFlipped(flipped);
+    if (flipped) setHasRevealed(true);
+  }, []);
   const handleRate = useCallback((rating: 1 | 2 | 3 | 4) => {
     setRateSignal(prev => ({ count: prev.count + 1, rating }));
   }, []);
@@ -136,10 +140,12 @@ export function FlashcardSession({
     setSessionKey((k) => k + 1);
     setCurrentIdx(0);
     setIsFlipped(false);
+    setHasRevealed(false);
   }, [results, flashcards]);
 
   const handleIndexChange = useCallback((index: number) => {
     setCurrentIdx(index);
+    setHasRevealed(false);
   }, []);
 
   const handleBury = useCallback(() => {
@@ -240,7 +246,7 @@ export function FlashcardSession({
       />
 
       <div className="shrink-0 pt-3 pb-4">
-        {isFlipped && currentFc && (
+        {hasRevealed && currentFc && (
           <div className="space-y-2 animate-fade-up mb-3">
             <p className="text-xs text-center text-muted-foreground">
               {tf("ratingHint")}

@@ -193,6 +193,7 @@
   },
   "flashcard": {
     "tapToReveal": "Tap to reveal",
+    "tapToSeeAnswer": "Tap to see answer",
     "answer": "Answer",
     "cardOf": "Card {current} of {total}",
     "again": "Again",
@@ -301,6 +302,8 @@
     "allTypes": "All Types",
     "searchQuestions": "Search questions...",
     "searchFlashcards": "Search flashcards...",
+    "searchAnswers": "Answers",
+    "searchExtra": "Extra",
     "editQuestion": "Edit Question",
     "editFlashcard": "Edit Flashcard",
     "editReading": "Edit Reading",
@@ -369,7 +372,12 @@
     "helpStop": "Stop session and return to topic page",
     "helpNextTopic": "Jump to the next topic with cards due today",
     "helpBury": "Postpone this card until tomorrow",
-    "helpUndo": "Undo last answer and go back one card"
+    "helpUndo": "Undo last answer and go back one card",
+    "helpShortcutsTitle": "Keyboard Shortcuts",
+    "helpShortcutAgain": "Again",
+    "helpShortcutHard": "Hard",
+    "helpShortcutGood": "Good",
+    "helpShortcutEasy": "Easy"
   },
   "tts": {
     "error": "Could not play audio. Please try again.",
