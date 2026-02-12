@@ -212,70 +212,66 @@ export function QuestionsClient({
   return (
     <div className="space-y-4">
       {/* Filters */}
-      <div className="space-y-3">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <Select value={topicId} onValueChange={setTopicId}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("admin.allTopics")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("admin.allTopics")}</SelectItem>
-              {topics.map((th) => (
-                <SelectItem key={th.id} value={th.id}>
-                  {th.title_en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="flex flex-wrap items-center gap-3">
+        <Select value={topicId} onValueChange={setTopicId}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder={t("admin.allTopics")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("admin.allTopics")}</SelectItem>
+            {topics.map((th) => (
+              <SelectItem key={th.id} value={th.id}>
+                {th.title_en}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select value={categoryId} onValueChange={setCategoryId}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("admin.allCategories")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("admin.allCategories")}</SelectItem>
-              {filteredCategories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name_en}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+        <Select value={categoryId} onValueChange={setCategoryId}>
+          <SelectTrigger className="w-full sm:w-[180px]">
+            <SelectValue placeholder={t("admin.allCategories")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("admin.allCategories")}</SelectItem>
+            {filteredCategories.map((cat) => (
+              <SelectItem key={cat.id} value={cat.id}>
+                {cat.name_en}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger>
-              <SelectValue placeholder={t("admin.allTypes")} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t("admin.allTypes")}</SelectItem>
-              <SelectItem value="multiple_choice">MC</SelectItem>
-              <SelectItem value="true_false">T/F</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-full sm:w-[140px]">
+            <SelectValue placeholder={t("admin.allTypes")} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{t("admin.allTypes")}</SelectItem>
+            <SelectItem value="multiple_choice">MC</SelectItem>
+            <SelectItem value="true_false">T/F</SelectItem>
+          </SelectContent>
+        </Select>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-            <Checkbox
-              checked={searchAnswers}
-              onCheckedChange={(v) => setSearchAnswers(v === true)}
-            />
-            {t("admin.searchAnswers")}
-          </label>
-          <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
-            <Checkbox
-              checked={searchExtra}
-              onCheckedChange={(v) => setSearchExtra(v === true)}
-            />
-            {t("admin.searchExtra")}
-          </label>
-          <Input
-            className="flex-1 min-w-[180px]"
-            placeholder={t("admin.searchQuestions")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+        <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+          <Checkbox
+            checked={searchAnswers}
+            onCheckedChange={(v) => setSearchAnswers(v === true)}
           />
-        </div>
+          {t("admin.searchAnswers")}
+        </label>
+        <label className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+          <Checkbox
+            checked={searchExtra}
+            onCheckedChange={(v) => setSearchExtra(v === true)}
+          />
+          {t("admin.searchExtra")}
+        </label>
+        <Input
+          className="flex-1 min-w-[180px]"
+          placeholder={t("admin.searchQuestions")}
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
       </div>
 
       {isPending && (
