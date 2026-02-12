@@ -1,12 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import { type McpResult, ok, err } from "../utils.js";
 
 // ─── learn_topic_stats ─────────────────────────────────────────────
 export async function handleTopicStats(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string },
 ): Promise<McpResult> {
   const { topic_id } = params;
@@ -17,7 +16,7 @@ export async function handleTopicStats(
     .eq("topic_id", topic_id);
   if (catErr) return err(catErr.message);
 
-  const categoryIds = (categories || []).map((c: any) => c.id);
+  const categoryIds = (categories || []).map((c) => c.id);
   if (categoryIds.length === 0) {
     return ok({
       topic_id,
@@ -79,7 +78,7 @@ export async function handleTopicStats(
 
 // ─── learn_content_overview ────────────────────────────────────────
 export async function handleContentOverview(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
 ): Promise<McpResult> {
   const { data: topics, error: tErr } = await supabase
     .from("topics")
@@ -92,18 +91,18 @@ export async function handleContentOverview(
   let totalQs = 0;
   let totalFcs = 0;
 
-  const topicStats = ts.map((t: any) => {
+  const topicStats = ts.map((t) => {
     const cats = t.categories || [];
-    const qs = cats.flatMap((c: any) => c.questions || []);
-    const fcs = cats.flatMap((c: any) => c.flashcards || []);
+    const qs = cats.flatMap((c) => c.questions || []);
+    const fcs = cats.flatMap((c) => c.flashcards || []);
     totalCats += cats.length;
     totalQs += qs.length;
     totalFcs += fcs.length;
     const qTranslated = qs.filter(
-      (q: any) => q.question_es && q.explanation_es,
+      (q) => q.question_es && q.explanation_es,
     ).length;
     const fcTranslated = fcs.filter(
-      (fc: any) => fc.question_es && fc.answer_es,
+      (fc) => fc.question_es && fc.answer_es,
     ).length;
     return {
       id: t.id,
@@ -124,7 +123,7 @@ export async function handleContentOverview(
 
 // ─── learn_question_quality_report ─────────────────────────────────
 export async function handleQuestionQualityReport(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id?: string },
 ): Promise<McpResult> {
   let qQuery = supabase
@@ -141,7 +140,7 @@ export async function handleQuestionQualityReport(
       .select("id")
       .eq("topic_id", params.topic_id);
     if (catErr) return err(catErr.message);
-    const categoryIds = (cats || []).map((c: any) => c.id);
+    const categoryIds = (cats || []).map((c) => c.id);
     if (categoryIds.length === 0) {
       return ok({ questions_checked: 0, question_issues: [], flashcards_checked: 0, flashcard_issues: [] });
     }
@@ -190,7 +189,7 @@ export async function handleQuestionQualityReport(
 
 // ─── learn_user_activity_stats ─────────────────────────────────────
 export async function handleUserActivityStats(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id?: string; since?: string },
 ): Promise<McpResult> {
   // If topic_id provided, resolve to flashcard IDs via categories
@@ -201,7 +200,7 @@ export async function handleUserActivityStats(
       .select("id")
       .eq("topic_id", params.topic_id);
     if (catErr) return err(catErr.message);
-    const catIds = (cats || []).map((c: any) => c.id);
+    const catIds = (cats || []).map((c) => c.id);
     if (catIds.length === 0) {
       return ok({ total_reviews: 0, unique_users: 0, hardest_flashcards: [] });
     }
@@ -210,7 +209,7 @@ export async function handleUserActivityStats(
       .select("id")
       .in("category_id", catIds);
     if (fcErr) return err(fcErr.message);
-    topicFlashcardIds = (fcs || []).map((f: any) => f.id);
+    topicFlashcardIds = (fcs || []).map((f) => f.id);
     if (topicFlashcardIds.length === 0) {
       return ok({ total_reviews: 0, unique_users: 0, hardest_flashcards: [] });
     }
@@ -231,7 +230,7 @@ export async function handleUserActivityStats(
   if (logErr) return err(logErr.message);
 
   const reviews = logs || [];
-  const userSet = new Set(reviews.map((r: any) => r.user_id));
+  const userSet = new Set(reviews.map((r) => r.user_id));
   const incorrectByFc: Record<string, number> = {};
 
   for (const r of reviews) {
@@ -254,7 +253,7 @@ export async function handleUserActivityStats(
 
 // ─── learn_difficulty_analysis ─────────────────────────────────────
 export async function handleDifficultyAnalysis(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string },
 ): Promise<McpResult> {
   const { data: flashcards, error: fErr } = await supabase
@@ -264,9 +263,9 @@ export async function handleDifficultyAnalysis(
   if (fErr) return err(fErr.message);
 
   const fcs = flashcards || [];
-  const fcIds = fcs.map((fc: any) => fc.id);
+  const fcIds = fcs.map((fc) => fc.id);
 
-  const reviewsByFc: Record<string, Array<{ was_correct: boolean }>> = {};
+  const reviewsByFc: Record<string, Array<{ was_correct: boolean | null }>> = {};
   if (fcIds.length > 0) {
     const { data: reviews, error: rErr } = await supabase
       .from("review_logs")
@@ -280,7 +279,7 @@ export async function handleDifficultyAnalysis(
     }
   }
 
-  const analysis = fcs.map((fc: any) => {
+  const analysis = fcs.map((fc) => {
     const rs = reviewsByFc[fc.id] || [];
     const total = rs.length;
     const correct = rs.filter((r) => r.was_correct).length;
@@ -308,7 +307,7 @@ export async function handleDifficultyAnalysis(
 
 // ─── learn_content_health ─────────────────────────────────────────
 export async function handleContentHealth(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
 ): Promise<McpResult> {
   // Fetch all active topics with nested content
   const { data: topics, error: tErr } = await supabase
@@ -322,10 +321,10 @@ export async function handleContentHealth(
   let globalQIssues = 0, globalFcIssues = 0;
   let globalQUntranslated = 0, globalFcUntranslated = 0;
 
-  const topicSummaries = ts.map((t: any) => {
+  const topicSummaries = ts.map((t) => {
     const cats = t.categories || [];
-    const qs = cats.flatMap((c: any) => c.questions || []);
-    const fcs = cats.flatMap((c: any) => c.flashcards || []);
+    const qs = cats.flatMap((c) => c.questions || []);
+    const fcs = cats.flatMap((c) => c.flashcards || []);
     totalCats += cats.length;
     totalQs += qs.length;
     totalFcs += fcs.length;
@@ -344,8 +343,8 @@ export async function handleContentHealth(
     globalFcIssues += fcIssueCount;
 
     // Translation completeness
-    const qUntranslated = qs.filter((q: any) => !q.question_es).length;
-    const fcUntranslated = fcs.filter((fc: any) => !fc.question_es || !fc.answer_es).length;
+    const qUntranslated = qs.filter((q) => !q.question_es).length;
+    const fcUntranslated = fcs.filter((fc) => !fc.question_es || !fc.answer_es).length;
     globalQUntranslated += qUntranslated;
     globalFcUntranslated += fcUntranslated;
 

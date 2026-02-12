@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import { type McpResult, ok, err } from "../utils.js";
+import type { Database } from "../database.types.js";
 
 // ─── Schema definitions (hardcoded reference) ──────────────────────
 const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: boolean; note?: string }>> = {
@@ -196,7 +196,7 @@ const SCHEMA: Record<string, Array<{ name: string; type: string; nullable?: bool
 
 // ─── learn_admin_summary ───────────────────────────────────────────
 export async function handleAdminSummary(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
 ): Promise<McpResult> {
   const { count: feedbackCount, error: fbErr } = await supabase
     .from("feedback")
@@ -286,14 +286,15 @@ export function handleSchemaInfo(
 }
 
 // ─── learn_run_query ───────────────────────────────────────────────
-const ALLOWED_TABLES = new Set(Object.keys(SCHEMA));
+type TableName = keyof Database["public"]["Tables"];
+const ALLOWED_TABLES = new Set<string>(Object.keys(SCHEMA));
 
 export async function handleRunQuery(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     table: string;
     select?: string;
-    filters?: Array<{ column: string; op: string; value: unknown }>;
+    filters?: Array<{ column: string; op: string; value?: unknown }>;
     order?: { column: string; ascending?: boolean };
     limit?: number;
   },
@@ -302,22 +303,23 @@ export async function handleRunQuery(
     return err(`Invalid table: "${params.table}". Allowed tables: ${[...ALLOWED_TABLES].join(", ")}`);
   }
 
-  let query = supabase.from(params.table).select(params.select ?? "*");
+  // Dynamic table name requires cast since it's runtime-validated above
+  let query = supabase.from(params.table as TableName).select(params.select ?? "*");
 
   if (params.filters) {
     for (const f of params.filters) {
       switch (f.op) {
-        case "eq": query = query.eq(f.column, f.value); break;
-        case "neq": query = query.neq(f.column, f.value); break;
-        case "gt": query = query.gt(f.column, f.value); break;
-        case "gte": query = query.gte(f.column, f.value); break;
-        case "lt": query = query.lt(f.column, f.value); break;
-        case "lte": query = query.lte(f.column, f.value); break;
+        case "eq": query = query.eq(f.column, f.value as string); break;
+        case "neq": query = query.neq(f.column, f.value as string); break;
+        case "gt": query = query.gt(f.column, f.value as string); break;
+        case "gte": query = query.gte(f.column, f.value as string); break;
+        case "lt": query = query.lt(f.column, f.value as string); break;
+        case "lte": query = query.lte(f.column, f.value as string); break;
         case "like": query = query.like(f.column, f.value as string); break;
         case "ilike": query = query.ilike(f.column, f.value as string); break;
         case "is": query = query.is(f.column, f.value as null); break;
-        case "in": query = query.in(f.column, f.value as unknown[]); break;
-        default: query = query.eq(f.column, f.value);
+        case "in": query = query.in(f.column, f.value as string[]); break;
+        default: query = query.eq(f.column, f.value as string);
       }
     }
   }
@@ -363,7 +365,7 @@ export function registerAdminTools(server: McpServer): void {
           z.object({
             column: z.string(),
             op: z.enum(["eq", "neq", "gt", "gte", "lt", "lte", "like", "ilike", "is", "in"]),
-            value: z.unknown(),
+            value: z.unknown().default(null),
           }),
         )
         .optional()
@@ -379,6 +381,6 @@ export function registerAdminTools(server: McpServer): void {
     },
     { readOnlyHint: true },
     async ({ table, select, filters, order, limit }) =>
-      handleRunQuery(getSupabaseClient(), { table, select, filters: filters as any, order, limit }),
+      handleRunQuery(getSupabaseClient(), { table, select, filters, order, limit }),
   );
 }

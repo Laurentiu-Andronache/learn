@@ -1,13 +1,16 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
+import type { TablesInsert } from "../database.types.js";
 import { type McpResult, ok, err } from "../utils.js";
+
+/* Types for aggregate/aliased query results */
+type CountByFK<K extends string> = { [P in K]: string } & { count: string };
 
 /* ── learn_list_topics ── */
 
 export async function handleListTopics(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { is_active?: boolean; limit?: number; offset?: number },
 ): Promise<McpResult> {
   const limit = params.limit ?? 50;
@@ -26,7 +29,7 @@ export async function handleListTopics(
   const { data: topics, error, count } = await query;
   if (error) return err(error.message);
 
-  const ids = (topics ?? []).map((t: any) => t.id);
+  const ids = (topics ?? []).map((t) => t.id);
 
   // Category counts
   const catCountMap: Record<string, number> = {};
@@ -36,11 +39,11 @@ export async function handleListTopics(
   if (ids.length > 0) {
     const { data: catCounts } = await supabase
       .from("categories")
-      .select("topic_id, count:id", { count: "exact" })
+      .select("topic_id, count:id")
       .in("topic_id", ids);
 
-    for (const row of catCounts ?? []) {
-      catCountMap[(row as any).topic_id] = Number((row as any).count);
+    for (const row of (catCounts ?? []) as unknown as CountByFK<"topic_id">[]) {
+      catCountMap[row.topic_id] = Number(row.count);
     }
 
     // Question counts via categories
@@ -49,9 +52,8 @@ export async function handleListTopics(
       .select("category_id:categories!inner(topic_id), count:id")
       .in("categories.topic_id", ids);
 
-    for (const row of qCounts ?? []) {
-      const topicId = (row as any).topic_id ?? (row as any).category_id;
-      qCountMap[topicId] = Number((row as any).count);
+    for (const row of (qCounts ?? []) as unknown as CountByFK<"topic_id">[]) {
+      qCountMap[row.topic_id] = Number(row.count);
     }
 
     // Flashcard counts via categories
@@ -60,13 +62,12 @@ export async function handleListTopics(
       .select("category_id:categories!inner(topic_id), count:id")
       .in("categories.topic_id", ids);
 
-    for (const row of fcCounts ?? []) {
-      const topicId = (row as any).topic_id ?? (row as any).category_id;
-      fcCountMap[topicId] = Number((row as any).count);
+    for (const row of (fcCounts ?? []) as unknown as CountByFK<"topic_id">[]) {
+      fcCountMap[row.topic_id] = Number(row.count);
     }
   }
 
-  const enriched = (topics ?? []).map((t: any) => ({
+  const enriched = (topics ?? []).map((t) => ({
     ...t,
     category_count: catCountMap[t.id] ?? 0,
     question_count: qCountMap[t.id] ?? 0,
@@ -79,7 +80,7 @@ export async function handleListTopics(
 /* ── learn_get_topic ── */
 
 export async function handleGetTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string },
 ): Promise<McpResult> {
   const { data: topic, error } = await supabase
@@ -96,7 +97,7 @@ export async function handleGetTopic(
     .eq("topic_id", params.topic_id)
     .order("created_at", { ascending: true });
 
-  const catIds = (categories ?? []).map((c: any) => c.id);
+  const catIds = (categories ?? []).map((c) => c.id);
   const qCountMap: Record<string, number> = {};
   const fcCountMap: Record<string, number> = {};
 
@@ -106,8 +107,8 @@ export async function handleGetTopic(
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of qCounts ?? []) {
-      qCountMap[(row as any).category_id] = Number((row as any).count);
+    for (const row of (qCounts ?? []) as unknown as CountByFK<"category_id">[]) {
+      qCountMap[row.category_id] = Number(row.count);
     }
 
     const { data: fcCounts } = await supabase
@@ -115,12 +116,12 @@ export async function handleGetTopic(
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of fcCounts ?? []) {
-      fcCountMap[(row as any).category_id] = Number((row as any).count);
+    for (const row of (fcCounts ?? []) as unknown as CountByFK<"category_id">[]) {
+      fcCountMap[row.category_id] = Number(row.count);
     }
   }
 
-  const enrichedCats = (categories ?? []).map((c: any) => ({
+  const enrichedCats = (categories ?? []).map((c) => ({
     ...c,
     question_count: qCountMap[c.id] ?? 0,
     flashcard_count: fcCountMap[c.id] ?? 0,
@@ -132,7 +133,7 @@ export async function handleGetTopic(
 /* ── learn_create_topic ── */
 
 export async function handleCreateTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     title_en: string; title_es: string;
     description_en?: string; description_es?: string;
@@ -147,7 +148,7 @@ export async function handleCreateTopic(
     if (v !== undefined) insert[k] = v;
   }
 
-  const { data, error } = await supabase.from("topics").insert(insert).select().single();
+  const { data, error } = await supabase.from("topics").insert(insert as TablesInsert<"topics">).select().single();
   if (error) return err(error.message);
 
   console.error(`[audit] created topic ${data.id}: ${title_en}`);
@@ -157,7 +158,7 @@ export async function handleCreateTopic(
 /* ── learn_update_topic ── */
 
 export async function handleUpdateTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     topic_id: string;
     title_en?: string; title_es?: string;
@@ -189,7 +190,7 @@ export async function handleUpdateTopic(
 /* ── learn_delete_topic (soft) ── */
 
 export async function handleDeleteTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string },
 ): Promise<McpResult> {
   const { data, error } = await supabase
@@ -208,7 +209,7 @@ export async function handleDeleteTopic(
 /* ── learn_hard_delete_topic ── */
 
 export async function handleHardDeleteTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string; confirm: string },
 ): Promise<McpResult> {
   if (params.confirm !== "PERMANENTLY DELETE") {

@@ -124,6 +124,79 @@ export async function validateImportJson(
   };
 }
 
+type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+async function insertCategoryWithContent(
+  supabase: AppSupabaseClient,
+  cat: ImportCategory,
+  topicId: string,
+): Promise<{ questions: number; flashcards: number }> {
+  const { data: category, error: catErr } = await supabase
+    .from("categories")
+    .insert({
+      topic_id: topicId,
+      name_en: cat.name_en,
+      name_es: cat.name_es,
+      slug: cat.slug,
+      color: cat.color || null,
+    })
+    .select("id")
+    .single();
+
+  if (catErr)
+    throw new Error(
+      `Category "${cat.name_en}" insert failed: ${catErr.message}`,
+    );
+
+  let questions = 0;
+  if (cat.questions.length > 0) {
+    const rows = cat.questions.map((q) => ({
+      category_id: category.id,
+      type: q.type,
+      question_en: q.question_en,
+      question_es: q.question_es,
+      options_en: q.options_en,
+      options_es: q.options_es,
+      correct_index: q.correct_index,
+      explanation_en: q.explanation_en || null,
+      explanation_es: q.explanation_es || null,
+      extra_en: q.extra_en || null,
+      extra_es: q.extra_es || null,
+      difficulty: q.difficulty ?? 5,
+    }));
+
+    const { error: qErr } = await supabase.from("questions").insert(rows);
+    if (qErr)
+      throw new Error(
+        `Questions insert for "${cat.name_en}" failed: ${qErr.message}`,
+      );
+    questions = rows.length;
+  }
+
+  let flashcards = 0;
+  if (cat.flashcards && cat.flashcards.length > 0) {
+    const fRows = cat.flashcards.map((f) => ({
+      category_id: category.id,
+      question_en: f.question_en,
+      question_es: f.question_es,
+      answer_en: f.answer_en,
+      answer_es: f.answer_es,
+      extra_en: f.extra_en || null,
+      extra_es: f.extra_es || null,
+      difficulty: f.difficulty ?? 5,
+    }));
+
+    const { error: fErr } = await supabase.from("flashcards").insert(fRows);
+    if (fErr)
+      throw new Error(
+        `Flashcards insert for "${cat.name_en}" failed: ${fErr.message}`,
+      );
+    flashcards = fRows.length;
+  }
+
+  return { questions, flashcards };
+}
+
 export async function importTopicJson(json: ImportTopic) {
   const supabase = await createClient();
 
@@ -154,66 +227,13 @@ export async function importTopicJson(json: ImportTopic) {
   let totalFlashcardsInserted = 0;
 
   for (const cat of json.categories) {
-    const { data: category, error: catErr } = await supabase
-      .from("categories")
-      .insert({
-        topic_id: topic.id,
-        name_en: cat.name_en,
-        name_es: cat.name_es,
-        slug: cat.slug,
-        color: cat.color || null,
-      })
-      .select("id")
-      .single();
-
-    if (catErr)
-      throw new Error(
-        `Category "${cat.name_en}" insert failed: ${catErr.message}`,
-      );
-
-    if (cat.questions.length > 0) {
-      const rows = cat.questions.map((q) => ({
-        category_id: category.id,
-        type: q.type,
-        question_en: q.question_en,
-        question_es: q.question_es,
-        options_en: q.options_en,
-        options_es: q.options_es,
-        correct_index: q.correct_index,
-        explanation_en: q.explanation_en || null,
-        explanation_es: q.explanation_es || null,
-        extra_en: q.extra_en || null,
-        extra_es: q.extra_es || null,
-        difficulty: q.difficulty ?? 5,
-      }));
-
-      const { error: qErr } = await supabase.from("questions").insert(rows);
-      if (qErr)
-        throw new Error(
-          `Questions insert for "${cat.name_en}" failed: ${qErr.message}`,
-        );
-      totalQuestionsInserted += rows.length;
-    }
-
-    if (cat.flashcards && cat.flashcards.length > 0) {
-      const fRows = cat.flashcards.map((f) => ({
-        category_id: category.id,
-        question_en: f.question_en,
-        question_es: f.question_es,
-        answer_en: f.answer_en,
-        answer_es: f.answer_es,
-        extra_en: f.extra_en || null,
-        extra_es: f.extra_es || null,
-        difficulty: f.difficulty ?? 5,
-      }));
-
-      const { error: fErr } = await supabase.from("flashcards").insert(fRows);
-      if (fErr)
-        throw new Error(
-          `Flashcards insert for "${cat.name_en}" failed: ${fErr.message}`,
-        );
-      totalFlashcardsInserted += fRows.length;
-    }
+    const { questions, flashcards } = await insertCategoryWithContent(
+      supabase,
+      cat,
+      topic.id,
+    );
+    totalQuestionsInserted += questions;
+    totalFlashcardsInserted += flashcards;
   }
 
   revalidatePath("/admin/topics");

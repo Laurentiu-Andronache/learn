@@ -1,13 +1,16 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
+import type { TablesInsert } from "../database.types.js";
 import { type McpResult, ok, err } from "../utils.js";
+
+/* Types for aggregate/aliased query results */
+type CountByFK<K extends string> = { [P in K]: string } & { count: string };
 
 /* ── learn_list_categories ── */
 
 export async function handleListCategories(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id?: string; limit?: number; offset?: number },
 ): Promise<McpResult> {
   const limit = params.limit ?? 50;
@@ -26,7 +29,7 @@ export async function handleListCategories(
   const { data: categories, error, count } = await query;
   if (error) return err(error.message);
 
-  const catIds = (categories ?? []).map((c: any) => c.id);
+  const catIds = (categories ?? []).map((c) => c.id);
   const qCountMap: Record<string, number> = {};
   const fcCountMap: Record<string, number> = {};
 
@@ -36,8 +39,8 @@ export async function handleListCategories(
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of qCounts ?? []) {
-      qCountMap[(row as any).category_id] = Number((row as any).count);
+    for (const row of (qCounts ?? []) as unknown as CountByFK<"category_id">[]) {
+      qCountMap[row.category_id] = Number(row.count);
     }
 
     const { data: fcCounts } = await supabase
@@ -45,12 +48,12 @@ export async function handleListCategories(
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of fcCounts ?? []) {
-      fcCountMap[(row as any).category_id] = Number((row as any).count);
+    for (const row of (fcCounts ?? []) as unknown as CountByFK<"category_id">[]) {
+      fcCountMap[row.category_id] = Number(row.count);
     }
   }
 
-  const enriched = (categories ?? []).map((c: any) => ({
+  const enriched = (categories ?? []).map((c) => ({
     ...c,
     question_count: qCountMap[c.id] ?? 0,
     flashcard_count: fcCountMap[c.id] ?? 0,
@@ -62,7 +65,7 @@ export async function handleListCategories(
 /* ── learn_create_category ── */
 
 export async function handleCreateCategory(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string; name_en: string; name_es: string; slug: string; color?: string },
 ): Promise<McpResult> {
   const insert: Record<string, unknown> = {
@@ -73,7 +76,7 @@ export async function handleCreateCategory(
   };
   if (params.color !== undefined) insert.color = params.color;
 
-  const { data, error } = await supabase.from("categories").insert(insert).select().single();
+  const { data, error } = await supabase.from("categories").insert(insert as TablesInsert<"categories">).select().single();
   if (error) return err(error.message);
 
   console.error(`[audit] created category ${data.id}: ${params.name_en}`);
@@ -83,7 +86,7 @@ export async function handleCreateCategory(
 /* ── learn_update_category ── */
 
 export async function handleUpdateCategory(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { category_id: string; name_en?: string; name_es?: string; slug?: string; color?: string },
 ): Promise<McpResult> {
   const { category_id, ...fields } = params;
@@ -112,7 +115,7 @@ export async function handleUpdateCategory(
 /* ── learn_delete_category ── */
 
 export async function handleDeleteCategory(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { category_id: string; confirm: string },
 ): Promise<McpResult> {
   if (params.confirm !== "DELETE") {
@@ -133,7 +136,7 @@ export async function handleDeleteCategory(
 /* ── learn_move_category ── */
 
 export async function handleMoveCategory(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { category_id: string; new_topic_id: string },
 ): Promise<McpResult> {
   const { data, error } = await supabase

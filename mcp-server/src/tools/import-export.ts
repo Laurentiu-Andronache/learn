@@ -1,8 +1,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import { type McpResult, ok, err } from "../utils.js";
+import type { Tables } from "../database.types.js";
 
 /* ── Types ── */
 
@@ -36,7 +36,7 @@ interface ImportTopic {
 /* ── learn_export_topic ── */
 
 export async function handleExportTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string; include_ids?: boolean },
 ): Promise<McpResult> {
   const includeIds = params.include_ids ?? false;
@@ -55,7 +55,7 @@ export async function handleExportTopic(
     .eq("topic_id", params.topic_id)
     .order("created_at", { ascending: true });
 
-  const catIds = (categories ?? []).map((c: any) => c.id);
+  const catIds = (categories ?? []).map((c) => c.id);
 
   const noneGuard = catIds.length > 0 ? catIds : ["__none__"];
 
@@ -65,33 +65,33 @@ export async function handleExportTopic(
   ]);
 
   // Group by category_id
-  const qByCat: Record<string, any[]> = {};
+  const qByCat: Record<string, Tables<"questions">[]> = {};
   for (const q of questions ?? []) {
-    const cid = (q as any).category_id;
+    const cid = q.category_id;
     if (!qByCat[cid]) qByCat[cid] = [];
     qByCat[cid].push(q);
   }
-  const fByCat: Record<string, any[]> = {};
+  const fByCat: Record<string, Tables<"flashcards">[]> = {};
   for (const f of flashcards ?? []) {
-    const cid = (f as any).category_id;
+    const cid = f.category_id;
     if (!fByCat[cid]) fByCat[cid] = [];
     fByCat[cid].push(f);
   }
 
-  const exportData: any = {
+  const exportData: ImportTopic & { categories: Array<ImportCategory & { id?: string; questions: Array<ImportQuestion & { id?: string }>; flashcards: Array<ImportFlashcard & { id?: string }> }> } = {
     title_en: topic.title_en,
     title_es: topic.title_es,
     description_en: topic.description_en ?? null,
     description_es: topic.description_es ?? null,
     icon: topic.icon ?? null,
     color: topic.color ?? null,
-    categories: (categories ?? []).map((c: any) => ({
+    categories: (categories ?? []).map((c) => ({
       ...(includeIds ? { id: c.id } : {}),
       name_en: c.name_en,
       name_es: c.name_es,
       slug: c.slug,
       color: c.color ?? null,
-      questions: (qByCat[c.id] ?? []).map((q: any) => ({
+      questions: (qByCat[c.id] ?? []).map((q) => ({
         ...(includeIds ? { id: q.id } : {}),
         type: q.type,
         question_en: q.question_en,
@@ -105,7 +105,7 @@ export async function handleExportTopic(
         extra_es: q.extra_es ?? null,
         difficulty: q.difficulty ?? 5,
       })),
-      flashcards: (fByCat[c.id] ?? []).map((f: any) => ({
+      flashcards: (fByCat[c.id] ?? []).map((f) => ({
         ...(includeIds ? { id: f.id } : {}),
         question_en: f.question_en,
         question_es: f.question_es,
@@ -124,7 +124,7 @@ export async function handleExportTopic(
 /* ── learn_import_topic ── */
 
 export async function handleImportTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { data: ImportTopic },
 ): Promise<McpResult> {
   const { data: topic } = params;
@@ -225,7 +225,7 @@ export async function handleImportTopic(
 /* ── learn_validate_import ── */
 
 export async function handleValidateImport(
-  params: { data: any },
+  params: { data: ImportTopic },
 ): Promise<McpResult> {
   const { data } = params;
   const errors: string[] = [];
@@ -295,12 +295,12 @@ export async function handleValidateImport(
 /* ── learn_duplicate_topic ── */
 
 export async function handleDuplicateTopic(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string; new_title_en?: string; new_title_es?: string },
 ): Promise<McpResult> {
   // Export source topic
   const exportResult = await handleExportTopic(supabase, { topic_id: params.topic_id });
-  if ((exportResult as any).isError) return exportResult;
+  if (exportResult.isError) return exportResult;
 
   const source = JSON.parse(exportResult.content[0].text);
 
@@ -310,7 +310,7 @@ export async function handleDuplicateTopic(
 
   // Import as new
   const importResult = await handleImportTopic(supabase, { data: source });
-  if ((importResult as any).isError) return importResult;
+  if (importResult.isError) return importResult;
 
   const imported = JSON.parse(importResult.content[0].text);
 
@@ -396,7 +396,7 @@ export function registerImportExportTools(server: McpServer): void {
     "learn_validate_import",
     "Validate import JSON without inserting (dry-run check)",
     {
-      data: z.any().describe("ImportTopic JSON to validate"),
+      data: importTopicSchema.describe("ImportTopic JSON to validate"),
     },
     { readOnlyHint: true },
     async (params) => handleValidateImport(params),

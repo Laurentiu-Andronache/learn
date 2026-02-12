@@ -14,6 +14,55 @@ async function sha256(text: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
+async function getCachedAudio(hash: string): Promise<Response | undefined> {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    return (await cache.match(`/api/tts/${hash}`)) ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+async function fetchAndCacheAudio(
+  text: string,
+  locale: string,
+  hash: string,
+): Promise<Response> {
+  const response = await fetch("/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, locale }),
+  });
+  if (response.ok) {
+    try {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(`/api/tts/${hash}`, response.clone());
+    } catch {
+      // Cache API unavailable
+    }
+  }
+  return response;
+}
+
+async function playAudioBlob(
+  response: Response,
+  audioRef: { current: HTMLAudioElement | null },
+  urlRef: { current: string | null },
+  el: HTMLElement,
+  setPlayingEl: (el: HTMLElement | null) => void,
+  stop: () => void,
+): Promise<void> {
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  urlRef.current = url;
+  const audio = new Audio(url);
+  audioRef.current = audio;
+  setPlayingEl(el);
+  audio.addEventListener("ended", stop);
+  audio.addEventListener("error", stop);
+  await audio.play();
+}
+
 export function useTTS() {
   const [playingEl, setPlayingEl] = useState<HTMLElement | null>(null);
   const [paused, setPaused] = useState(false);
@@ -48,11 +97,9 @@ export function useTTS() {
 
   const handleBlockClick = useCallback(
     (el: HTMLElement) => {
-      // Debounce rapid clicks
       if (debounceRef.current) clearTimeout(debounceRef.current);
 
       debounceRef.current = setTimeout(async () => {
-        // Pause/resume if clicking the same element
         if (playingElRef.current === el && audioRef.current) {
           if (pausedRef.current) {
             await audioRef.current.play();
@@ -64,72 +111,33 @@ export function useTTS() {
           return;
         }
 
-        // Stop any current playback
         stop();
-
         const text = el.textContent?.trim();
         if (!text) return;
 
         try {
           const hash = await sha256(text);
-          const cacheKey = `/api/tts/${hash}`;
+          const response =
+            (await getCachedAudio(hash)) ??
+            (await fetchAndCacheAudio(text, locale, hash));
 
-          // Check browser Cache API
-          let response: Response | undefined;
-          try {
-            const cache = await caches.open(CACHE_NAME);
-            const cached = await cache.match(cacheKey);
-            if (cached) {
-              response = cached;
-            }
-          } catch {
-            // Cache API unavailable (e.g. incognito) — proceed without
+          if (response.status === 429) {
+            toast.error(t("rateLimited"));
+            return;
+          }
+          if (!response.ok) {
+            toast.error(t("error"));
+            return;
           }
 
-          // Fetch from API if not cached
-          if (!response) {
-            const fetchResponse = await fetch("/api/tts", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ text, locale }),
-            });
-
-            if (fetchResponse.status === 429) {
-              toast.error(t("rateLimited"));
-              return;
-            }
-            if (!fetchResponse.ok) {
-              toast.error(t("error"));
-              return;
-            }
-
-            // Cache the response clone
-            try {
-              const cache = await caches.open(CACHE_NAME);
-              await cache.put(cacheKey, fetchResponse.clone());
-            } catch {
-              // Silent fail
-            }
-
-            response = fetchResponse;
-          }
-
-          const blob = await response.blob();
-          const url = URL.createObjectURL(blob);
-          urlRef.current = url;
-
-          const audio = new Audio(url);
-          audioRef.current = audio;
-          setPlayingEl(el);
-
-          audio.addEventListener("ended", () => {
-            stop();
-          });
-          audio.addEventListener("error", () => {
-            stop();
-          });
-
-          await audio.play();
+          await playAudioBlob(
+            response,
+            audioRef,
+            urlRef,
+            el,
+            setPlayingEl,
+            stop,
+          );
         } catch {
           stop();
           toast.error(t("error"));

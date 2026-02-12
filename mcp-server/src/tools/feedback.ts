@@ -1,12 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import { type McpResult, ok, err } from "../utils.js";
 
 // ─── learn_list_feedback ───────────────────────────────────────────
 export async function handleListFeedback(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { type?: string; limit?: number },
 ): Promise<McpResult> {
   let query = supabase.from("feedback").select("*");
@@ -25,7 +24,7 @@ export async function handleListFeedback(
 
 // ─── learn_delete_feedback ─────────────────────────────────────────
 export async function handleDeleteFeedback(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { feedback_id: string },
 ): Promise<McpResult> {
   const { error } = await supabase
@@ -40,7 +39,7 @@ export async function handleDeleteFeedback(
 
 // ─── learn_list_proposed_questions ─────────────────────────────────
 export async function handleListProposedQuestions(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { status?: string; limit?: number },
 ): Promise<McpResult> {
   let query = supabase
@@ -61,7 +60,7 @@ export async function handleListProposedQuestions(
 
 // ─── learn_review_proposed_question ────────────────────────────────
 export async function handleReviewProposedQuestion(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     proposed_question_id: string;
     action: string;
@@ -124,7 +123,7 @@ export async function handleReviewProposedQuestion(
 
 // ─── learn_list_topic_proposals ────────────────────────────────────
 export async function handleListTopicProposals(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { status?: string; limit?: number },
 ): Promise<McpResult> {
   let query = supabase.from("topic_proposals").select("*");
@@ -143,7 +142,7 @@ export async function handleListTopicProposals(
 
 // ─── learn_review_topic_proposal ───────────────────────────────────
 export async function handleReviewTopicProposal(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     topic_proposal_id: string;
     action: string;

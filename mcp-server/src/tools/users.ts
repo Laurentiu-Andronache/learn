@@ -1,12 +1,11 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import { type McpResult, ok, err } from "../utils.js";
 
 // ─── learn_list_users ──────────────────────────────────────────────
 export async function handleListUsers(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { search?: string; limit?: number; offset?: number },
 ): Promise<McpResult> {
   let query = supabase.from("profiles").select("*", { count: "exact" });
@@ -27,7 +26,7 @@ export async function handleListUsers(
 
 // ─── learn_get_user ────────────────────────────────────────────────
 export async function handleGetUser(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { user_id?: string; display_name?: string },
 ): Promise<McpResult> {
   if (!params.user_id && !params.display_name) {
@@ -41,11 +40,11 @@ export async function handleGetUser(
     profileQuery = profileQuery.eq("display_name", params.display_name!);
   }
 
-  const { data: profile, error: profErr } = await (profileQuery as any).single();
+  const { data: profile, error: profErr } = await profileQuery.single();
   if (profErr) return err(profErr.message);
   if (!profile) return err("User not found");
 
-  const userId = (profile as any).id;
+  const userId = profile.id;
 
   const { count: topicCount } = await supabase
     .from("topics")
@@ -79,7 +78,7 @@ function parseSinceDate(since: string): string {
 }
 
 export async function handleActiveUsers(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { since: string },
 ): Promise<McpResult> {
   const sinceDate = parseSinceDate(params.since);
@@ -116,7 +115,7 @@ export async function handleActiveUsers(
 
 // ─── learn_user_topics ─────────────────────────────────────────────
 export async function handleUserTopics(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { user_id?: string; display_name?: string },
 ): Promise<McpResult> {
   if (!params.user_id && !params.display_name) {

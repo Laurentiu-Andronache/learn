@@ -18,6 +18,7 @@ describe("card-mapper", () => {
     state: "review",
     last_review: "2026-01-15T10:00:00.000Z",
     due: "2026-01-22T10:00:00.000Z",
+    learning_steps: 0,
   };
 
   describe("toCard", () => {

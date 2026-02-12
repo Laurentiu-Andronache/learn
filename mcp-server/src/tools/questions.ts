@@ -1,13 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
+import type { TablesInsert } from "../database.types.js";
 import { type McpResult, ok, err } from "../utils.js";
 
 // ─── Handlers ────────────────────────────────────────────────────────
 
 export async function handleListQuestions(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     topic_id?: string;
     category_id?: string;
@@ -54,7 +54,7 @@ export async function handleListQuestions(
 }
 
 export async function handleGetQuestion(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { question_id: string }
 ): Promise<McpResult> {
   const { data, error } = await supabase
@@ -69,7 +69,7 @@ export async function handleGetQuestion(
 }
 
 export async function handleSearchQuestions(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     query: string;
     lang?: string;
@@ -109,14 +109,14 @@ export async function handleSearchQuestions(
 }
 
 export async function handleCreateQuestion(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     category_id: string;
     type: string;
     question_en: string;
     question_es: string;
-    options_en?: unknown[];
-    options_es?: unknown[];
+    options_en?: string[];
+    options_es?: string[];
     correct_index?: number;
     explanation_en?: string;
     explanation_es?: string;
@@ -142,7 +142,7 @@ export async function handleCreateQuestion(
 
   const { data, error } = await supabase
     .from("questions")
-    .insert(row)
+    .insert(row as TablesInsert<"questions">)
     .select()
     .single();
 
@@ -152,15 +152,15 @@ export async function handleCreateQuestion(
 }
 
 export async function handleCreateQuestionsBatch(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     category_id: string;
     questions: Array<{
       type: string;
       question_en: string;
       question_es: string;
-      options_en?: unknown[];
-      options_es?: unknown[];
+      options_en?: string[];
+      options_es?: string[];
       correct_index?: number;
       explanation_en?: string;
       explanation_es?: string;
@@ -177,7 +177,7 @@ export async function handleCreateQuestionsBatch(
     ...q,
   }));
 
-  const { data, error } = await supabase.from("questions").insert(rows).select();
+  const { data, error } = await supabase.from("questions").insert(rows as TablesInsert<"questions">[]).select();
 
   if (error) return err(error.message);
   console.error(`[audit] Batch created ${data.length} questions in category ${params.category_id}`);
@@ -185,15 +185,15 @@ export async function handleCreateQuestionsBatch(
 }
 
 export async function handleUpdateQuestion(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     question_id: string;
     category_id?: string;
     type?: string;
     question_en?: string;
     question_es?: string;
-    options_en?: unknown[];
-    options_es?: unknown[];
+    options_en?: string[];
+    options_es?: string[];
     correct_index?: number;
     explanation_en?: string;
     explanation_es?: string;
@@ -222,7 +222,7 @@ export async function handleUpdateQuestion(
 }
 
 export async function handleUpdateQuestionsBatch(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     updates: Array<{
       question_id: string;
@@ -257,7 +257,7 @@ export async function handleUpdateQuestionsBatch(
 }
 
 export async function handleDeleteQuestion(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { question_id: string }
 ): Promise<McpResult> {
   const { error } = await supabase
@@ -271,7 +271,7 @@ export async function handleDeleteQuestion(
 }
 
 export async function handleDeleteQuestionsBatch(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { question_ids: string[]; confirm: string }
 ): Promise<McpResult> {
   if (params.confirm !== "DELETE ALL")
@@ -289,7 +289,7 @@ export async function handleDeleteQuestionsBatch(
 }
 
 export async function handleMoveQuestions(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { question_ids: string[]; new_category_id: string }
 ): Promise<McpResult> {
   if (!params.question_ids.length) return err("Question IDs cannot be empty");
@@ -359,8 +359,8 @@ export function registerQuestionTools(server: McpServer): void {
       type: z.enum(["multiple_choice", "true_false"]).describe("Question type"),
       question_en: z.string().describe("Question text (English)"),
       question_es: z.string().describe("Question text (Spanish)"),
-      options_en: z.array(z.unknown()).optional().describe("Answer options (English)"),
-      options_es: z.array(z.unknown()).optional().describe("Answer options (Spanish)"),
+      options_en: z.array(z.string()).optional().describe("Answer options (English)"),
+      options_es: z.array(z.string()).optional().describe("Answer options (Spanish)"),
       correct_index: z.number().optional().describe("Index of correct answer"),
       explanation_en: z.string().optional().describe("Explanation (English)"),
       explanation_es: z.string().optional().describe("Explanation (Spanish)"),
@@ -381,8 +381,8 @@ export function registerQuestionTools(server: McpServer): void {
           type: z.enum(["multiple_choice", "true_false"]),
           question_en: z.string(),
           question_es: z.string(),
-          options_en: z.array(z.unknown()).optional(),
-          options_es: z.array(z.unknown()).optional(),
+          options_en: z.array(z.string()).optional(),
+          options_es: z.array(z.string()).optional(),
           correct_index: z.number().optional(),
           explanation_en: z.string().optional(),
           explanation_es: z.string().optional(),
@@ -404,8 +404,8 @@ export function registerQuestionTools(server: McpServer): void {
       type: z.enum(["multiple_choice", "true_false"]).optional(),
       question_en: z.string().optional(),
       question_es: z.string().optional(),
-      options_en: z.array(z.unknown()).optional(),
-      options_es: z.array(z.unknown()).optional(),
+      options_en: z.array(z.string()).optional(),
+      options_es: z.array(z.string()).optional(),
       correct_index: z.number().optional(),
       explanation_en: z.string().optional(),
       explanation_es: z.string().optional(),
@@ -427,8 +427,8 @@ export function registerQuestionTools(server: McpServer): void {
           type: z.enum(["multiple_choice", "true_false"]).optional(),
           question_en: z.string().optional(),
           question_es: z.string().optional(),
-          options_en: z.array(z.unknown()).optional(),
-          options_es: z.array(z.unknown()).optional(),
+          options_en: z.array(z.string()).optional(),
+          options_es: z.array(z.string()).optional(),
           correct_index: z.number().optional(),
           explanation_en: z.string().optional(),
           explanation_es: z.string().optional(),

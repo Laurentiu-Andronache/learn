@@ -1,13 +1,13 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
+import type { TablesInsert } from "../database.types.js";
 import { type McpResult, ok, err } from "../utils.js";
 
 // ─── Handlers ────────────────────────────────────────────────────────
 
 export async function handleListFlashcards(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     topic_id?: string;
     category_id?: string;
@@ -50,7 +50,7 @@ export async function handleListFlashcards(
 }
 
 export async function handleGetFlashcard(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { flashcard_id: string }
 ): Promise<McpResult> {
   const { data, error } = await supabase
@@ -65,7 +65,7 @@ export async function handleGetFlashcard(
 }
 
 export async function handleSearchFlashcards(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     query: string;
     lang?: string;
@@ -104,7 +104,7 @@ export async function handleSearchFlashcards(
 }
 
 export async function handleCreateFlashcard(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     category_id: string;
     question_en: string;
@@ -129,7 +129,7 @@ export async function handleCreateFlashcard(
 
   const { data, error } = await supabase
     .from("flashcards")
-    .insert(row)
+    .insert(row as TablesInsert<"flashcards">)
     .select()
     .single();
 
@@ -139,7 +139,7 @@ export async function handleCreateFlashcard(
 }
 
 export async function handleCreateFlashcardsBatch(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     category_id: string;
     flashcards: Array<{
@@ -160,7 +160,7 @@ export async function handleCreateFlashcardsBatch(
     ...f,
   }));
 
-  const { data, error } = await supabase.from("flashcards").insert(rows).select();
+  const { data, error } = await supabase.from("flashcards").insert(rows as TablesInsert<"flashcards">[]).select();
 
   if (error) return err(error.message);
   console.error(`[audit] Batch created ${data.length} flashcards in category ${params.category_id}`);
@@ -168,7 +168,7 @@ export async function handleCreateFlashcardsBatch(
 }
 
 export async function handleUpdateFlashcard(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     flashcard_id: string;
     category_id?: string;
@@ -201,7 +201,7 @@ export async function handleUpdateFlashcard(
 }
 
 export async function handleUpdateFlashcardsBatch(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: {
     updates: Array<{
       flashcard_id: string;
@@ -236,7 +236,7 @@ export async function handleUpdateFlashcardsBatch(
 }
 
 export async function handleDeleteFlashcard(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { flashcard_id: string }
 ): Promise<McpResult> {
   const { error } = await supabase
@@ -250,7 +250,7 @@ export async function handleDeleteFlashcard(
 }
 
 export async function handleDeleteFlashcardsBatch(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { flashcard_ids: string[]; confirm: string }
 ): Promise<McpResult> {
   if (params.confirm !== "DELETE ALL")
@@ -268,7 +268,7 @@ export async function handleDeleteFlashcardsBatch(
 }
 
 export async function handleMoveFlashcards(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { flashcard_ids: string[]; new_category_id: string }
 ): Promise<McpResult> {
   if (!params.flashcard_ids.length) return err("Flashcard IDs cannot be empty");

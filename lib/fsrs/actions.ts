@@ -8,6 +8,122 @@ import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
+// --- Shared types & helpers for snapshot-based undo/reset ---
+
+type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>;
+
+interface BeforeSnapshot {
+  stability_before: number | null;
+  difficulty_before: number | null;
+  state_before: string | null;
+  reps_before: number | null;
+  lapses_before: number | null;
+  elapsed_days_before: number | null;
+  scheduled_days_before: number | null;
+  last_review_before: string | null;
+  due_before: string | null;
+  learning_steps_before: number | null;
+}
+
+const SNAPSHOT_SELECT =
+  "id, flashcard_id, stability_before, difficulty_before, state_before, reps_before, lapses_before, elapsed_days_before, scheduled_days_before, last_review_before, due_before, learning_steps_before";
+
+function captureSnapshot(
+  existingState: {
+    stability: number;
+    difficulty: number;
+    state: string;
+    reps: number;
+    lapses: number;
+    elapsed_days: number;
+    scheduled_days: number;
+    last_review: string | null;
+    due: string;
+    learning_steps?: number | null;
+  } | null,
+): BeforeSnapshot {
+  if (!existingState) {
+    return {
+      stability_before: null,
+      difficulty_before: null,
+      state_before: null,
+      reps_before: null,
+      lapses_before: null,
+      elapsed_days_before: null,
+      scheduled_days_before: null,
+      last_review_before: null,
+      due_before: null,
+      learning_steps_before: null,
+    };
+  }
+  return {
+    stability_before: existingState.stability,
+    difficulty_before: existingState.difficulty,
+    state_before: existingState.state,
+    reps_before: existingState.reps,
+    lapses_before: existingState.lapses,
+    elapsed_days_before: existingState.elapsed_days,
+    scheduled_days_before: existingState.scheduled_days,
+    last_review_before: existingState.last_review,
+    due_before: existingState.due,
+    learning_steps_before: existingState.learning_steps ?? 0,
+  };
+}
+
+async function restoreFromSnapshot(
+  supabase: AppSupabaseClient,
+  userId: string,
+  flashcardId: string,
+  snapshot: BeforeSnapshot,
+) {
+  if (snapshot.state_before === null) {
+    await supabase
+      .from("user_card_state")
+      .delete()
+      .eq("user_id", userId)
+      .eq("flashcard_id", flashcardId);
+  } else {
+    await supabase
+      .from("user_card_state")
+      .update({
+        stability: snapshot.stability_before,
+        difficulty: snapshot.difficulty_before,
+        state: snapshot.state_before,
+        reps: snapshot.reps_before,
+        lapses: snapshot.lapses_before,
+        elapsed_days: snapshot.elapsed_days_before,
+        scheduled_days: snapshot.scheduled_days_before,
+        last_review: snapshot.last_review_before,
+        due: snapshot.due_before,
+        learning_steps: snapshot.learning_steps_before ?? 0,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("flashcard_id", flashcardId);
+  }
+}
+
+async function insertReviewLog(
+  supabase: AppSupabaseClient,
+  params: {
+    user_id: string;
+    flashcard_id: string;
+    card_state_id: string;
+    rating: number;
+    answer_time_ms: number | null;
+  },
+  snapshot: BeforeSnapshot,
+) {
+  const { error } = await supabase
+    .from("review_logs")
+    .insert({ ...params, ...snapshot });
+  if (error) {
+    console.error("Failed to insert review log:", error.message);
+  }
+}
+
+// --- Exported server actions ---
+
 export async function scheduleFlashcardReview(
   userId: string,
   flashcardId: string,
@@ -30,21 +146,7 @@ export async function scheduleFlashcardReview(
   const now = new Date();
   const card = existingState ? toCard(existingState) : createNewCard();
 
-  // Capture full before-snapshot for undo support
-  const stabilityBefore = existingState ? existingState.stability : null;
-  const difficultyBefore = existingState ? existingState.difficulty : null;
-  const stateBefore = existingState ? existingState.state : null;
-  const repsBefore = existingState ? existingState.reps : null;
-  const lapsesBefore = existingState ? existingState.lapses : null;
-  const elapsedDaysBefore = existingState ? existingState.elapsed_days : null;
-  const scheduledDaysBefore = existingState
-    ? existingState.scheduled_days
-    : null;
-  const lastReviewBefore = existingState ? existingState.last_review : null;
-  const dueBefore = existingState ? existingState.due : null;
-  const learningStepsBefore = existingState
-    ? existingState.learning_steps ?? 0
-    : null;
+  const snapshot = captureSnapshot(existingState);
 
   // Run FSRS scheduling with per-user scheduler
   const scheduler = createUserScheduler({
@@ -105,27 +207,17 @@ export async function scheduleFlashcardReview(
     cardStateId = inserted.id;
   }
 
-  // Insert review log with full before-snapshot
-  const { error: logError } = await supabase.from("review_logs").insert({
-    user_id: userId,
-    flashcard_id: flashcardId,
-    card_state_id: cardStateId,
-    rating,
-    answer_time_ms: answerTimeMs ?? null,
-    stability_before: stabilityBefore,
-    difficulty_before: difficultyBefore,
-    state_before: stateBefore,
-    reps_before: repsBefore,
-    lapses_before: lapsesBefore,
-    elapsed_days_before: elapsedDaysBefore,
-    scheduled_days_before: scheduledDaysBefore,
-    last_review_before: lastReviewBefore,
-    due_before: dueBefore,
-    learning_steps_before: learningStepsBefore,
-  });
-  if (logError) {
-    console.error("Failed to insert review log:", logError.message);
-  }
+  await insertReviewLog(
+    supabase,
+    {
+      user_id: userId,
+      flashcard_id: flashcardId,
+      card_state_id: cardStateId,
+      rating,
+      answer_time_ms: answerTimeMs ?? null,
+    },
+    snapshot,
+  );
 
   return { cardStateId, newState: dbFields };
 }
@@ -167,12 +259,9 @@ export async function buryFlashcard(userId: string, flashcardId: string) {
 export async function undoLastReview(userId: string, flashcardId: string) {
   const supabase = await createClient();
 
-  // Find the most recent review log with full snapshot
   const { data: lastLog } = await supabase
     .from("review_logs")
-    .select(
-      "id, stability_before, difficulty_before, state_before, reps_before, lapses_before, elapsed_days_before, scheduled_days_before, last_review_before, due_before, learning_steps_before",
-    )
+    .select(SNAPSHOT_SELECT)
     .eq("user_id", userId)
     .eq("flashcard_id", flashcardId)
     .order("reviewed_at", { ascending: false })
@@ -181,36 +270,8 @@ export async function undoLastReview(userId: string, flashcardId: string) {
 
   if (!lastLog) return;
 
-  // Delete the review log
   await supabase.from("review_logs").delete().eq("id", lastLog.id);
-
-  if (lastLog.state_before === null) {
-    // Card was new before this review — delete card state entirely
-    await supabase
-      .from("user_card_state")
-      .delete()
-      .eq("user_id", userId)
-      .eq("flashcard_id", flashcardId);
-  } else {
-    // Restore card state from snapshot
-    await supabase
-      .from("user_card_state")
-      .update({
-        stability: lastLog.stability_before,
-        difficulty: lastLog.difficulty_before,
-        state: lastLog.state_before,
-        reps: lastLog.reps_before,
-        lapses: lastLog.lapses_before,
-        elapsed_days: lastLog.elapsed_days_before,
-        scheduled_days: lastLog.scheduled_days_before,
-        last_review: lastLog.last_review_before,
-        due: lastLog.due_before,
-        learning_steps: lastLog.learning_steps_before ?? 0,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("flashcard_id", flashcardId);
-  }
+  await restoreFromSnapshot(supabase, userId, flashcardId, lastLog);
 }
 
 export async function resetTodayProgress(
@@ -224,12 +285,9 @@ export async function resetTodayProgress(
   const todayMidnight = new Date();
   todayMidnight.setUTCHours(0, 0, 0, 0);
 
-  // Fetch today's review logs with full snapshot data
   const { data: todayLogs } = await supabase
     .from("review_logs")
-    .select(
-      "id, flashcard_id, state_before, stability_before, difficulty_before, reps_before, lapses_before, elapsed_days_before, scheduled_days_before, last_review_before, due_before, learning_steps_before",
-    )
+    .select(SNAPSHOT_SELECT)
     .eq("user_id", userId)
     .in("flashcard_id", flashcardIds)
     .gte("reviewed_at", todayMidnight.toISOString())
@@ -237,50 +295,23 @@ export async function resetTodayProgress(
 
   if (!todayLogs?.length) return 0;
 
-  // Group by flashcard_id — first log today has the pre-today snapshot
-  const firstLogByFlashcard = new Map<
-    string,
-    (typeof todayLogs)[0]
-  >();
+  const firstLogByFlashcard = new Map<string, (typeof todayLogs)[0]>();
   for (const log of todayLogs) {
     if (!firstLogByFlashcard.has(log.flashcard_id)) {
       firstLogByFlashcard.set(log.flashcard_id, log);
     }
   }
 
-  // Bulk delete today's review logs
-  const logIds = todayLogs.map((l) => l.id);
-  await supabase.from("review_logs").delete().in("id", logIds);
+  await supabase
+    .from("review_logs")
+    .delete()
+    .in(
+      "id",
+      todayLogs.map((l) => l.id),
+    );
 
-  // Restore each flashcard's card state to its pre-today state using snapshot
   for (const [flashcardId, firstLog] of firstLogByFlashcard) {
-    if (firstLog.state_before === null) {
-      // Card was new today — delete card state entirely
-      await supabase
-        .from("user_card_state")
-        .delete()
-        .eq("user_id", userId)
-        .eq("flashcard_id", flashcardId);
-    } else {
-      // Restore from first log's before-snapshot
-      await supabase
-        .from("user_card_state")
-        .update({
-          stability: firstLog.stability_before,
-          difficulty: firstLog.difficulty_before,
-          state: firstLog.state_before,
-          reps: firstLog.reps_before,
-          lapses: firstLog.lapses_before,
-          elapsed_days: firstLog.elapsed_days_before,
-          scheduled_days: firstLog.scheduled_days_before,
-          last_review: firstLog.last_review_before,
-          due: firstLog.due_before,
-          learning_steps: firstLog.learning_steps_before ?? 0,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("user_id", userId)
-        .eq("flashcard_id", flashcardId);
-    }
+    await restoreFromSnapshot(supabase, userId, flashcardId, firstLog);
   }
 
   return todayLogs.length;

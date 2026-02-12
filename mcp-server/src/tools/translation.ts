@@ -1,7 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
-import { getSupabaseClient } from "../supabase.js";
+import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import { type McpResult, ok, err } from "../utils.js";
 
 const QUESTION_TRANSLATION_FIELDS = new Set([
@@ -51,7 +50,7 @@ function isEmpty(val: unknown): boolean {
 // ─── Handlers ────────────────────────────────────────────────────────
 
 export async function handleCheckTranslations(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id: string; source_lang?: string }
 ): Promise<McpResult> {
   const targetSuffix = (params.source_lang ?? "en") === "en" ? "_es" : "_en";
@@ -139,7 +138,7 @@ export async function handleCheckTranslations(
 }
 
 export async function handleFindUntranslated(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { lang?: string }
 ): Promise<McpResult> {
   const lang = params.lang ?? "es";
@@ -255,7 +254,7 @@ export async function handleFindUntranslated(
 }
 
 export async function handleCompareTranslations(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { topic_id?: string; question_ids?: string[]; flashcard_ids?: string[]; fields?: string[] }
 ): Promise<McpResult> {
   if (!params.topic_id && !params.question_ids?.length && !params.flashcard_ids?.length) {
@@ -330,7 +329,7 @@ export async function handleCompareTranslations(
 }
 
 export async function handleUpdateTranslation(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { question_id: string; fields: Record<string, unknown> }
 ): Promise<McpResult> {
   const validationErr = validateTranslationFields(params.fields);
@@ -349,7 +348,7 @@ export async function handleUpdateTranslation(
 }
 
 export async function handleBatchUpdateTranslations(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { updates: Array<{ question_id: string; fields: Record<string, unknown> }> }
 ): Promise<McpResult> {
   if (!params.updates.length) return err("Updates array cannot be empty");
@@ -382,7 +381,7 @@ export async function handleBatchUpdateTranslations(
 }
 
 export async function handleUpdateFlashcardTranslation(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { flashcard_id: string; fields: Record<string, unknown> }
 ): Promise<McpResult> {
   const validationErr = validateTranslationFields(params.fields, FLASHCARD_TRANSLATION_FIELDS);
@@ -401,7 +400,7 @@ export async function handleUpdateFlashcardTranslation(
 }
 
 export async function handleBatchUpdateFlashcardTranslations(
-  supabase: SupabaseClient,
+  supabase: TypedClient,
   params: { updates: Array<{ flashcard_id: string; fields: Record<string, unknown> }> }
 ): Promise<McpResult> {
   if (!params.updates.length) return err("Updates array cannot be empty");
@@ -476,7 +475,7 @@ export function registerTranslationTools(server: McpServer): void {
       question_id: z.string().uuid().describe("Question UUID"),
       fields: z.record(z.unknown()).describe("Translation fields to update (e.g. { question_es: '...' })"),
     },
-    async (params) => handleUpdateTranslation(getSupabaseClient(), params as any)
+    async (params) => handleUpdateTranslation(getSupabaseClient(), params)
   );
 
   server.tool(
@@ -490,7 +489,7 @@ export function registerTranslationTools(server: McpServer): void {
         })
       ).describe("Array of { question_id, fields } objects"),
     },
-    async (params) => handleBatchUpdateTranslations(getSupabaseClient(), params as any)
+    async (params) => handleBatchUpdateTranslations(getSupabaseClient(), params)
   );
 
   server.tool(
@@ -500,7 +499,7 @@ export function registerTranslationTools(server: McpServer): void {
       flashcard_id: z.string().uuid().describe("Flashcard UUID"),
       fields: z.record(z.unknown()).describe("Translation fields to update (e.g. { answer_es: '...' })"),
     },
-    async (params) => handleUpdateFlashcardTranslation(getSupabaseClient(), params as any)
+    async (params) => handleUpdateFlashcardTranslation(getSupabaseClient(), params)
   );
 
   server.tool(
@@ -514,6 +513,6 @@ export function registerTranslationTools(server: McpServer): void {
         })
       ).describe("Array of { flashcard_id, fields } objects"),
     },
-    async (params) => handleBatchUpdateFlashcardTranslations(getSupabaseClient(), params as any)
+    async (params) => handleBatchUpdateFlashcardTranslations(getSupabaseClient(), params)
   );
 }
