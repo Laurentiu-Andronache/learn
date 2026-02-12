@@ -159,6 +159,11 @@ export async function getOrderedFlashcards(
     return Math.random() - 0.5;
   });
 
+  // 6b. Exclude future cards — studying before FSRS-scheduled due date undermines spacing effect
+  if (options.subMode === "full" || options.subMode === "category_focus") {
+    orderedFlashcards = orderedFlashcards.filter((of) => getBucket(of) !== 3);
+  }
+
   // 7. Enforce new cards per day limit
   if (options.newCardsPerDay !== undefined) {
     const todayMidnight = new Date(now);
@@ -269,8 +274,18 @@ export async function getSubModeCounts(userId: string, topicId: string) {
       (cs.state === "review" || cs.state === "relearning"),
   ).length;
 
+  // Full mode excludes future cards (new cards + cards due now)
+  const stateMap = new Map(
+    activeCardStates.map((cs) => [cs.flashcard_id, cs]),
+  );
+  const fullCount = activeIds.filter((id) => {
+    const cs = stateMap.get(id);
+    if (!cs) return true; // new/unseen card
+    return new Date(cs.due) <= now; // due now
+  }).length;
+
   return {
-    full: activeIds.length,
+    full: fullCount,
     quickReview: Math.min(seen, 20),
     spacedRepetition: dueNow,
   };

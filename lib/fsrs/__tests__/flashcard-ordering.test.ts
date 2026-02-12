@@ -12,6 +12,10 @@ function chainable(result: MockResult) {
     eq: () => self,
     in: () => self,
     not: () => self,
+    is: () => self,
+    gte: () => self,
+    order: () => self,
+    limit: () => self,
     returns: () => self,
     single: () => Promise.resolve(result),
     // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock for await support
@@ -107,12 +111,12 @@ describe("getOrderedFlashcards – bucket sorting", () => {
     vi.setSystemTime(NOW);
   });
 
-  it("sorts: review due → new → learning due → future", async () => {
+  it("sorts: review due → new → learning due (future excluded)", async () => {
     const flashcards = [
       makeFlashcard("f-new"), // no card state → bucket 1
       makeFlashcard("f-learning"), // learning, due → bucket 2
       makeFlashcard("f-review"), // review, due → bucket 0
-      makeFlashcard("f-future"), // review, future → bucket 3
+      makeFlashcard("f-future"), // review, future → bucket 3 (excluded)
     ];
 
     tableData = {
@@ -130,10 +134,10 @@ describe("getOrderedFlashcards – bucket sorting", () => {
     });
     const ids = result.map((of) => of.flashcard.id);
 
+    expect(ids).toHaveLength(3); // future card excluded
     expect(ids[0]).toBe("f-review"); // bucket 0
     expect(ids[1]).toBe("f-new"); // bucket 1
     expect(ids[2]).toBe("f-learning"); // bucket 2
-    expect(ids[3]).toBe("f-future"); // bucket 3
   });
 
   it("sorts multiple review-due cards by most overdue first", async () => {
@@ -385,12 +389,13 @@ describe("getSubModeCounts", () => {
     vi.setSystemTime(NOW);
   });
 
-  it("returns correct counts", async () => {
+  it("returns correct counts (excludes future from full)", async () => {
     const flashcards = [
       { id: "f-1", categories: { topic_id: "topic-1" } },
       { id: "f-2", categories: { topic_id: "topic-1" } },
       { id: "f-3", categories: { topic_id: "topic-1" } },
       { id: "f-4", categories: { topic_id: "topic-1" } },
+      { id: "f-5", categories: { topic_id: "topic-1" } }, // future card
     ];
 
     tableData = {
@@ -404,12 +409,14 @@ describe("getSubModeCounts", () => {
           due: "2026-02-08T11:00:00Z",
           state: "relearning",
         }, // due relearning
+        // f-4 = new/unseen (no card state)
+        { flashcard_id: "f-5", due: "2026-02-10T00:00:00Z", state: "review" }, // future review
       ],
     };
 
     const counts = await getSubModeCounts("user-1", "topic-1");
-    expect(counts.full).toBe(4); // all active flashcards
-    expect(counts.quickReview).toBe(3); // min(3 seen, 20)
+    expect(counts.full).toBe(4); // 3 due + 1 new, excludes future f-5
+    expect(counts.quickReview).toBe(4); // min(4 seen, 20)
     expect(counts.spacedRepetition).toBe(2); // review + relearning, NOT learning
   });
 
@@ -438,5 +445,122 @@ describe("getSubModeCounts", () => {
 
     const counts = await getSubModeCounts("user-1", "topic-1");
     expect(counts).toEqual({ full: 0, quickReview: 0, spacedRepetition: 0 });
+  });
+});
+
+describe("getOrderedFlashcards – future card exclusion", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+
+  it("returns empty session when all cards are future", async () => {
+    const flashcards = [makeFlashcard("f-1"), makeFlashcard("f-2")];
+
+    tableData = {
+      flashcards,
+      suspended_flashcards: [],
+      user_card_state: [
+        makeCardState("f-1", "review", "2026-02-09T12:00:00Z"), // tomorrow
+        makeCardState("f-2", "review", "2026-02-10T12:00:00Z"), // 2 days out
+      ],
+    };
+
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
+      subMode: "full",
+    });
+    expect(result).toHaveLength(0);
+  });
+
+  it("excludes future cards from category_focus mode too", async () => {
+    const flashcards = [
+      makeFlashcard("f-due", "cat-1"),
+      makeFlashcard("f-future", "cat-1"),
+    ];
+
+    tableData = {
+      flashcards,
+      suspended_flashcards: [],
+      user_card_state: [
+        makeCardState("f-due", "review", "2026-02-07T12:00:00Z"), // overdue
+        makeCardState("f-future", "review", "2026-02-10T12:00:00Z"), // future
+      ],
+    };
+
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
+      subMode: "category_focus",
+      categoryId: "cat-1",
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0].flashcard.id).toBe("f-due");
+  });
+
+  it("quick_review keeps future seen cards", async () => {
+    const flashcards = [makeFlashcard("f-future")];
+
+    tableData = {
+      flashcards,
+      suspended_flashcards: [],
+      user_card_state: [
+        makeCardState("f-future", "review", "2026-02-10T12:00:00Z"),
+      ],
+    };
+
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
+      subMode: "quick_review",
+    });
+    expect(result).toHaveLength(1);
+  });
+});
+
+describe("getOrderedFlashcards – newCardsPerDay cap", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(NOW);
+  });
+
+  it("caps new cards to newCardsPerDay limit", async () => {
+    const flashcards = Array.from({ length: 10 }, (_, i) =>
+      makeFlashcard(`f-${i}`),
+    );
+
+    tableData = {
+      flashcards,
+      suspended_flashcards: [],
+      user_card_state: [],
+      review_logs: [], // no reviews today
+    };
+
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
+      subMode: "full",
+      newCardsPerDay: 5,
+    });
+    expect(result).toHaveLength(5);
+  });
+
+  it("applies ramp-up limit on day 2", async () => {
+    const flashcards = Array.from({ length: 15 }, (_, i) =>
+      makeFlashcard(`f-${i}`),
+    );
+
+    tableData = {
+      flashcards,
+      suspended_flashcards: [],
+      user_card_state: [],
+      // Mock returns same rows for both review_logs queries:
+      // 1) today's new cards → counts 1 (mock can't filter by date)
+      // 2) earliest review → day 2 → ramp-up cap = min(10, 5+2) = 7
+      // Result: 7 - 1 already studied = 6 remaining
+      review_logs: [
+        { flashcard_id: "f-0", reviewed_at: "2026-02-07T10:00:00Z" },
+      ],
+    };
+
+    const result = await getOrderedFlashcards("user-1", "topic-1", {
+      subMode: "full",
+      newCardsPerDay: 10,
+      newCardsRampUp: true,
+    });
+    expect(result).toHaveLength(6); // 7 ramp-up cap - 1 "studied today" from mock
   });
 });
