@@ -14,6 +14,7 @@ export async function handleListFlashcards(
     difficulty_min?: number;
     difficulty_max?: number;
     search?: string;
+    compact?: boolean;
     limit?: number;
     offset?: number;
   }
@@ -21,9 +22,13 @@ export async function handleListFlashcards(
   const limit = params.limit ?? 50;
   const offset = params.offset ?? 0;
 
+  const selectStr = params.compact
+    ? "id, question_en, difficulty, category_id, categories!inner(id, name_en, topic_id)"
+    : "*, categories!inner(id, name_en, name_es, topic_id)";
+
   let query = supabase
     .from("flashcards")
-    .select("*, categories!inner(id, name_en, name_es, topic_id)", { count: "exact" });
+    .select(selectStr, { count: "exact" });
 
   if (params.topic_id) {
     query = query.eq("categories.topic_id", params.topic_id);
@@ -38,9 +43,12 @@ export async function handleListFlashcards(
     query = query.lte("difficulty", params.difficulty_max);
   }
   if (params.search) {
-    query = query.or(
-      `question_en.ilike.%${params.search}%,question_es.ilike.%${params.search}%`
-    );
+    const terms = params.search.split(/\s+/).filter(Boolean);
+    const fields = ["question_en", "question_es", "answer_en", "answer_es", "extra_en", "extra_es"];
+    const orFilter = fields
+      .flatMap((f) => terms.map((t) => `${f}.ilike.%${t}%`))
+      .join(",");
+    query = query.or(orFilter);
   }
 
   const { data, error, count } = await query.range(offset, offset + limit - 1);
@@ -85,7 +93,11 @@ export async function handleSearchFlashcards(
         ? ["question_en", "answer_en", "extra_en"]
         : ["question_en", "question_es", "answer_en", "answer_es", "extra_en", "extra_es"];
 
-  const orFilter = searchFields.map((f) => `${f}.ilike.%${q}%`).join(",");
+  // Split multi-word query into individual terms for OR matching
+  const terms = q.split(/\s+/).filter(Boolean);
+  const orFilter = searchFields
+    .flatMap((f) => terms.map((t) => `${f}.ilike.%${t}%`))
+    .join(",");
 
   let query = supabase
     .from("flashcards")
@@ -297,7 +309,8 @@ export function registerFlashcardTools(server: McpServer): void {
       category_id: z.string().uuid().optional().describe("Filter by category UUID"),
       difficulty_min: z.number().min(1).max(10).optional().describe("Min difficulty"),
       difficulty_max: z.number().min(1).max(10).optional().describe("Max difficulty"),
-      search: z.string().optional().describe("Search in question text"),
+      search: z.string().optional().describe("Search in question text (multi-word splits into OR terms, searches all text fields)"),
+      compact: z.boolean().optional().describe("Return only id, question_en, difficulty (default false)"),
       limit: z.number().min(1).max(200).optional().describe("Results per page (default 50)"),
       offset: z.number().min(0).optional().describe("Offset for pagination"),
     },

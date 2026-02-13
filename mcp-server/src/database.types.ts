@@ -722,7 +722,45 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      find_similar_content: {
+        Args: {
+          source_id: string
+          source_type: string
+          similarity_threshold?: number
+          max_results?: number
+        }
+        Returns: {
+          id: string
+          content_type: string
+          question_en: string
+          similarity_score: number
+          category_name: string
+        }[]
+      }
+      search_content: {
+        Args: {
+          search_query: string
+          content_types?: string[]
+          filter_topic_id?: string | null
+          filter_lang?: string | null
+          max_results?: number
+        }
+        Returns: {
+          id: string
+          content_type: string
+          category_id: string
+          category_name: string
+          topic_id: string
+          question_en: string
+          question_es: string
+          answer_or_explanation_en: string
+          answer_or_explanation_es: string
+          extra_en: string
+          extra_es: string
+          difficulty: number  // smallint in DB, mapped to number in TS
+          best_similarity: number
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

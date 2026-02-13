@@ -152,6 +152,26 @@ export async function handleMoveCategory(
   return ok(data);
 }
 
+/* ── learn_category_summary ── */
+
+export async function handleCategorySummary(
+  supabase: TypedClient,
+  params: { category_id: string },
+): Promise<McpResult> {
+  const [catRes, qRes, fRes] = await Promise.all([
+    supabase.from("categories").select("*, topics(id, title_en)").eq("id", params.category_id).single(),
+    supabase.from("questions").select("id, question_en, type, difficulty").eq("category_id", params.category_id),
+    supabase.from("flashcards").select("id, question_en, difficulty").eq("category_id", params.category_id),
+  ]);
+  if (catRes.error) return err(catRes.error.message);
+  return ok({
+    category: catRes.data,
+    questions: qRes.data ?? [],
+    flashcards: fRes.data ?? [],
+    counts: { questions: qRes.data?.length ?? 0, flashcards: fRes.data?.length ?? 0 },
+  });
+}
+
 /* ── Registration ── */
 
 export function registerCategoryTools(server: McpServer): void {
@@ -212,5 +232,15 @@ export function registerCategoryTools(server: McpServer): void {
       new_topic_id: z.string().describe("Destination topic UUID"),
     },
     async (params) => handleMoveCategory(getSupabaseClient(), params),
+  );
+
+  server.tool(
+    "learn_category_summary",
+    "Compact category overview: metadata + question/flashcard text only (no extras/explanations). Useful for auditing category content without blowing token limits.",
+    {
+      category_id: z.string().uuid().describe("Category UUID"),
+    },
+    { readOnlyHint: true },
+    async (params) => handleCategorySummary(getSupabaseClient(), params),
   );
 }
