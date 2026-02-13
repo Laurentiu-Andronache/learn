@@ -107,6 +107,7 @@ export function QuestionEditForm({
       <div className="space-y-2">
         <Label>{editTab === "en" ? "Question (EN)" : "Question (ES)"}</Label>
         <Textarea
+          className="[field-sizing:content]"
           value={(editData[`question_${editTab}`] as string) ?? ""}
           onChange={(e) =>
             setEditData({
@@ -114,7 +115,7 @@ export function QuestionEditForm({
               [`question_${editTab}`]: e.target.value,
             })
           }
-          rows={2}
+          rows={1}
         />
       </div>
 
@@ -161,6 +162,7 @@ export function QuestionEditForm({
       <div className="space-y-2">
         <Label>Explanation ({editTab.toUpperCase()})</Label>
         <Textarea
+          className="[field-sizing:content]"
           value={(editData[`explanation_${editTab}`] as string) ?? ""}
           onChange={(e) =>
             setEditData({
@@ -168,7 +170,7 @@ export function QuestionEditForm({
               [`explanation_${editTab}`]: e.target.value,
             })
           }
-          rows={2}
+          rows={1}
         />
       </div>
 
@@ -176,11 +178,12 @@ export function QuestionEditForm({
       <div className="space-y-2">
         <Label>Extra / Learn More ({editTab.toUpperCase()})</Label>
         <Textarea
+          className="[field-sizing:content]"
           value={(editData[`extra_${editTab}`] as string) ?? ""}
           onChange={(e) =>
             setEditData({ ...editData, [`extra_${editTab}`]: e.target.value })
           }
-          rows={2}
+          rows={3}
         />
       </div>
 
