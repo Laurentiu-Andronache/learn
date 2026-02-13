@@ -163,7 +163,7 @@ describe("getTopicProgress", () => {
     expect(result.newCount).toBe(1);
   });
 
-  it("counts dueToday for all overdue cards (review, relearning, learning)", async () => {
+  it("counts dueToday for overdue review and relearning cards only", async () => {
     setupMocks({
       flashcards: [
         { id: "f1", category_id: "cat-1", categories: makeCat("topic-1") },
@@ -174,6 +174,7 @@ describe("getTopicProgress", () => {
       cardStates: [
         { flashcard_id: "f1", state: "review", stability: 10, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
         { flashcard_id: "f2", state: "relearning", stability: 2, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        // learning-state cards are intra-day steps, NOT counted as dueToday
         { flashcard_id: "f3", state: "learning", stability: 1, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
         // future review card does NOT count as dueToday
         { flashcard_id: "f4", state: "review", stability: 10, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-01" },
@@ -182,7 +183,7 @@ describe("getTopicProgress", () => {
     });
 
     const result = await getTopicProgress("user-1", "topic-1");
-    expect(result.dueToday).toBe(3); // f1 (review) + f2 (relearning) + f3 (learning)
+    expect(result.dueToday).toBe(2); // f1 (review) + f2 (relearning) only
   });
 
   it("sets fullyMemorized when all cards mastered and none due", async () => {

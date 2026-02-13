@@ -136,11 +136,11 @@ export async function getTopicProgress(
       } else {
         catProgress.newCount++;
       }
-      // dueToday: count all overdue cards (review, relearning, and learning)
+      // dueToday: only genuine reviews (learning steps are intra-day, not due)
       if (
         cs.due &&
         new Date(cs.due) <= new Date(now) &&
-        (cs.state === "review" || cs.state === "relearning" || cs.state === "learning")
+        (cs.state === "review" || cs.state === "relearning")
       ) {
         catProgress.dueToday++;
       }
@@ -387,11 +387,11 @@ export async function getCategoryProgress(
       } else {
         result.newCount++;
       }
-      // dueToday: count all overdue cards (review, relearning, and learning)
+      // dueToday: only genuine reviews (learning steps are intra-day, not due)
       if (
         cs.due &&
         new Date(cs.due) <= new Date(now) &&
-        (cs.state === "review" || cs.state === "relearning" || cs.state === "learning")
+        (cs.state === "review" || cs.state === "relearning")
       ) {
         result.dueToday++;
       }
