@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation";
 import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { FlashcardSession } from "@/components/flashcards/flashcard-session";
+import { FlashcardsDone } from "@/components/flashcards/flashcards-done";
 import type { SubMode } from "@/lib/fsrs/flashcard-ordering";
-import { getOrderedFlashcards } from "@/lib/fsrs/flashcard-ordering";
+import {
+  getEmptyStateContext,
+  getOrderedFlashcards,
+} from "@/lib/fsrs/flashcard-ordering";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -60,7 +64,22 @@ export default async function FlashcardsPage({
     newCardsRampUp: fsrsSettings.new_cards_ramp_up,
   });
 
-  if (ordered.length === 0) redirect("/topics");
+  if (ordered.length === 0) {
+    const ctx = await getEmptyStateContext(user.id, topic.id, {
+      subMode,
+      categoryId: category,
+      newCardsPerDay: fsrsSettings.new_cards_per_day,
+      newCardsRampUp: fsrsSettings.new_cards_ramp_up,
+    });
+    return (
+      <FlashcardsDone
+        topicUrl={topicUrl(topic)}
+        remainingNewCards={ctx.remainingNewCards}
+        nextDueAt={ctx.nextDueAt}
+        effectiveLimit={ctx.effectiveLimit}
+      />
+    );
+  }
 
   return (
     <FlashcardSession

@@ -210,6 +210,18 @@
       "easy": "Easy",
       "reviewAgain": "Review Again Cards",
       "backToTopics": "Back to Topics"
+    },
+    "done": {
+      "title": "All Done for Now!",
+      "subtitle": "You've completed all available flashcards for today. Great work!",
+      "nextReview": "Next review",
+      "dueNow": "Now",
+      "inMinutes": "{count, plural, one {in # minute} other {in # minutes}}",
+      "inHours": "{count, plural, one {in # hour} other {in # hours}}",
+      "inDays": "{count, plural, one {in # day} other {in # days}}",
+      "remainingNewCards": "There {count, plural, one {is # new card} other {are # new cards}} remaining in this topic, but your daily limit is {limit}.",
+      "adjustInSettings": "Adjust in Study Settings",
+      "backToTopic": "Back to Topic"
     }
   },
   "reading": {

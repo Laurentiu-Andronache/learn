@@ -34,6 +34,96 @@ export interface OrderingOptions {
   newCardsRampUp?: boolean;
 }
 
+/** Context returned when no flashcards are available */
+export interface EmptyStateContext {
+  /** Total unseen new cards remaining (beyond daily limit) */
+  remainingNewCards: number;
+  /** Earliest due date among future cards, or null if none */
+  nextDueAt: string | null;
+  /** Current effective new-cards-per-day limit */
+  effectiveLimit: number;
+}
+
+export async function getEmptyStateContext(
+  userId: string,
+  topicId: string,
+  options: OrderingOptions,
+): Promise<EmptyStateContext> {
+  const supabase = await createClient();
+  const now = new Date();
+
+  // Fetch all flashcards for topic
+  let flashcardsQuery = supabase
+    .from("flashcards")
+    .select("id, categories!inner(topic_id)")
+    .eq("categories.topic_id", topicId);
+  if (options.subMode === "category_focus" && options.categoryId) {
+    flashcardsQuery = flashcardsQuery.eq("category_id", options.categoryId);
+  }
+  const { data: flashcards } =
+    await flashcardsQuery.returns<{ id: string; categories: { topic_id: string } }[]>();
+  const flashcardIds = (flashcards || []).map((f) => f.id);
+  if (!flashcardIds.length) return { remainingNewCards: 0, nextDueAt: null, effectiveLimit: 0 };
+
+  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
+    supabase
+      .from("suspended_flashcards")
+      .select("flashcard_id")
+      .eq("user_id", userId)
+      .in("flashcard_id", flashcardIds),
+    supabase
+      .from("user_card_state")
+      .select("flashcard_id, due")
+      .eq("user_id", userId)
+      .in("flashcard_id", flashcardIds),
+  ]);
+  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
+  const stateMap = new Map((cardStates || []).map((cs) => [cs.flashcard_id, cs]));
+
+  const activeIds = flashcardIds.filter((id) => !suspendedSet.has(id));
+
+  // Count total unseen new cards (no card state)
+  const totalNewCards = activeIds.filter((id) => !stateMap.has(id)).length;
+
+  // Find earliest future due date
+  let nextDueAt: string | null = null;
+  for (const cs of cardStates || []) {
+    if (suspendedSet.has(cs.flashcard_id)) continue;
+    const due = new Date(cs.due);
+    if (due > now) {
+      if (!nextDueAt || due.getTime() < new Date(nextDueAt).getTime()) {
+        nextDueAt = cs.due;
+      }
+    }
+  }
+
+  // Calculate effective daily limit
+  let effectiveLimit = options.newCardsPerDay ?? 10;
+  if (options.newCardsRampUp) {
+    const { data: earliestLog } = await supabase
+      .from("review_logs")
+      .select("reviewed_at")
+      .eq("user_id", userId)
+      .in("flashcard_id", flashcardIds)
+      .order("reviewed_at", { ascending: true })
+      .limit(1);
+
+    if (earliestLog && earliestLog.length > 0) {
+      const dayNumber =
+        Math.floor(
+          (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) / 86400000,
+        ) + 1;
+      if (dayNumber <= 5) {
+        effectiveLimit = Math.min(effectiveLimit, 5 + dayNumber);
+      }
+    } else {
+      effectiveLimit = Math.min(effectiveLimit, 6);
+    }
+  }
+
+  return { remainingNewCards: totalNewCards, nextDueAt, effectiveLimit };
+}
+
 export async function getOrderedFlashcards(
   userId: string,
   topicId: string,

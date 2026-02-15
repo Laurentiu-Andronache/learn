@@ -210,6 +210,18 @@
       "easy": "Fácil",
       "reviewAgain": "Repasar Tarjetas Falladas",
       "backToTopics": "Volver a Temas"
+    },
+    "done": {
+      "title": "¡Todo Listo por Ahora!",
+      "subtitle": "Has completado todas las tarjetas disponibles para hoy. ¡Buen trabajo!",
+      "nextReview": "Próxima revisión",
+      "dueNow": "Ahora",
+      "inMinutes": "{count, plural, one {en # minuto} other {en # minutos}}",
+      "inHours": "{count, plural, one {en # hora} other {en # horas}}",
+      "inDays": "{count, plural, one {en # día} other {en # días}}",
+      "remainingNewCards": "{count, plural, one {Queda # tarjeta nueva} other {Quedan # tarjetas nuevas}} en este tema, pero tu límite diario es {limit}.",
+      "adjustInSettings": "Ajustar en Configuración de Estudio",
+      "backToTopic": "Volver al Tema"
     }
   },
   "reading": {
