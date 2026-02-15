@@ -65,7 +65,7 @@ export function AnimatedScore({ value, className, showRing = false }: AnimatedSc
           />
         </svg>
       )}
-      <span className="font-display text-5xl font-bold tabular-nums">
+      <span className={cn("font-display font-bold tabular-nums", showRing ? "text-4xl" : "text-5xl")}>
         {display}%
       </span>
     </div>

@@ -91,6 +91,7 @@
 @layer base {
   * {
     @apply border-border;
+    touch-action: manipulation;
   }
   body {
     @apply bg-background text-foreground;
