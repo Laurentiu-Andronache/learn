@@ -41,8 +41,8 @@
     "continueLearning": "Continue Learning",
     "features": {
       "fsrs": {
-        "title": "Spaced Repetition",
-        "description": "FSRS algorithm schedules reviews at optimal intervals for long-term retention"
+        "title": "FSRS-6 Spaced Repetition",
+        "description": "The latest FSRS-6 algorithm with 21 trainable parameters adapts to your memory patterns. Reviews scheduled at optimal intervals — fewer reviews than traditional methods for the same retention."
       },
       "bilingual": {
         "title": "Bilingual",
@@ -253,12 +253,24 @@
     "newCardsPerDay": "New Cards Per Day",
     "newCardsPerDayDescription": "Maximum new cards introduced per day per topic.",
     "rampUp": "Gradual Introduction",
-    "rampUpDescription": "Start with fewer new cards and gradually increase over the first 5 days of each topic (6\u21927\u21928\u21929\u219210).",
+    "rampUpDescription": "Start with fewer new cards and gradually increase over the first 5 days of each topic (6→7→8→9→10).",
     "newCardsAfterRampUp": "Cards Per Day After Ramp-Up",
     "showIntervals": "Show Interval Previews",
     "showIntervalsDescription": "Display next review time on rating buttons.",
     "readAloud": "Auto-Read Questions",
     "readAloudDescription": "Automatically read questions aloud when they appear in quiz and flashcard modes.",
+    "optimizer": {
+      "title": "Optimize Parameters",
+      "description": "Trains the scheduling algorithm on your personal review history for more efficient study sessions.",
+      "optimizeNow": "Optimize Now",
+      "usingDefaults": "Using default parameters.",
+      "optimizedOn": "Optimized on {date}.",
+      "optimized": "Parameters optimized successfully.",
+      "resetWeights": "Reset to Defaults",
+      "resetDone": "Parameters reset to defaults.",
+      "notEnoughReviews": "Need at least {threshold} spaced reviews (you have {count}).",
+      "needMoreReviews": "Need at least {threshold} spaced reviews to optimize (you have {count}). Keep studying across multiple days!"
+    },
     "resetDefaults": "Reset to Defaults",
     "saved": "Settings saved.",
     "appearance": "Appearance",
@@ -405,17 +417,17 @@
     "description": "LEARN is a bilingual quiz and flashcard application designed to help you master any topic using science-backed spaced repetition.",
     "intro": "LEARN is a bilingual (English/Spanish) quiz and flashcard application designed to help you master any topic using science-backed spaced repetition. Whether you're studying vaccines, languages, or any subject, LEARN adapts to your memory patterns for optimal long-term retention.",
     "howFsrsWorks": "How Spaced Repetition Works",
-    "fsrsIntro": "LEARN uses the FSRS (Free Spaced Repetition Scheduler) algorithm, a modern, research-backed system for optimizing when you review material.",
+    "fsrsIntro": "LEARN uses FSRS-6 (Free Spaced Repetition Scheduler), the latest version of a modern, research-backed algorithm for optimizing when you review material. With 21 trainable parameters, it automatically adapts to your individual memory patterns.",
     "fsrsCoreIdea": "The core idea is simple: review information just before you're about to forget it. FSRS tracks how well you remember each card and schedules the next review at the optimal time:",
     "newCards": "New cards appear frequently at first",
     "difficultCards": "Difficult cards you struggle with show up more often",
     "easyCards": "Easy cards you know well appear at longer intervals",
     "masteredCards": "Mastered cards may only need review every few months",
-    "fsrsEfficiency": "This approach is dramatically more efficient than re-reading or cramming — you spend your time exactly where it's needed most.",
+    "fsrsEfficiency": "This approach is dramatically more efficient than re-reading or cramming — you spend your time exactly where it's needed most. With FSRS, users need 20–30% fewer reviews than traditional methods for the same retention level.",
     "studyModes": "Study Modes",
     "faq": "FAQ",
     "faqFsrsQuestion": "What makes FSRS different from other flashcard apps?",
-    "faqFsrsAnswer": "FSRS is a newer algorithm that outperforms traditional systems like SM-2 (used by Anki). It uses machine learning principles to more accurately predict when you'll forget something, resulting in fewer reviews needed to maintain the same level of retention. <link>More details here</link>.",
+    "faqFsrsAnswer": "FSRS-6 is the latest version of the Free Spaced Repetition Scheduler, with 21 trainable parameters including a trainable forgetting curve decay. It outperforms traditional systems like SM-2 (used by Anki's default) using machine learning principles to predict when you'll forget something. LEARN automatically optimizes these parameters for your personal review history, resulting in even fewer reviews needed to maintain the same retention. <link>More details here</link>.",
     "faqAnonymousQuestion": "Can I use LEARN without creating an account?",
     "faqAnonymousAnswer": "Yes! You can try LEARN as a guest. Your progress will be saved, and you can upgrade to a full account at any time to ensure your data is permanently saved.",
     "faqBilingualQuestion": "How does bilingual support work?",
@@ -425,6 +437,10 @@
     "faqSuspendQuestion": "What does suspending a flashcard do?",
     "faqSuspendAnswer": "Suspending a flashcard removes it from your review queue. This is useful for cards you find too easy, too hard, or irrelevant. You can unsuspend them from Settings at any time.",
     "faqDataQuestion": "Is my data safe?",
-    "faqDataAnswer": "Your data is stored securely in Supabase with row-level security (RLS). Only you can access your progress, preferences, and review history. We never share your data with third parties."
+    "faqDataAnswer": "Your data is stored securely in Supabase with row-level security (RLS). Only you can access your progress, preferences, and review history. We never share your data with third parties.",
+    "faqOptimizationQuestion": "How does personalized optimization work?",
+    "faqOptimizationAnswer": "The app analyzes your review history using a Rust-based optimizer engine. After 50 or more reviews, it trains 21 parameters specific to your memory patterns. This happens automatically — no setup needed. Default parameters (derived from hundreds of millions of reviews) are used until you have enough data. The result is more efficient scheduling with fewer unnecessary reviews.",
+    "faqFsrs6Question": "What is FSRS-6?",
+    "faqFsrs6Answer": "FSRS-6 is the latest version of the Free Spaced Repetition Scheduler, featuring 21 trainable parameters (up from 19 in FSRS-5). The key improvement is a trainable forgetting curve decay — the algorithm learns how quickly your memory fades, rather than assuming everyone forgets at the same rate. It also has improved same-day review handling for learning-phase cards. FSRS is used by Anki and other major flashcard platforms. <link>Learn more about the algorithm</link>."
   }
 }

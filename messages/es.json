@@ -41,8 +41,8 @@
     "continueLearning": "Continuar Aprendiendo",
     "features": {
       "fsrs": {
-        "title": "Repetición Espaciada",
-        "description": "El algoritmo FSRS programa repasos en intervalos óptimos para la retención a largo plazo"
+        "title": "Repetición Espaciada FSRS-6",
+        "description": "El último algoritmo FSRS-6 con 21 parámetros entrenables se adapta a tus patrones de memoria. Repasos programados en intervalos óptimos — menos repasos que los métodos tradicionales para la misma retención."
       },
       "bilingual": {
         "title": "Bilingüe",
@@ -138,8 +138,8 @@
     "createdBy": "por {creator}",
     "anonymous": "Anónimo",
     "tips": {
-      "readFirst": "\u00bfNuevo en este tema? Empieza con Lectura, luego pasa a Tarjetas. Despu\u00e9s de unos d\u00edas de pr\u00e1ctica, prueba el Quiz.",
-      "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente \u2014 o mejor a\u00fan, en voz alta \u2014 usando una oraci\u00f3n completa.",
+      "readFirst": "¿Nuevo en este tema? Empieza con Lectura, luego pasa a Tarjetas. Después de unos días de práctica, prueba el Quiz.",
+      "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente — o mejor aún, en voz alta — usando una oración completa.",
       "listenAloud": "Toca cualquier párrafo en una respuesta, información extra o modo lectura para escucharlo en voz alta."
     },
     "progress": {
@@ -252,13 +252,25 @@
     "maxIntervalDescription": "El intervalo más largo permitido entre repasos de una tarjeta.",
     "newCardsPerDay": "Tarjetas Nuevas Por Día",
     "newCardsPerDayDescription": "Máximo de tarjetas nuevas introducidas por día por tema.",
-    "rampUp": "Introducci\u00f3n Gradual",
-    "rampUpDescription": "Comienza con menos tarjetas nuevas y aumenta gradualmente durante los primeros 5 d\u00edas de cada tema (6\u21927\u21928\u21929\u219210).",
-    "newCardsAfterRampUp": "Tarjetas Por D\u00eda Despu\u00e9s del Aumento",
+    "rampUp": "Introducción Gradual",
+    "rampUpDescription": "Comienza con menos tarjetas nuevas y aumenta gradualmente durante los primeros 5 días de cada tema (6→7→8→9→10).",
+    "newCardsAfterRampUp": "Tarjetas Por Día Después del Aumento",
     "showIntervals": "Mostrar Previsualización de Intervalos",
     "showIntervalsDescription": "Mostrar el próximo tiempo de repaso en los botones de calificación.",
     "readAloud": "Leer Preguntas en Voz Alta",
     "readAloudDescription": "Leer automáticamente las preguntas en voz alta cuando aparecen en modos de cuestionario y tarjetas.",
+    "optimizer": {
+      "title": "Optimizar Parámetros",
+      "description": "Entrena el algoritmo de programación con tu historial de repasos personal para sesiones de estudio más eficientes.",
+      "optimizeNow": "Optimizar Ahora",
+      "usingDefaults": "Usando parámetros predeterminados.",
+      "optimizedOn": "Optimizado el {date}.",
+      "optimized": "Parámetros optimizados exitosamente.",
+      "resetWeights": "Restablecer Valores",
+      "resetDone": "Parámetros restablecidos a valores predeterminados.",
+      "notEnoughReviews": "Se necesitan al menos {threshold} repasos espaciados (tienes {count}).",
+      "needMoreReviews": "Se necesitan al menos {threshold} repasos espaciados para optimizar (tienes {count}). ¡Sigue estudiando en varios días!"
+    },
     "resetDefaults": "Restablecer Valores Predeterminados",
     "saved": "Ajustes guardados.",
     "appearance": "Apariencia",
@@ -405,17 +417,17 @@
     "description": "LEARN es una aplicación bilingüe de cuestionarios y tarjetas diseñada para ayudarte a dominar cualquier tema usando repetición espaciada respaldada por la ciencia.",
     "intro": "LEARN es una aplicación bilingüe (inglés/español) de cuestionarios y tarjetas diseñada para ayudarte a dominar cualquier tema usando repetición espaciada respaldada por la ciencia. Ya sea que estudies vacunas, idiomas o cualquier materia, LEARN se adapta a tus patrones de memoria para una retención óptima a largo plazo.",
     "howFsrsWorks": "Cómo Funciona la Repetición Espaciada",
-    "fsrsIntro": "LEARN usa el algoritmo FSRS (Free Spaced Repetition Scheduler), un sistema moderno respaldado por investigación para optimizar cuándo repasas el material.",
+    "fsrsIntro": "LEARN usa FSRS-6 (Free Spaced Repetition Scheduler), la versión más reciente de un algoritmo moderno respaldado por investigación para optimizar cuándo repasas el material. Con 21 parámetros entrenables, se adapta automáticamente a tus patrones de memoria individuales.",
     "fsrsCoreIdea": "La idea central es simple: repasa la información justo antes de que estés a punto de olvidarla. FSRS rastrea qué tan bien recuerdas cada tarjeta y programa el próximo repaso en el momento óptimo:",
     "newCards": "Las tarjetas nuevas aparecen frecuentemente al principio",
     "difficultCards": "Las tarjetas difíciles con las que luchas aparecen más seguido",
     "easyCards": "Las tarjetas fáciles que conoces bien aparecen a intervalos más largos",
     "masteredCards": "Las tarjetas dominadas pueden necesitar repaso solo cada pocos meses",
-    "fsrsEfficiency": "Este enfoque es dramáticamente más eficiente que releer o estudiar de golpe — dedicas tu tiempo exactamente donde más se necesita.",
+    "fsrsEfficiency": "Este enfoque es dramáticamente más eficiente que releer o estudiar de golpe — dedicas tu tiempo exactamente donde más se necesita. Con FSRS, los usuarios necesitan 20–30% menos repasos que los métodos tradicionales para el mismo nivel de retención.",
     "studyModes": "Modos de Estudio",
     "faq": "Preguntas Frecuentes",
     "faqFsrsQuestion": "¿Qué hace a FSRS diferente de otras apps de tarjetas?",
-    "faqFsrsAnswer": "FSRS es un algoritmo más nuevo que supera a sistemas tradicionales como SM-2 (usado por Anki). Usa principios de aprendizaje automático para predecir con mayor precisión cuándo olvidarás algo, resultando en menos repasos necesarios para mantener el mismo nivel de retención. <link>Más detalles aquí</link>.",
+    "faqFsrsAnswer": "FSRS-6 es la versión más reciente del Free Spaced Repetition Scheduler, con 21 parámetros entrenables incluyendo una curva de olvido entrenable. Supera a sistemas tradicionales como SM-2 (usado por defecto en Anki) usando principios de aprendizaje automático para predecir cuándo olvidarás algo. LEARN optimiza automáticamente estos parámetros según tu historial de repasos personal, resultando en aún menos repasos necesarios para mantener la misma retención. <link>Más detalles aquí</link>.",
     "faqAnonymousQuestion": "¿Puedo usar LEARN sin crear una cuenta?",
     "faqAnonymousAnswer": "¡Sí! Puedes probar LEARN como invitado. Tu progreso se guardará, y puedes mejorar a una cuenta completa en cualquier momento para asegurar que tus datos se guarden permanentemente.",
     "faqBilingualQuestion": "¿Cómo funciona el soporte bilingüe?",
@@ -425,6 +437,10 @@
     "faqSuspendQuestion": "¿Qué hace suspender una tarjeta?",
     "faqSuspendAnswer": "Suspender una tarjeta la elimina de tu cola de repaso. Esto es útil para tarjetas que encuentras muy fáciles, muy difíciles o irrelevantes. Puedes reactivarlas desde Configuración en cualquier momento.",
     "faqDataQuestion": "¿Están seguros mis datos?",
-    "faqDataAnswer": "Tus datos se almacenan de forma segura en Supabase con seguridad a nivel de fila (RLS). Solo tú puedes acceder a tu progreso, preferencias e historial de repaso. Nunca compartimos tus datos con terceros."
+    "faqDataAnswer": "Tus datos se almacenan de forma segura en Supabase con seguridad a nivel de fila (RLS). Solo tú puedes acceder a tu progreso, preferencias e historial de repaso. Nunca compartimos tus datos con terceros.",
+    "faqOptimizationQuestion": "¿Cómo funciona la optimización personalizada?",
+    "faqOptimizationAnswer": "La app analiza tu historial de repasos usando un motor de optimización basado en Rust. Después de 50 o más repasos, entrena 21 parámetros específicos para tus patrones de memoria. Esto sucede automáticamente — no necesitas configurar nada. Los parámetros predeterminados (derivados de cientos de millones de repasos) se usan hasta que tengas suficientes datos. El resultado es una programación más eficiente con menos repasos innecesarios.",
+    "faqFsrs6Question": "¿Qué es FSRS-6?",
+    "faqFsrs6Answer": "FSRS-6 es la versión más reciente del Free Spaced Repetition Scheduler, con 21 parámetros entrenables (frente a 19 en FSRS-5). La mejora clave es una curva de olvido entrenable — el algoritmo aprende qué tan rápido se desvanece tu memoria, en lugar de asumir que todos olvidan al mismo ritmo. También tiene mejor manejo de repasos del mismo día para tarjetas en fase de aprendizaje. FSRS es usado por Anki y otras plataformas importantes de tarjetas. <link>Más sobre el algoritmo</link>."
   }
 }

@@ -63,6 +63,7 @@ interface SettingsClientProps {
     } | null;
   }>;
   fsrsSettings?: FsrsSettings | null;
+  reviewCount?: number;
   baseFontSize?: number;
 }
 
@@ -75,6 +76,7 @@ export function SettingsClient({
   suspendedFlashcards,
   hiddenTopics,
   fsrsSettings,
+  reviewCount = 0,
   baseFontSize = 14,
 }: SettingsClientProps) {
   const t = useTranslations("settings");
@@ -155,7 +157,7 @@ export function SettingsClient({
 
       {/* Study Settings */}
       {fsrsSettings && (
-        <FsrsSettingsCard userId={userId} settings={fsrsSettings} />
+        <FsrsSettingsCard userId={userId} settings={fsrsSettings} reviewCount={reviewCount} />
       )}
 
       {/* Suspended Flashcards */}

@@ -6,6 +6,7 @@ import type { UserCardState } from "@/lib/types/database";
 export interface UserSchedulerSettings {
   desired_retention: number;
   max_review_interval: number;
+  fsrs_weights?: number[] | null;
 }
 
 export function getIntervalPreviews(

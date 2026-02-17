@@ -9,7 +9,7 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 - **Database**: Supabase (PostgreSQL with RLS)
 - **Authentication**: Supabase Auth (email/password + anonymous)
 - **Deployment**: Vercel
-- **Spaced Repetition**: FSRS (Free Spaced Repetition Scheduler)
+- **Spaced Repetition**: FSRS-6 (Free Spaced Repetition Scheduler) with per-user parameter optimization
 - **i18n**: next-intl (English/Spanish)
 
 ## Features
@@ -18,7 +18,7 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 - **Flashcard Mode**: 4-point FSRS rating (Again/Hard/Good/Easy), interval previews, keyboard hotkeys
 - **Quiz Mode**: Multiple choice recognition test with score tracking and retry
 - **Reading Mode**: Markdown-based educational content with progress tracking
-- **FSRS Scheduling**: Optimized review timing based on forgetting curves with fuzz
+- **FSRS-6 Scheduling**: Latest 21-parameter algorithm with automatic per-user optimization — trains on your review history for personalized scheduling
 - **Progress Tracking**: Recall mastery via flashcards, recognition scores via quizzes
 - **Topics**: Organized content by topic with category breakdowns
 - **Admin Panel**: Separate management for flashcards and quiz questions, topic CRUD, content moderation
@@ -35,6 +35,8 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 **Quizzes** are optional recognition tests — multiple choice, no FSRS. Content stored in `questions` table. Results stored in `quiz_attempts` table.
 
 Progress shown throughout the app reflects **flashcard recall mastery** only.
+
+**FSRS-6 Optimization** uses `@open-spaced-repetition/binding` (Rust napi-rs) to train 21 personalized parameters per user from their `review_logs`. Optimized weights stored in `profiles.fsrs_weights` (JSONB). Auto-triggers after 50+ reviews or manual via Settings.
 
 ## Project Structure
 
@@ -84,6 +86,8 @@ learn-app/
 **FSRS Spaced Repetition**:
 - `user_card_state` — FSRS scheduling data (FK → flashcards)
 - `review_logs` — Review history (FK → flashcards)
+
+Profiles also store `fsrs_weights` (JSONB) for per-user optimized FSRS-6 parameters.
 
 **Quiz**:
 - `quiz_attempts` — Quiz results (user_id, topic_id, score, total, answers JSONB)

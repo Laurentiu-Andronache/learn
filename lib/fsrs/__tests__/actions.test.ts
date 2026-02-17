@@ -12,8 +12,23 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/services/user-preferences", () => ({
   getFsrsSettings: vi.fn(() =>
-    Promise.resolve({ desired_retention: 0.9, max_review_interval: 36500 }),
+    Promise.resolve({
+      desired_retention: 0.9,
+      max_review_interval: 36500,
+      new_cards_per_day: 10,
+      new_cards_ramp_up: true,
+      show_review_time: true,
+      read_questions_aloud: false,
+      fsrs_weights: null,
+      fsrs_weights_updated_at: null,
+    }),
   ),
+}));
+
+vi.mock("next/server", () => ({
+  after: vi.fn((fn: () => void) => {
+    // no-op in tests — don't run auto-optimization
+  }),
 }));
 
 vi.mock("@/lib/topics/topic-flashcard-ids", () => ({

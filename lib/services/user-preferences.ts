@@ -207,6 +207,8 @@ export interface FsrsSettings {
   new_cards_ramp_up: boolean;
   show_review_time: boolean;
   read_questions_aloud: boolean;
+  fsrs_weights: number[] | null;
+  fsrs_weights_updated_at: string | null;
 }
 
 const FSRS_DEFAULTS: FsrsSettings = {
@@ -216,6 +218,8 @@ const FSRS_DEFAULTS: FsrsSettings = {
   new_cards_ramp_up: true,
   show_review_time: true,
   read_questions_aloud: false,
+  fsrs_weights: null,
+  fsrs_weights_updated_at: null,
 };
 
 export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
@@ -223,7 +227,7 @@ export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
   const { data, error } = await supabase
     .from("profiles")
     .select(
-      "desired_retention, max_review_interval, new_cards_per_day, new_cards_ramp_up, show_review_time, read_questions_aloud",
+      "desired_retention, max_review_interval, new_cards_per_day, new_cards_ramp_up, show_review_time, read_questions_aloud, fsrs_weights, fsrs_weights_updated_at",
     )
     .eq("id", userId)
     .single();
@@ -239,6 +243,8 @@ export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
     show_review_time: data.show_review_time ?? FSRS_DEFAULTS.show_review_time,
     read_questions_aloud:
       data.read_questions_aloud ?? FSRS_DEFAULTS.read_questions_aloud,
+    fsrs_weights: (data.fsrs_weights as number[] | null) ?? null,
+    fsrs_weights_updated_at: data.fsrs_weights_updated_at ?? null,
   };
 }
 

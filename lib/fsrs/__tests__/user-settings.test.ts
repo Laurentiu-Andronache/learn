@@ -47,6 +47,8 @@ describe("getFsrsSettings", () => {
         new_cards_ramp_up: false,
         show_review_time: false,
         read_questions_aloud: true,
+        fsrs_weights: [1, 2, 3],
+        fsrs_weights_updated_at: "2026-01-01T00:00:00.000Z",
       },
       error: null,
     };
@@ -59,6 +61,8 @@ describe("getFsrsSettings", () => {
       new_cards_ramp_up: false,
       show_review_time: false,
       read_questions_aloud: true,
+      fsrs_weights: [1, 2, 3],
+      fsrs_weights_updated_at: "2026-01-01T00:00:00.000Z",
     });
   });
 
@@ -71,6 +75,8 @@ describe("getFsrsSettings", () => {
         new_cards_ramp_up: null,
         show_review_time: null,
         read_questions_aloud: null,
+        fsrs_weights: null,
+        fsrs_weights_updated_at: null,
       },
       error: null,
     };
@@ -83,6 +89,8 @@ describe("getFsrsSettings", () => {
       new_cards_ramp_up: true,
       show_review_time: true,
       read_questions_aloud: false,
+      fsrs_weights: null,
+      fsrs_weights_updated_at: null,
     });
   });
 
@@ -100,6 +108,8 @@ describe("getFsrsSettings", () => {
       new_cards_ramp_up: true,
       show_review_time: true,
       read_questions_aloud: false,
+      fsrs_weights: null,
+      fsrs_weights_updated_at: null,
     });
   });
 });

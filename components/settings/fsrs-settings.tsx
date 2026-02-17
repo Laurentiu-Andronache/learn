@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain } from "lucide-react";
+import { Brain, Sparkles } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
@@ -15,10 +15,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import {
+  optimizeFsrsParameters,
+  resetFsrsWeights,
+} from "@/lib/fsrs/actions";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
 import { updateFsrsSettings } from "@/lib/services/user-preferences";
 
-const DEFAULTS: FsrsSettings = {
+const DEFAULTS: Omit<FsrsSettings, "fsrs_weights" | "fsrs_weights_updated_at"> = {
   desired_retention: 0.9,
   max_review_interval: 36500,
   new_cards_per_day: 10,
@@ -30,9 +34,10 @@ const DEFAULTS: FsrsSettings = {
 interface FsrsSettingsCardProps {
   userId: string;
   settings: FsrsSettings;
+  reviewCount: number;
 }
 
-export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
+export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettingsCardProps) {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const [retention, setRetention] = useState(settings.desired_retention);
@@ -42,6 +47,9 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
   const [showIntervals, setShowIntervals] = useState(settings.show_review_time);
   const [readAloud, setReadAloud] = useState(settings.read_questions_aloud);
   const [saving, setSaving] = useState(false);
+
+  const [weightsUpdatedAt, setWeightsUpdatedAt] = useState(settings.fsrs_weights_updated_at);
+  const [optimizing, setOptimizing] = useState(false);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
@@ -71,6 +79,37 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
     setReadAloud(DEFAULTS.read_questions_aloud);
   }, []);
 
+  const handleOptimize = useCallback(async () => {
+    setOptimizing(true);
+    try {
+      const result = await optimizeFsrsParameters(userId);
+      if (result.success) {
+        setWeightsUpdatedAt(new Date().toISOString());
+        toast.success(t("optimizer.optimized"));
+      } else if (result.error === "not_enough_reviews") {
+        toast.error(t("optimizer.needMoreReviews", { count: reviewCount, threshold: 50 }));
+      } else {
+        toast.error(tc("error"));
+      }
+    } catch {
+      toast.error(tc("error"));
+    } finally {
+      setOptimizing(false);
+    }
+  }, [userId, reviewCount, t, tc]);
+
+  const handleResetWeights = useCallback(async () => {
+    try {
+      await resetFsrsWeights(userId);
+      setWeightsUpdatedAt(null);
+      toast.success(t("optimizer.resetDone"));
+    } catch {
+      toast.error(tc("error"));
+    }
+  }, [userId, t, tc]);
+
+  const canOptimize = reviewCount >= 50;
+
   return (
     <Card>
       <CardHeader>
@@ -80,6 +119,57 @@ export function FsrsSettingsCard({ userId, settings }: FsrsSettingsCardProps) {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
+        {/* Parameter Optimization */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <Sparkles size={16} className="text-primary" />
+            <Label>{t("optimizer.title")}</Label>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {t("optimizer.description")}
+          </p>
+          <div className="flex items-center gap-3 mt-1">
+            {weightsUpdatedAt ? (
+              <p className="text-xs text-muted-foreground">
+                {t("optimizer.optimizedOn", {
+                  date: new Date(weightsUpdatedAt).toLocaleDateString(),
+                })}
+              </p>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                {t("optimizer.usingDefaults")}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleOptimize}
+              disabled={!canOptimize || optimizing}
+            >
+              {optimizing ? tc("loading") : t("optimizer.optimizeNow")}
+            </Button>
+            {weightsUpdatedAt && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleResetWeights}
+                className="text-muted-foreground"
+              >
+                {t("optimizer.resetWeights")}
+              </Button>
+            )}
+          </div>
+          {!canOptimize && (
+            <p className="text-xs text-muted-foreground">
+              {t("optimizer.needMoreReviews", { count: reviewCount, threshold: 50 })}
+            </p>
+          )}
+        </div>
+
+        <Separator />
+
         {/* Desired Retention */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between">

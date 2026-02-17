@@ -160,6 +160,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `components/topics/study-tips-dialog.tsx` — First-visit study tips popup (localStorage-gated)
 - `hooks/use-tts.ts` — TTS click-to-read hook (browser cache, Audio playback, pause/resume)
 - `app/api/tts/route.ts` — TTS API route (auth, rate limit, Supabase Storage cache, ElevenLabs)
+- `lib/fsrs/optimizer.ts` — `optimizeUserParameters()`, `transformReviewLogs()`
 
 ## Admin Editing (shared components)
 
@@ -187,13 +188,28 @@ Flashcard grading: Again (1, red) / Hard (2, orange) / Good (3, green) / Easy (4
 
 ## Per-User FSRS Settings
 
-Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true), `read_questions_aloud` (default false), `base_font_size` (12-18, default 14).
+Stored in `profiles` table: `desired_retention` (0.70-0.97, default 0.9), `max_review_interval` (1-36500, default 36500), `new_cards_per_day` (1-999, default 10), `new_cards_ramp_up` (default true), `show_review_time` (default true), `read_questions_aloud` (default false), `base_font_size` (12-18, default 14), `fsrs_weights` (JSONB, default NULL), `fsrs_weights_updated_at` (timestamptz, default NULL).
 
 **Ramp-up**: When `new_cards_ramp_up` is true, new cards are capped at `5 + dayNumber` for the first 5 days of a topic (6/7/8/9/10), then `new_cards_per_day`. Day number is calculated from the user's earliest review log for that topic's flashcards.
 
 **Text Size**: `base_font_size` overrides Tailwind's `text-sm` via CSS variable `--text-sm` on `<html>`. Cookie is the source of truth (works for anonymous/guest users without DB); DB is a backup for cross-device sync. Cookie read in `layout.tsx` for flash-free SSR. Settings page syncs cookie→DB on load. Slider applies instantly via `document.documentElement.style.setProperty`. `prose-sm` also overridden in `globals.css`.
 
 `createUserScheduler()` in `scheduler.ts` creates FSRS instances with custom retention/interval. Used in `scheduleFlashcardReview` and `getIntervalPreviews`. Settings UI at `/settings` via `components/settings/fsrs-settings.tsx`.
+
+## FSRS-6 + Per-User Parameter Optimization
+
+ts-fsrs@5.2.3 defaults to **FSRS-6** (21 parameters, trainable decay `w[20]`). Per-user optimization via `@open-spaced-repetition/binding` (Rust napi-rs bindings) trains custom weights from `review_logs` using MLE + BPTT.
+
+**Flow**: `review_logs` → group by flashcard_id → `FSRSItem[]` → `computeParameters()` → 21 weights → `profiles.fsrs_weights` (JSONB)
+
+- `lib/fsrs/optimizer.ts` — transforms review logs, calls `computeParameters`, returns weights
+- `profiles.fsrs_weights` — JSONB array of 21 numbers (NULL = use defaults)
+- `profiles.fsrs_weights_updated_at` — last optimization timestamp
+- `createUserScheduler()` passes `w: fsrs_weights` when non-null
+- Auto-optimization: fires via `after()` when user has 50+ reviews and hasn't optimized recently
+- Manual: "Optimize Now" button in `/settings` study settings card
+- Minimum 50 reviews required for meaningful optimization
+- Runs on Vercel serverless (NOT edge runtime) — native Rust binary via napi-rs
 
 ## Undo/Reset: Snapshot-Based Restore
 
@@ -225,8 +241,9 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `components/quiz/quiz-logic.test.ts` | 18 | Shuffle, grading, results, retry |
 | `components/flashcards/flashcard-logic.test.ts` | 17 | 4-point grading, stack advance, categories |
 | `lib/markdown/__tests__/preprocess-tooltips.test.ts` | 12 | Tooltip syntax conversion, escaping, code block skipping |
+| `lib/fsrs/__tests__/fsrs6-verification.test.ts` | 1 | FSRS-6 default params verification |
 
-**Total: 230 tests across 20 test files.**
+**Total: 231+ tests across 21+ test files.**
 
 ## UX Patterns
 

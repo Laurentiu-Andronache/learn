@@ -11,6 +11,7 @@ import {
   getSuspendedFlashcards,
   updateBaseFontSize,
 } from "@/lib/services/user-preferences";
+import { countValidOptimizerItems } from "@/lib/fsrs/optimizer";
 import { createClient } from "@/lib/supabase/server";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -45,13 +46,14 @@ export default async function SettingsPage() {
   const validCookieFont =
     cookieFont >= 12 && cookieFont <= 18 ? cookieFont : null;
 
-  const [profile, suspendedFlashcards, hiddenTopics, fsrsSettings, dbFontSize] =
+  const [profile, suspendedFlashcards, hiddenTopics, fsrsSettings, dbFontSize, reviewCountResult] =
     await Promise.all([
       getProfile(user.id).catch(() => null),
       getSuspendedFlashcards(user.id).catch(() => []),
       getHiddenTopics(user.id).catch(() => []),
       getFsrsSettings(user.id).catch(() => null),
       getBaseFontSize(user.id).catch(() => 14),
+      countValidOptimizerItems(user.id).catch(() => 0),
     ]);
 
   // Cookie is the source of truth (works without DB); sync to DB if they differ
@@ -70,6 +72,7 @@ export default async function SettingsPage() {
       suspendedFlashcards={suspendedFlashcards}
       hiddenTopics={hiddenTopics}
       fsrsSettings={fsrsSettings}
+      reviewCount={reviewCountResult}
       baseFontSize={baseFontSize}
     />
   );

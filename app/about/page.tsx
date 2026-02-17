@@ -141,6 +141,18 @@ export default async function AboutPage() {
                 <AccordionTrigger>{t("faqDataQuestion")}</AccordionTrigger>
                 <AccordionContent>{t("faqDataAnswer")}</AccordionContent>
               </AccordionItem>
+              <AccordionItem value="optimization">
+                <AccordionTrigger>{t("faqOptimizationQuestion")}</AccordionTrigger>
+                <AccordionContent>{t("faqOptimizationAnswer")}</AccordionContent>
+              </AccordionItem>
+              <AccordionItem value="fsrs6">
+                <AccordionTrigger>{t("faqFsrs6Question")}</AccordionTrigger>
+                <AccordionContent>{t.rich("faqFsrs6Answer", {
+                  link: (chunks) => (
+                    <a href="https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80">{chunks}</a>
+                  )
+                })}</AccordionContent>
+              </AccordionItem>
             </Accordion>
           </CardContent>
         </Card>
