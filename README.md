@@ -9,7 +9,7 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 - **Database**: Supabase (PostgreSQL with RLS)
 - **Authentication**: Supabase Auth (email/password + anonymous)
 - **Deployment**: Vercel
-- **Spaced Repetition**: FSRS-6 (Free Spaced Repetition Scheduler) with per-user parameter optimization
+- **Spaced Repetition**: FSRS-6 via [`ts-fsrs`](https://github.com/open-spaced-repetition/ts-fsrs) (TypeScript scheduling engine) + [`@open-spaced-repetition/binding`](https://github.com/open-spaced-repetition/fsrs-rs-nodejs) (Rust napi-rs optimizer for per-user parameter training). Both by Jarrett Ye / open-spaced-repetition
 - **i18n**: next-intl (English/Spanish)
 
 ## Features

@@ -125,11 +125,15 @@ The transformation: from "I read about that once" → "I know this well enough t
 ## 9. Proof Points
 
 ### Algorithm
-- FSRS (Free Spaced Repetition Scheduler) developed by open-source community, peer-reviewed benchmarks show it outperforms SM-2: https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm
+- FSRS (Free Spaced Repetition Scheduler) developed by Jarrett Ye (L-M-Sherlock) and the open-spaced-repetition community. Peer-reviewed benchmarks show it outperforms SM-2: https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm
 - Used by Anki (via add-on) and other major flashcard platforms
 - FSRS-6 is the latest version (21 parameters, up from 19 in FSRS-5), adding trainable forgetting curve decay and improved same-day review handling
 - Per-user optimization trains weights on individual review history using Maximum Likelihood Estimation + Backpropagation Through Time (via Rust `fsrs-rs` engine)
 - Default parameters derived from hundreds of millions of reviews across ~10k users; personalized optimization further refines for individual memory patterns
+
+### Packages (both by Jarrett Ye / open-spaced-repetition)
+- **`ts-fsrs`** — TypeScript implementation of the FSRS algorithm. Handles card scheduling, state transitions, interval calculations, and fuzz. Core scheduling engine used in every flashcard review.
+- **`@open-spaced-repetition/binding`** — Rust napi-rs bindings to the `fsrs-rs` optimizer engine. Trains personalized FSRS-6 weights from a user's review history using MLE + BPTT. Runs on Node.js serverless (not edge runtime) via native binary auto-selected by napi-rs.
 
 ### Content Methodology
 - Created using a collaboration between human expert prompts, Claude Opus 4.6, Gemini Deep Research, and scientific studies in PDF

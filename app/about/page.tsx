@@ -153,6 +153,15 @@ export default async function AboutPage() {
                   )
                 })}</AccordionContent>
               </AccordionItem>
+              <AccordionItem value="tech">
+                <AccordionTrigger>{t("faqTechQuestion")}</AccordionTrigger>
+                <AccordionContent>{t.rich("faqTechAnswer", {
+                  link: (chunks) => (
+                    <a href="https://github.com/open-spaced-repetition" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80">{chunks}</a>
+                  ),
+                  b: (chunks) => <strong>{chunks}</strong>
+                })}</AccordionContent>
+              </AccordionItem>
             </Accordion>
           </CardContent>
         </Card>
