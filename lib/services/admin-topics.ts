@@ -83,6 +83,19 @@ export async function updateTopicIntroText(
   revalidatePath("/admin/reviews/content-issues");
 }
 
+export async function toggleTopicVisibility(
+  id: string,
+  visibility: "public" | "private",
+) {
+  const { supabase } = await requireAdmin();
+  const { error } = await supabase
+    .from("topics")
+    .update({ visibility })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/topics");
+}
+
 export async function getAllTopics() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AdminTopicActions } from "@/components/admin/topic-actions";
+import { TopicVisibilityToggle } from "@/components/admin/topic-visibility-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getAllTopics } from "@/lib/services/admin-topics";
@@ -47,7 +48,11 @@ export default async function AdminTopicsPage() {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
+            <div className="flex items-center gap-3 shrink-0">
+              <TopicVisibilityToggle
+                topicId={topic.id}
+                isPrivate={topic.visibility === "private"}
+              />
               <Button asChild variant="outline" size="sm">
                 <Link href={`/admin/topics/${topic.id}/edit`}>Edit</Link>
               </Button>

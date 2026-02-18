@@ -318,6 +318,8 @@
     "import": "Importar",
     "hideNotes": "Ocultar Notas",
     "addNotes": "Agregar Notas",
+    "public": "Público",
+    "private": "Privado",
     "deactivate": "Desactivar",
     "restore": "Restaurar",
     "noItems": "No hay elementos para revisar.",
