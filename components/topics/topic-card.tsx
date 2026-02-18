@@ -41,6 +41,8 @@ interface TopicData {
   description_es: string | null;
   icon: string | null;
   creator: { display_name: string | null } | null;
+  visibility?: string | null;
+  creator_id?: string | null;
 }
 
 interface TopicCardProps {
@@ -226,7 +228,12 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
           )}
 
           {/* Due today badge */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {topic.visibility === "private" && (
+              <Badge variant="outline" className="text-xs">
+                {t("private")}
+              </Badge>
+            )}
             {progress && progress.dueToday > 0 && (
               <Badge variant="secondary">
                 {progress.dueToday} {t("dueToday")}

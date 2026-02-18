@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, useRef } from "react";
+import { createContext, useContext, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -21,6 +21,39 @@ const TTSContext = createContext<{
   playingEl?: HTMLElement | null;
   ttsPaused?: boolean;
 }>({});
+
+function InlineAudioPlayer({ src }: { src: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+
+  return (
+    <span
+      className="inline-flex items-center gap-1 cursor-pointer rounded px-1.5 py-0.5 bg-muted hover:bg-muted/80 transition-colors text-xs"
+      onClick={(e) => {
+        e.stopPropagation();
+        const audio = audioRef.current;
+        if (!audio) return;
+        if (playing) {
+          audio.pause();
+          audio.currentTime = 0;
+          setPlaying(false);
+        } else {
+          audio.play().catch(() => {});
+          setPlaying(true);
+        }
+      }}
+    >
+      <audio
+        ref={audioRef}
+        src={src}
+        preload="none"
+        onEnded={() => setPlaying(false)}
+      />
+      <span>{playing ? "\u23F9" : "\u25B6"}</span>
+      <span className="text-muted-foreground">audio</span>
+    </span>
+  );
+}
 
 function TTSBlock({
   children,
@@ -73,6 +106,10 @@ const markdownComponents = {
         <GlossaryTerm term={String(children)} explanation={title} />
       );
     }
+    // Inline audio player for [audio](url) links from Anki imports
+    if (String(children) === "audio" && href && !href.startsWith("tooltip")) {
+      return <InlineAudioPlayer src={href} />;
+    }
     const isExternal =
       href?.startsWith("http://") || href?.startsWith("https://");
     return (
@@ -116,6 +153,10 @@ const markdownComponents = {
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
     <TTSBlock className="list-item">{children}</TTSBlock>
+  ),
+  img: ({ src, alt }: { src?: string | Blob; alt?: string }) => (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src={typeof src === "string" ? src : undefined} alt={alt ?? ""} className="max-w-full max-h-64 rounded-md mx-auto my-2" loading="lazy" />
   ),
 };
 

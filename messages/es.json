@@ -27,6 +27,7 @@
     "signUp": "Registrarse",
     "logout": "Cerrar Sesión",
     "upgrade": "Mejorar Cuenta",
+    "import": "Importar",
     "menu": "Menú",
     "greeting": "¡Hola, {email}!"
   },
@@ -137,6 +138,8 @@
     "noProgressToReset": "No hay progreso que restablecer para este tema.",
     "createdBy": "por {creator}",
     "anonymous": "Anónimo",
+    "private": "Privado",
+    "imported": "Importado",
     "tips": {
       "readFirst": "¿Nuevo en este tema? Empieza con Lectura, luego pasa a Tarjetas. Después de unos días de práctica, prueba el Quiz.",
       "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente — o mejor aún, en voz alta — usando una oración completa.",
@@ -444,5 +447,43 @@
     "faqFsrs6Answer": "FSRS-6 es la versión más reciente del Free Spaced Repetition Scheduler, con 21 parámetros entrenables (frente a 19 en FSRS-5). La mejora clave es una curva de olvido entrenable — el algoritmo aprende qué tan rápido se desvanece tu memoria, en lugar de asumir que todos olvidan al mismo ritmo. También tiene mejor manejo de repasos del mismo día para tarjetas en fase de aprendizaje. FSRS es usado por Anki y otras plataformas importantes de tarjetas. <link>Más sobre el algoritmo</link>.",
     "faqTechQuestion": "¿Qué tecnología impulsa la repetición espaciada?",
     "faqTechAnswer": "Dos paquetes de código abierto, ambos del proyecto <link>open-spaced-repetition</link> creado por Jarrett Ye (L-M-Sherlock), el investigador detrás del algoritmo FSRS. <b>ts-fsrs</b> es la implementación en TypeScript que maneja la programación de tarjetas, transiciones de estado, cálculos de intervalos y aleatorización. <b>@open-spaced-repetition/binding</b> proporciona enlaces Rust napi-rs al motor optimizador fsrs-rs — entrena pesos FSRS personalizados a partir de tu historial de repasos usando Estimación de Máxima Verosimilitud y Retropropagación a Través del Tiempo. Ambos paquetes provienen del mismo equipo que desarrolló FSRS como reemplazo moderno del algoritmo SM-2 de Anki."
+  },
+  "import": {
+    "title": "Importar Mazo de Anki",
+    "description": "Sube un archivo .apkg de Anki o un .zip de CrowdAnki para importar tarjetas.",
+    "dropzone": "Arrastra tu archivo .apkg o .zip aquí",
+    "dropzoneHint": "o haz clic para buscar (máx. 50MB)",
+    "selectLanguage": "Idioma de las tarjetas",
+    "languageHint": "¿En qué idioma están escritas las tarjetas?",
+    "makePublic": "Hacer tema público",
+    "makePublicHint": "Los temas públicos son visibles para todos los usuarios",
+    "autoTranslate": "Traducir automáticamente al {targetLang}",
+    "autoTranslateHint": "Usa IA para traducir el contenido de las tarjetas (solo admin)",
+    "importing": "Importando...",
+    "processing": "Procesando mazo...",
+    "uploadingMedia": "Subiendo archivos multimedia...",
+    "creatingFlashcards": "Creando tarjetas...",
+    "success": "¡Importación completada!",
+    "flashcardsImported": "{count} tarjetas importadas",
+    "mediaUploaded": "{count} archivos multimedia subidos",
+    "warnings": "Advertencias",
+    "viewTopic": "Ver Tema",
+    "importAnother": "Importar Otro",
+    "error": "Error en la importación",
+    "fileTooLarge": "El archivo es demasiado grande (máx. 50MB)",
+    "invalidFormat": "Formato de archivo inválido. Sube un archivo .apkg o .zip.",
+    "tooManyCards": "El mazo tiene demasiadas tarjetas (máx. 10.000)",
+    "tooManyMedia": "El mazo tiene demasiados archivos multimedia (máx. 5.000)",
+    "rateLimited": "Demasiadas importaciones. Espera antes de importar de nuevo.",
+    "preview": "Vista Previa del Mazo",
+    "deckName": "Nombre del mazo",
+    "cardCount": "{count} tarjetas",
+    "mediaCount": "{count} archivos multimedia",
+    "categoryCount": "{count} categorías",
+    "confirm": "Importar Mazo",
+    "badges": {
+      "imported": "Importado",
+      "private": "Privado"
+    }
   }
 }

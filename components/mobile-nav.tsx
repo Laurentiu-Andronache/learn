@@ -52,6 +52,13 @@ export function MobileNav({
                 {t("topics")}
               </Link>
               <Link
+                href="/import"
+                onClick={() => setOpen(false)}
+                className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"
+              >
+                {t("import")}
+              </Link>
+              <Link
                 href="/settings"
                 onClick={() => setOpen(false)}
                 className="rounded-md px-3 py-2 text-sm font-medium hover:bg-accent"

@@ -38,6 +38,9 @@ export async function NavBar() {
                 <Link href="/topics">{t("topics")}</Link>
               </Button>
               <Button asChild variant="ghost" size="sm">
+                <Link href="/import">{t("import")}</Link>
+              </Button>
+              <Button asChild variant="ghost" size="sm">
                 <Link href="/settings">{t("settings")}</Link>
               </Button>
               {isAdmin && (

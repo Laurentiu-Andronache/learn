@@ -36,11 +36,12 @@ export default async function TopicsPage() {
   const locale = await getLocale();
   const t = await getTranslations("topics");
 
-  // Get all active topics with creator info
+  // Get all active topics: public ones + user's own private ones
   const { data: topics } = await supabase
     .from("topics")
     .select("*, creator:profiles!creator_id(display_name)")
     .eq("is_active", true)
+    .or(`visibility.eq.public,visibility.is.null,creator_id.eq.${user.id}`)
     .order("created_at");
 
   // Get progress for all topics

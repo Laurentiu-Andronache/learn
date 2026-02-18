@@ -27,6 +27,7 @@
     "signUp": "Sign Up",
     "logout": "Log Out",
     "upgrade": "Upgrade Account",
+    "import": "Import",
     "menu": "Menu",
     "greeting": "Hey, {email}!"
   },
@@ -137,6 +138,8 @@
     "noProgressToReset": "No progress to reset for this topic.",
     "createdBy": "by {creator}",
     "anonymous": "Anonymous",
+    "private": "Private",
+    "imported": "Imported",
     "tips": {
       "readFirst": "New to this topic? Start with Reading, then move to Flashcards. After a few days of practice, try the Quiz.",
       "speakAnswer": "Before revealing an answer, always try to respond in your mind — or better yet, out loud — using a complete sentence.",
@@ -444,5 +447,43 @@
     "faqFsrs6Answer": "FSRS-6 is the latest version of the Free Spaced Repetition Scheduler, featuring 21 trainable parameters (up from 19 in FSRS-5). The key improvement is a trainable forgetting curve decay — the algorithm learns how quickly your memory fades, rather than assuming everyone forgets at the same rate. It also has improved same-day review handling for learning-phase cards. FSRS is used by Anki and other major flashcard platforms. <link>Learn more about the algorithm</link>.",
     "faqTechQuestion": "What technology powers the spaced repetition?",
     "faqTechAnswer": "Two open-source packages, both from the <link>open-spaced-repetition</link> project created by Jarrett Ye (L-M-Sherlock), the researcher behind the FSRS algorithm. <b>ts-fsrs</b> is the TypeScript implementation that handles card scheduling, state transitions, interval calculations, and fuzz. <b>@open-spaced-repetition/binding</b> provides Rust napi-rs bindings to the fsrs-rs optimizer engine — it trains personalized FSRS weights from your review history using Maximum Likelihood Estimation and Backpropagation Through Time. Both packages come from the same team that developed FSRS as a modern replacement for Anki's legacy SM-2 algorithm."
+  },
+  "import": {
+    "title": "Import Anki Deck",
+    "description": "Upload an Anki .apkg file or CrowdAnki .zip to import flashcards.",
+    "dropzone": "Drop your .apkg or .zip file here",
+    "dropzoneHint": "or click to browse (max 50MB)",
+    "selectLanguage": "Card language",
+    "languageHint": "Which language are the cards written in?",
+    "makePublic": "Make topic public",
+    "makePublicHint": "Public topics are visible to all users",
+    "autoTranslate": "Auto-translate to {targetLang}",
+    "autoTranslateHint": "Uses AI to translate card content (admin only)",
+    "importing": "Importing...",
+    "processing": "Processing deck...",
+    "uploadingMedia": "Uploading media...",
+    "creatingFlashcards": "Creating flashcards...",
+    "success": "Import complete!",
+    "flashcardsImported": "{count} flashcards imported",
+    "mediaUploaded": "{count} media files uploaded",
+    "warnings": "Warnings",
+    "viewTopic": "View Topic",
+    "importAnother": "Import Another",
+    "error": "Import failed",
+    "fileTooLarge": "File is too large (max 50MB)",
+    "invalidFormat": "Invalid file format. Please upload an .apkg or .zip file.",
+    "tooManyCards": "Deck has too many cards (max 10,000)",
+    "tooManyMedia": "Deck has too many media files (max 5,000)",
+    "rateLimited": "Too many imports. Please wait before importing again.",
+    "preview": "Deck Preview",
+    "deckName": "Deck name",
+    "cardCount": "{count} flashcards",
+    "mediaCount": "{count} media files",
+    "categoryCount": "{count} categories",
+    "confirm": "Import Deck",
+    "badges": {
+      "imported": "Imported",
+      "private": "Private"
+    }
   }
 }
