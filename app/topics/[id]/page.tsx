@@ -109,6 +109,10 @@ export default async function TopicDetailPage({ params }: Props) {
       ? topic.description_es || topic.description_en
       : topic.description_en;
 
+  const hasQuiz = (quizQuestionCount ?? 0) > 0;
+  const hasReading = !!(topic.intro_text_en || topic.intro_text_es);
+  const isImportedStyle = !hasQuiz && !hasReading;
+
   return (
     <div className="container max-w-3xl mx-auto py-8 px-4 space-y-6">
       {/* Header */}
@@ -249,100 +253,108 @@ export default async function TopicDetailPage({ params }: Props) {
         </Link>
 
         {/* Quiz — Recognition Test */}
-        {quizSummary.attemptCount > 0 &&
-        quizSummary.uniqueCorrectCount < (quizQuestionCount ?? 0) ? (
-          <ClickableCard
-            href={`${topicUrl(topic, "quiz")}?mode=remaining`}
-            className="cursor-pointer"
-          >
-            <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
+        {hasQuiz && (
+          <>
+            {quizSummary.attemptCount > 0 &&
+            quizSummary.uniqueCorrectCount < (quizQuestionCount ?? 0) ? (
+              <ClickableCard
+                href={`${topicUrl(topic, "quiz")}?mode=remaining`}
+                className="cursor-pointer"
+              >
+                <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
+                  <CardContent className="pt-6 text-center space-y-2">
+                    <div className="text-3xl">&#128221;</div>
+                    <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {tModes("quizDescription")}
+                    </p>
+                    <Badge variant="quiz">
+                      {quizQuestionCount ?? 0} {tTopics("questionCount")}
+                    </Badge>
+                    <p className="text-sm text-muted-foreground">
+                      {tTopics("quizSummary", {
+                        attempts: quizSummary.attemptCount,
+                        correct: quizSummary.uniqueCorrectCount,
+                      })}
+                    </p>
+                    <div className="flex items-center justify-center gap-3 text-xs">
+                      <Link
+                        href={topicUrl(topic, "quiz")}
+                        className="font-medium text-primary underline"
+                      >
+                        {tTopics("fullTest")}
+                      </Link>
+                      <span className="text-muted-foreground">&#183;</span>
+                      <span className="text-muted-foreground">
+                        {tTopics("remainingTest")}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              </ClickableCard>
+            ) : (
+              <Link href={topicUrl(topic, "quiz")}>
+                <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
+                  <CardContent className="pt-6 text-center space-y-2">
+                    <div className="text-3xl">&#128221;</div>
+                    <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
+                    <p className="text-xs text-muted-foreground">
+                      {tModes("quizDescription")}
+                    </p>
+                    <Badge variant="quiz">
+                      {quizQuestionCount ?? 0} {tTopics("questionCount")}
+                    </Badge>
+                    {quizSummary.attemptCount > 0 && (
+                      <p className="text-sm text-muted-foreground">
+                        {tTopics("quizSummaryAllCorrect", {
+                          attempts: quizSummary.attemptCount,
+                        })}
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </Link>
+            )}
+          </>
+        )}
+
+        {/* Reading */}
+        {hasReading && (
+          <Link href={topicUrl(topic, "reading")}>
+            <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--reading-accent)/0.5)]">
               <CardContent className="pt-6 text-center space-y-2">
-                <div className="text-3xl">&#128221;</div>
-                <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
+                <div className="text-3xl">&#128214;</div>
+                <h3 className="font-semibold">{tModes("reading")}</h3>
                 <p className="text-xs text-muted-foreground">
-                  {tModes("quizDescription")}
+                  {tModes("readingDescription")}
                 </p>
-                <Badge variant="quiz">
-                  {quizQuestionCount ?? 0} {tTopics("questionCount")}
-                </Badge>
-                <p className="text-sm text-muted-foreground">
-                  {tTopics("quizSummary", {
-                    attempts: quizSummary.attemptCount,
-                    correct: quizSummary.uniqueCorrectCount,
-                  })}
-                </p>
-                <div className="flex items-center justify-center gap-3 text-xs">
-                  <Link
-                    href={topicUrl(topic, "quiz")}
-                    className="font-medium text-primary underline"
-                  >
-                    {tTopics("fullTest")}
-                  </Link>
-                  <span className="text-muted-foreground">&#183;</span>
-                  <span className="text-muted-foreground">
-                    {tTopics("remainingTest")}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-          </ClickableCard>
-        ) : (
-          <Link href={topicUrl(topic, "quiz")}>
-            <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--quiz-accent)/0.5)]">
-              <CardContent className="pt-6 text-center space-y-2">
-                <div className="text-3xl">&#128221;</div>
-                <h3 className="font-semibold">{tTopics("recognitionTest")}</h3>
-                <p className="text-xs text-muted-foreground">
-                  {tModes("quizDescription")}
-                </p>
-                <Badge variant="quiz">
-                  {quizQuestionCount ?? 0} {tTopics("questionCount")}
-                </Badge>
-                {quizSummary.attemptCount > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {tTopics("quizSummaryAllCorrect", {
-                      attempts: quizSummary.attemptCount,
-                    })}
-                  </p>
-                )}
               </CardContent>
             </Card>
           </Link>
         )}
-
-        {/* Reading */}
-        <Link href={topicUrl(topic, "reading")}>
-          <Card className="hover:shadow-glow-sm hover:border-primary/20 transition-all duration-200 cursor-pointer h-full border-t-2 border-t-[hsl(var(--reading-accent)/0.5)]">
-            <CardContent className="pt-6 text-center space-y-2">
-              <div className="text-3xl">&#128214;</div>
-              <h3 className="font-semibold">{tModes("reading")}</h3>
-              <p className="text-xs text-muted-foreground">
-                {tModes("readingDescription")}
-              </p>
-            </CardContent>
-          </Card>
-        </Link>
       </div>
 
       {/* Study Tips */}
-      <Card className="bg-muted/30 border-dashed">
-        <CardContent className="pt-4 space-y-2 text-sm text-muted-foreground">
-          <p>
-            <span className="mr-1">&#128161;</span>
-            {tTopics("tips.readFirst")}
-          </p>
-          <p>
-            <span className="mr-1">&#129504;</span>
-            {tTopics("tips.speakAnswer")}
-          </p>
-          <p>
-            <span className="mr-1">&#128264;</span>
-            {tTopics("tips.listenAloud")}
-          </p>
-        </CardContent>
-      </Card>
+      {!isImportedStyle && (
+        <Card className="bg-muted/30 border-dashed">
+          <CardContent className="pt-4 space-y-2 text-sm text-muted-foreground">
+            <p>
+              <span className="mr-1">&#128161;</span>
+              {tTopics("tips.readFirst")}
+            </p>
+            <p>
+              <span className="mr-1">&#129504;</span>
+              {tTopics("tips.speakAnswer")}
+            </p>
+            <p>
+              <span className="mr-1">&#128264;</span>
+              {tTopics("tips.listenAloud")}
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
-      <StudyTipsDialog />
+      {!isImportedStyle && <StudyTipsDialog />}
 
       {/* Categories */}
       {progress.categories.length > 0 && (

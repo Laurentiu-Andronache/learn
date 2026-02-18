@@ -71,6 +71,7 @@ export function useTTS() {
   const playingElRef = useRef<HTMLElement | null>(null);
   const pausedRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const requestIdRef = useRef(0);
   const locale = useLocale();
   const t = useTranslations("tts");
 
@@ -79,6 +80,11 @@ export function useTTS() {
   pausedRef.current = paused;
 
   const stop = useCallback(() => {
+    requestIdRef.current++;
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+      debounceRef.current = null;
+    }
     if (audioRef.current) {
       audioRef.current.pause();
       audioRef.current.removeAttribute("src");
@@ -112,14 +118,19 @@ export function useTTS() {
         }
 
         stop();
+        const thisRequest = requestIdRef.current;
         const text = el.textContent?.trim();
         if (!text) return;
 
         try {
           const hash = await sha256(text);
+          if (requestIdRef.current !== thisRequest) return;
+
           const response =
             (await getCachedAudio(hash)) ??
             (await fetchAndCacheAudio(text, locale, hash));
+
+          if (requestIdRef.current !== thisRequest) return;
 
           if (response.status === 429) {
             toast.error(t("rateLimited"));
@@ -139,8 +150,10 @@ export function useTTS() {
             stop,
           );
         } catch {
-          stop();
-          toast.error(t("error"));
+          if (requestIdRef.current === thisRequest) {
+            stop();
+            toast.error(t("error"));
+          }
         }
       }, DEBOUNCE_MS);
     },

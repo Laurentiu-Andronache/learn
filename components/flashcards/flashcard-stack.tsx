@@ -8,6 +8,7 @@ import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTTS } from "@/hooks/use-tts";
+import { isExtraDuplicate, stripFrontFromAnswer } from "@/lib/flashcards/strip-front-from-answer";
 import type { UserCardState } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import { FlashcardProgress } from "./flashcard-progress";
@@ -60,6 +61,8 @@ export function FlashcardStack({
   const tq = useTranslations("quiz");
   const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
   const questionRef = useRef<HTMLParagraphElement>(null);
+  const backCardRef = useRef<HTMLDivElement>(null);
+  const stopAutoPlayRef = useRef(false);
   const prevSkipSignal = useRef(skipSignal ?? 0);
   const prevUndoSignal = useRef(undoSignal ?? 0);
   const prevRateSignal = useRef(rateSignal?.count ?? 0);
@@ -181,25 +184,79 @@ export function FlashcardStack({
     return () => window.removeEventListener("keydown", handler);
   }, [hasBeenRevealed, advance, reportOpen]);
 
-  // Stop TTS on card change, then auto-read question if enabled
+  const stopAutoPlay = useCallback(() => {
+    stopAutoPlayRef.current = true;
+    const container = backCardRef.current;
+    if (container) {
+      for (const audio of container.querySelectorAll<HTMLAudioElement>("audio[data-inline-audio]")) {
+        audio.pause();
+        audio.currentTime = 0;
+      }
+    }
+  }, []);
+
+  // Stop TTS + auto-play on card change, then auto-read question if enabled
   // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on card change
   useEffect(() => {
     stopTTS();
+    stopAutoPlay();
     if (readQuestionsAloud && questionRef.current) {
       handleBlockClick(questionRef.current);
     }
   }, [currentIndex]);
+
+  // Auto-play inline audio when card flips to back
+  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on flip/index change
+  useEffect(() => {
+    if (!isFlipped) {
+      stopAutoPlay();
+      return;
+    }
+    const container = backCardRef.current;
+    if (!container) return;
+
+    // Small delay for flip animation to finish
+    const timeout = setTimeout(() => {
+      // Only auto-play audio NOT inside collapsed <details> (avoids duplicates in "Learn More")
+      const audios = Array.from(
+        container.querySelectorAll<HTMLAudioElement>("audio[data-inline-audio]"),
+      ).filter((a) => !a.closest("details:not([open])"));
+      if (audios.length === 0) return;
+
+      stopTTS();
+      stopAutoPlayRef.current = false;
+
+      let idx = 0;
+      const playNext = () => {
+        if (stopAutoPlayRef.current || idx >= audios.length) return;
+        const audio = audios[idx];
+        idx++;
+        const onEnded = () => {
+          audio.removeEventListener("ended", onEnded);
+          playNext();
+        };
+        audio.addEventListener("ended", onEnded);
+        audio.play().catch(() => {});
+      };
+      playNext();
+    }, 350);
+
+    return () => clearTimeout(timeout);
+  }, [isFlipped, currentIndex]);
 
   const current = flashcards[currentIndex];
   if (!current) return null;
 
   const questionText =
     locale === "es" ? current.question_es : current.question_en;
-  const answer = locale === "es" ? current.answer_es : current.answer_en;
-  const extra = locale === "es" ? current.extra_es : current.extra_en;
+  const rawAnswer = locale === "es" ? current.answer_es : current.answer_en;
+  const answer = rawAnswer ? stripFrontFromAnswer(rawAnswer, questionText) : rawAnswer;
+  const rawExtra = locale === "es" ? current.extra_es : current.extra_en;
+  const extra = rawExtra && answer && isExtraDuplicate(answer, rawExtra) ? null : rawExtra;
 
   const handleFlip = () => {
     stopTTS();
+    stopAutoPlay();
     if (!hasBeenRevealed) {
       setIsFlipped(true);
       setHasBeenRevealed(true);
@@ -209,6 +266,11 @@ export function FlashcardStack({
       setIsFlipped(next);
       onFlipChange?.(next);
     }
+  };
+
+  const handleTTSClick = (el: HTMLElement) => {
+    stopAutoPlay();
+    handleBlockClick(el);
   };
 
   // Count ratings by type
@@ -262,12 +324,12 @@ export function FlashcardStack({
           </Card>
 
           {/* Back */}
-          <Card className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto border-[hsl(var(--flashcard-accent)/0.2)]">
+          <Card ref={backCardRef} className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto border-[hsl(var(--flashcard-accent)/0.2)]">
             <div className="flex-1 space-y-3">
               {answer && (
                 <div>
                   <p className="text-sm font-medium mb-1">{tf("answer")}</p>
-                  <MarkdownContent text={answer} className="text-sm text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
+                  <MarkdownContent text={answer} className="text-sm text-muted-foreground" onBlockClick={handleTTSClick} playingEl={playingEl} ttsPaused={paused} />
                 </div>
               )}
               {extra && (
@@ -277,7 +339,7 @@ export function FlashcardStack({
                     {tq("learnMore")}
                   </summary>
                   <div className="pl-1 pb-3">
-                    <MarkdownContent text={extra} className="text-sm text-muted-foreground" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
+                    <MarkdownContent text={extra} className="text-sm text-muted-foreground" onBlockClick={handleTTSClick} playingEl={playingEl} ttsPaused={paused} />
                   </div>
                 </details>
               )}
@@ -286,7 +348,7 @@ export function FlashcardStack({
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-muted-foreground"
+                className="text-xs text-muted-foreground"
                 onClick={(e) => {
                   e.stopPropagation();
                   setReportOpen(true);
@@ -297,6 +359,7 @@ export function FlashcardStack({
               <Button
                 variant="ghost"
                 size="sm"
+                className="text-xs"
                 onClick={(e) => {
                   e.stopPropagation();
                   onSuspend(current.id);

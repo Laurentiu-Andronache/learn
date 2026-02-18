@@ -29,7 +29,7 @@ Claude Code is responsible for all schema changes.
 
 Full schema: `supabase/migrations/20260207000000_initial_schema.sql` + `20260209000000_split_quiz_flashcard.sql`
 
-**Content** (public read, admin write): `topics`, `categories`, `questions`, `flashcards`
+**Content** (visibility-filtered read, admin write): `topics`, `categories`, `questions`, `flashcards` — SELECT policies filter by `topics.visibility` (private → creator/admin only)
 
 **User Management**: `profiles`, `admin_users`
 

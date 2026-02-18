@@ -139,6 +139,10 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 
 **Auto-Read Questions**: `read_questions_aloud` profile setting (default false). When enabled, questions are auto-read via `handleBlockClick(ref)` on appear. Quiz: auto-read on question change + click question to pause/resume. Flashcard: auto-read on front side, stop on flip (no click-to-control — would conflict with card flip handler). Setting in `/settings` study settings card.
 
+## Topic Visibility
+
+`topics.visibility` column: `"public"` (default/NULL) or `"private"` (creator-only). Admin toggle at `/admin/topics` via `components/admin/topic-visibility-toggle.tsx` + `toggleTopicVisibility` server action. RLS enforces visibility across `topics`, `categories`, `flashcards`, and `questions` — private content is invisible to non-creator/non-admin users at the DB level.
+
 ## Component/Service Naming
 
 - `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
@@ -161,6 +165,8 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `hooks/use-tts.ts` — TTS click-to-read hook (browser cache, Audio playback, pause/resume)
 - `app/api/tts/route.ts` — TTS API route (auth, rate limit, Supabase Storage cache, ElevenLabs)
 - `lib/fsrs/optimizer.ts` — `optimizeUserParameters()`, `transformReviewLogs()`
+- `components/admin/topic-visibility-toggle.tsx` — Public/Private switch for admin topics list
+- `lib/services/admin-topics.ts` — `toggleTopicVisibility` server action
 
 ## Admin Editing (shared components)
 
@@ -261,6 +267,10 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 **Settings list components (hidden topics, suspended flashcards)**: Parent passes server-fetched data as initial prop + `onCountChange` callback. Child manages local state with `useState(initial)` and calls `onCountChange` on mutations so the parent's count/visibility stays in sync.
 
 **Supabase Storage from Next.js API routes**: `~/.bashrc` exports `SUPABASE_SERVICE_ROLE_KEY` for the Launcher project; `process.env` takes priority over `.env.local`, so the Learn dev server was sending the wrong project's JWT. Fix: use `LEARN_SERVICE_ROLE_KEY` env var (falls back to `SUPABASE_SERVICE_ROLE_KEY` on Vercel where there's no bashrc collision). Upload uses raw `fetch` + `after()` from `next/server` for fire-and-forget (prevents context GC before completion).
+
+**RLS visibility for content tables**: `topics`, `categories`, `flashcards`, `questions` all enforce topic visibility. When adding new content tables that reference topics/categories, the SELECT policy must check `topics.visibility IS DISTINCT FROM 'private' OR topics.creator_id = auth.uid() OR is_admin(auth.uid())`. A bare `true` policy leaks private content.
+
+**Profiles are readable by all authenticated users**: The `profiles` SELECT policy allows any logged-in user to read any profile (for creator display names on topic cards). Don't add sensitive data to `profiles` without tightening this.
 
 **MarkdownContent inside `<p>` tags**: `MarkdownContent` renders `<span className="block">` instead of `<p>` to avoid React hydration errors from nested `<p>` elements. If you render markdown in a context that's already inside a `<p>`, this is handled automatically.
 

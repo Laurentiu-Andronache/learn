@@ -39,7 +39,6 @@ function InlineAudioPlayer({ src }: { src: string }) {
           setPlaying(false);
         } else {
           audio.play().catch(() => {});
-          setPlaying(true);
         }
       }}
     >
@@ -47,6 +46,9 @@ function InlineAudioPlayer({ src }: { src: string }) {
         ref={audioRef}
         src={src}
         preload="none"
+        data-inline-audio=""
+        onPlay={() => setPlaying(true)}
+        onPause={() => setPlaying(false)}
         onEnded={() => setPlaying(false)}
       />
       <span>{playing ? "\u23F9" : "\u25B6"}</span>

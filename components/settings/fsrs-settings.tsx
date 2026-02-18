@@ -291,7 +291,7 @@ export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettings
         <Separator />
 
         {/* Actions */}
-        <div className="flex gap-2 justify-end">
+        <div className="flex gap-2 justify-end flex-wrap">
           <Button variant="outline" size="sm" onClick={handleReset}>
             {t("resetDefaults")}
           </Button>
