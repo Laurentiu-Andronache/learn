@@ -14,6 +14,8 @@ learn-app/
 ├── lib/           # Utilities, services, types
 ├── supabase/      # Database migrations
 ├── mcp-server/    # MCP content management server
+├── .githooks/     # Git hooks (pre-commit: lint+test+build)
+├── biome.json     # Linter/formatter config
 ├── CLAUDE.md      # This file
 ├── CLAUDE-supabase.md  # DB schema, migrations, admin access
 └── CLAUDE-content-creation.md  # Flashcard/quiz/reading content rules
@@ -22,9 +24,15 @@ learn-app/
 ## Dev Workflow
 
 - Dev server: `npm run dev` on `:4000` (it should already be running)
+- Lint: `npm run lint` (Biome) / `npm run lint:fix` (auto-fix)
 - Tests: `npm run test` (Vitest)
+- Validate all: `npm run validate` (lint:fix → test → build)
 - Deploy: `npm run build`; if it succeeds, then push to main → Vercel auto-deploys to https://learn.gift
 - All env vars must be configured in Vercel dashboard
+
+## Pre-commit Hook
+
+`.githooks/pre-commit` runs `lint → test → build` (check-only, no auto-fix). New clones need: `git config core.hooksPath .githooks`
 
 ## Architecture: Quiz vs Flashcard Split
 

@@ -125,7 +125,10 @@ cd learn/learn-app
 
 ```bash
 npm install
+git config core.hooksPath .githooks
 ```
+
+The second command enables the pre-commit hook that runs lint (check-only), tests, and build before each commit.
 
 ### 3. Set Up Environment Variables
 
@@ -165,6 +168,16 @@ Visit:
 ```bash
 npm run build
 npm run start
+```
+
+## Linting & Formatting
+
+[Biome](https://biomejs.dev/) handles both linting and formatting:
+
+```bash
+npm run lint          # Check for issues
+npm run lint:fix      # Auto-fix issues
+npm run validate      # lint:fix + test + build (same as pre-commit hook)
 ```
 
 ## Testing
