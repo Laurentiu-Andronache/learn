@@ -1,8 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
 import { useTranslations } from "next-intl";
+import { useTransition } from "react";
 import { Switch } from "@/components/ui/switch";
 import { toggleTopicVisibility } from "@/lib/services/admin-topics";
 

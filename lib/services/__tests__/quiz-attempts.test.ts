@@ -35,7 +35,12 @@ describe("saveQuizAttempt", () => {
       score: 8,
       total: 10,
       answers: [
-        { question_id: "q1", selected_index: 2, was_correct: true, time_ms: 3000 },
+        {
+          question_id: "q1",
+          selected_index: 2,
+          was_correct: true,
+          time_ms: 3000,
+        },
       ],
     });
 
@@ -46,7 +51,12 @@ describe("saveQuizAttempt", () => {
       score: 8,
       total: 10,
       answers: [
-        { question_id: "q1", selected_index: 2, was_correct: true, time_ms: 3000 },
+        {
+          question_id: "q1",
+          selected_index: 2,
+          was_correct: true,
+          time_ms: 3000,
+        },
       ],
     });
     expect(result).toEqual({ id: "attempt-1" });

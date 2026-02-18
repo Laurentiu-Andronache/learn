@@ -115,11 +115,20 @@ export default async function AboutPage() {
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="what-is-fsrs">
                 <AccordionTrigger>{t("faqFsrsQuestion")}</AccordionTrigger>
-                <AccordionContent>{t.rich("faqFsrsAnswer", {
-                  link: (chunks) => (
-                    <a href="https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80">{chunks}</a>
-                  )
-                })}</AccordionContent>
+                <AccordionContent>
+                  {t.rich("faqFsrsAnswer", {
+                    link: (chunks) => (
+                      <a
+                        href="https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline hover:text-primary/80"
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                  })}
+                </AccordionContent>
               </AccordionItem>
               <AccordionItem value="anonymous">
                 <AccordionTrigger>{t("faqAnonymousQuestion")}</AccordionTrigger>
@@ -142,25 +151,47 @@ export default async function AboutPage() {
                 <AccordionContent>{t("faqDataAnswer")}</AccordionContent>
               </AccordionItem>
               <AccordionItem value="optimization">
-                <AccordionTrigger>{t("faqOptimizationQuestion")}</AccordionTrigger>
-                <AccordionContent>{t("faqOptimizationAnswer")}</AccordionContent>
+                <AccordionTrigger>
+                  {t("faqOptimizationQuestion")}
+                </AccordionTrigger>
+                <AccordionContent>
+                  {t("faqOptimizationAnswer")}
+                </AccordionContent>
               </AccordionItem>
               <AccordionItem value="fsrs6">
                 <AccordionTrigger>{t("faqFsrs6Question")}</AccordionTrigger>
-                <AccordionContent>{t.rich("faqFsrs6Answer", {
-                  link: (chunks) => (
-                    <a href="https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80">{chunks}</a>
-                  )
-                })}</AccordionContent>
+                <AccordionContent>
+                  {t.rich("faqFsrs6Answer", {
+                    link: (chunks) => (
+                      <a
+                        href="https://github.com/open-spaced-repetition/fsrs4anki/wiki/The-Algorithm"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline hover:text-primary/80"
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                  })}
+                </AccordionContent>
               </AccordionItem>
               <AccordionItem value="tech">
                 <AccordionTrigger>{t("faqTechQuestion")}</AccordionTrigger>
-                <AccordionContent>{t.rich("faqTechAnswer", {
-                  link: (chunks) => (
-                    <a href="https://github.com/open-spaced-repetition" target="_blank" rel="noopener noreferrer" className="text-primary underline hover:text-primary/80">{chunks}</a>
-                  ),
-                  b: (chunks) => <strong>{chunks}</strong>
-                })}</AccordionContent>
+                <AccordionContent>
+                  {t.rich("faqTechAnswer", {
+                    link: (chunks) => (
+                      <a
+                        href="https://github.com/open-spaced-repetition"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary underline hover:text-primary/80"
+                      >
+                        {chunks}
+                      </a>
+                    ),
+                    b: (chunks) => <strong>{chunks}</strong>,
+                  })}
+                </AccordionContent>
               </AccordionItem>
             </Accordion>
           </CardContent>

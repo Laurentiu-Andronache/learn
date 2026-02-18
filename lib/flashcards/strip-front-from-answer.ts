@@ -37,8 +37,8 @@ export function isExtraDuplicate(answer: string, extra: string): boolean {
   }
   // Fallback: high word overlap check for non-audio duplicates
   const wordRe = /[a-zA-Z\u00C0-\u024F]{2,}/g;
-  const answerWords = new Set((answer.toLowerCase().match(wordRe)) ?? []);
-  const extraWords = (extra.toLowerCase().match(wordRe)) ?? [];
+  const answerWords = new Set(answer.toLowerCase().match(wordRe) ?? []);
+  const extraWords = extra.toLowerCase().match(wordRe) ?? [];
   if (extraWords.length === 0) return false;
   let overlap = 0;
   for (const w of extraWords) {

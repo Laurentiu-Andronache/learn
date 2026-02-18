@@ -1,9 +1,9 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { after } from "next/server";
-import { importAnkiFile } from "@/lib/import/import-orchestrator";
 import type { AnkiImportOptions } from "@/lib/import/anki-types";
 import { IMPORT_LIMITS } from "@/lib/import/anki-types";
+import { importAnkiFile } from "@/lib/import/import-orchestrator";
 
 // In-memory rate limiter: userId → timestamps[]
 const importRateLimits = new Map<string, number[]>();
@@ -79,7 +79,9 @@ export async function POST(request: Request) {
   // Validate file size
   if (file.size > IMPORT_LIMITS.maxFileSize) {
     return Response.json(
-      { error: `File too large (max ${IMPORT_LIMITS.maxFileSize / 1024 / 1024}MB)` },
+      {
+        error: `File too large (max ${IMPORT_LIMITS.maxFileSize / 1024 / 1024}MB)`,
+      },
       { status: 400 },
     );
   }
@@ -104,8 +106,7 @@ export async function POST(request: Request) {
   // Only admins can create public topics or auto-translate
   const visibility =
     authUser.isAdmin && visibilityParam === "public" ? "public" : "private";
-  const autoTranslate =
-    authUser.isAdmin && autoTranslateParam === "true";
+  const autoTranslate = authUser.isAdmin && autoTranslateParam === "true";
 
   const options: AnkiImportOptions = {
     language: language as "en" | "es",
@@ -136,8 +137,7 @@ export async function POST(request: Request) {
     return Response.json(result);
   } catch (err) {
     console.error("Anki import error:", err);
-    const message =
-      err instanceof Error ? err.message : "Import failed";
+    const message = err instanceof Error ? err.message : "Import failed";
     return Response.json({ error: message }, { status: 500 });
   }
 }

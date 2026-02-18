@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  transformReviewLogs,
-  type PlainFSRSItem,
-} from "../optimizer";
+import { type PlainFSRSItem, transformReviewLogs } from "../optimizer";
 
 /** Helper to build a review log row */
 function makeLog(overrides: {

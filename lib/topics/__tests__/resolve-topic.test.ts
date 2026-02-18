@@ -8,7 +8,11 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(() => Promise.resolve(mockSupabase)),
 }));
 
-import { isUuidParam, resolveTopic, resolveTopicSelect } from "../resolve-topic";
+import {
+  isUuidParam,
+  resolveTopic,
+  resolveTopicSelect,
+} from "../resolve-topic";
 
 beforeEach(() => {
   vi.clearAllMocks();

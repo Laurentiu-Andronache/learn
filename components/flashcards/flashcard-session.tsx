@@ -57,8 +57,11 @@ export function FlashcardSession({
   const tf = useTranslations("flashcard");
   const ts = useTranslations("session");
   const [sessionKey, setSessionKey] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [rateSignal, setRateSignal] = useState({ count: 0, rating: 3 as 1 | 2 | 3 | 4 });
+  const [, setIsFlipped] = useState(false);
+  const [rateSignal, setRateSignal] = useState({
+    count: 0,
+    rating: 3 as 1 | 2 | 3 | 4,
+  });
   const [flashcards, setFlashcards] = useState(initialFlashcards);
   const [results, setResults] = useState<Map<string, 1 | 2 | 3 | 4> | null>(
     null,
@@ -126,7 +129,7 @@ export function FlashcardSession({
     if (flipped) setHasRevealed(true);
   }, []);
   const handleRate = useCallback((rating: 1 | 2 | 3 | 4) => {
-    setRateSignal(prev => ({ count: prev.count + 1, rating }));
+    setRateSignal((prev) => ({ count: prev.count + 1, rating }));
   }, []);
 
   const handleReviewAgain = useCallback(() => {

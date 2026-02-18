@@ -20,7 +20,6 @@ const languages = [
 ] as const;
 
 function setLocaleCookie(locale: string) {
-  // biome-ignore lint/suspicious/noDocumentCookie: simple locale cookie, no framework alternative needed
   document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 }
 

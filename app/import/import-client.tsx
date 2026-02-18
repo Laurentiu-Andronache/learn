@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  AlertTriangle,
-  Check,
-  FileUp,
-  Loader2,
-  Upload,
-} from "lucide-react";
+import { AlertTriangle, Check, FileUp, Loader2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";

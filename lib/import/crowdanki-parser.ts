@@ -4,17 +4,16 @@
  */
 
 import JSZip from "jszip";
+import { processNoteToFlashcards } from "./anki-templates";
 import type {
   AnkiModel,
   CrowdAnkiDeck,
-  CrowdAnkiNote,
   CrowdAnkiNoteModel,
   ParsedCategory,
   ParsedDeck,
   ParsedFlashcard,
 } from "./anki-types";
 import { IMPORT_LIMITS } from "./anki-types";
-import { processNoteToFlashcards } from "./anki-templates";
 
 function slugify(text: string): string {
   return text
@@ -24,9 +23,7 @@ function slugify(text: string): string {
     .slice(0, 60);
 }
 
-function crowdAnkiModelToAnkiModel(
-  m: CrowdAnkiNoteModel,
-): AnkiModel {
+function crowdAnkiModelToAnkiModel(m: CrowdAnkiNoteModel): AnkiModel {
   return {
     id: m.crowdanki_uuid,
     name: m.name,
@@ -65,9 +62,7 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
   }
 
   if (!deckJsonContent) {
-    throw new Error(
-      "Invalid CrowdAnki archive: no deck.json found",
-    );
+    throw new Error("Invalid CrowdAnki archive: no deck.json found");
   }
 
   const deck = JSON.parse(deckJsonContent) as CrowdAnkiDeck;
@@ -98,9 +93,7 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
   for (const [path, file] of Object.entries(zip.files)) {
     if (file.dir) continue;
     // Match files in the media directory or directly referenced media
-    const isMedia =
-      path.startsWith(mediaPrefix) ||
-      path.includes("/media/");
+    const isMedia = path.startsWith(mediaPrefix) || path.includes("/media/");
 
     if (!isMedia) continue;
     if (mediaCount >= IMPORT_LIMITS.maxMediaFiles) {
@@ -128,9 +121,7 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
   let totalFlashcards = 0;
 
   function processNotes(d: CrowdAnkiDeck, parentName?: string) {
-    const deckName = parentName
-      ? `${parentName} > ${d.name}`
-      : d.name;
+    const deckName = parentName ? `${parentName} > ${d.name}` : d.name;
 
     for (const note of d.notes ?? []) {
       if (totalFlashcards >= IMPORT_LIMITS.maxFlashcards) return;
@@ -166,9 +157,7 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
         }
       }
       if (categoryName === "General" && (note.tags?.length ?? 0) > 0) {
-        const firstTag = note.tags[0]
-          .replace(/::/g, " > ")
-          .replace(/_/g, " ");
+        const firstTag = note.tags[0].replace(/::/g, " > ").replace(/_/g, " ");
         if (firstTag.trim()) categoryName = firstTag.trim();
       }
 
@@ -228,7 +217,10 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
 
   return {
     name: deck.name,
-    description: (deck.desc ?? "").replace(/<[^>]*>/g, "").trim().slice(0, 500),
+    description: (deck.desc ?? "")
+      .replace(/<[^>]*>/g, "")
+      .trim()
+      .slice(0, 500),
     categories,
     warnings,
     mediaFiles,

@@ -165,7 +165,14 @@ export function QuestionsClient({
         // Auth error from requireAdmin() — layout already handles access control
       }
     });
-  }, [topicId, categoryId, typeFilter, debouncedSearch, searchAnswers, searchExtra]);
+  }, [
+    topicId,
+    categoryId,
+    typeFilter,
+    debouncedSearch,
+    searchAnswers,
+    searchExtra,
+  ]);
 
   useEffect(() => {
     fetchQuestions();
@@ -293,7 +300,9 @@ export function QuestionsClient({
                 editingId === q.id ? setEditingId(null) : startEditing(q)
               }
             >
-              <p className="text-sm font-medium flex-1 min-w-0 break-words">{q.question_en}</p>
+              <p className="text-sm font-medium flex-1 min-w-0 break-words">
+                {q.question_en}
+              </p>
               <div className="flex gap-1 shrink-0">
                 <Badge variant="outline">
                   {q.type === "true_false" ? "T/F" : "MC"}

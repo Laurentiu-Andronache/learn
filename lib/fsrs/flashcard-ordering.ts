@@ -61,9 +61,12 @@ export async function getEmptyStateContext(
     flashcardsQuery = flashcardsQuery.eq("category_id", options.categoryId);
   }
   const { data: flashcards } =
-    await flashcardsQuery.returns<{ id: string; categories: { topic_id: string } }[]>();
+    await flashcardsQuery.returns<
+      { id: string; categories: { topic_id: string } }[]
+    >();
   const flashcardIds = (flashcards || []).map((f) => f.id);
-  if (!flashcardIds.length) return { remainingNewCards: 0, nextDueAt: null, effectiveLimit: 0 };
+  if (!flashcardIds.length)
+    return { remainingNewCards: 0, nextDueAt: null, effectiveLimit: 0 };
 
   const [{ data: suspended }, { data: cardStates }] = await Promise.all([
     supabase
@@ -78,7 +81,9 @@ export async function getEmptyStateContext(
       .in("flashcard_id", flashcardIds),
   ]);
   const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
-  const stateMap = new Map((cardStates || []).map((cs) => [cs.flashcard_id, cs]));
+  const stateMap = new Map(
+    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
+  );
 
   const activeIds = flashcardIds.filter((id) => !suspendedSet.has(id));
 
@@ -111,7 +116,8 @@ export async function getEmptyStateContext(
     if (earliestLog && earliestLog.length > 0) {
       const dayNumber =
         Math.floor(
-          (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) / 86400000,
+          (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) /
+            86400000,
         ) + 1;
       if (dayNumber <= 5) {
         effectiveLimit = Math.min(effectiveLimit, 5 + dayNumber);
@@ -285,9 +291,11 @@ export async function getOrderedFlashcards(
         .limit(1);
 
       if (earliestLog && earliestLog.length > 0) {
-        const dayNumber = Math.floor(
-          (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) / 86400000
-        ) + 1;
+        const dayNumber =
+          Math.floor(
+            (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) /
+              86400000,
+          ) + 1;
         if (dayNumber <= 5) {
           effectiveLimit = Math.min(options.newCardsPerDay, 5 + dayNumber);
         }
@@ -365,9 +373,7 @@ export async function getSubModeCounts(userId: string, topicId: string) {
   ).length;
 
   // Full mode excludes future cards (new cards + cards due now)
-  const stateMap = new Map(
-    activeCardStates.map((cs) => [cs.flashcard_id, cs]),
-  );
+  const stateMap = new Map(activeCardStates.map((cs) => [cs.flashcard_id, cs]));
   const fullCount = activeIds.filter((id) => {
     const cs = stateMap.get(id);
     if (!cs) return true; // new/unseen card

@@ -3,10 +3,7 @@ import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { ReadingView } from "@/components/reading/reading-view";
 import { getReadingProgress } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
-import {
-  isUuidParam,
-  resolveTopicSelect,
-} from "@/lib/topics/resolve-topic";
+import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
 interface ReadingPageProps {

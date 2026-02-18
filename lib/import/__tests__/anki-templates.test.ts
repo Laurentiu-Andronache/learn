@@ -1,12 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  renderTemplate,
   expandCloze,
   expandTemplates,
   htmlToMarkdown,
+  processNoteToFlashcards,
+  renderTemplate,
   sanitizeHtml,
   stripOrphanedJS,
-  processNoteToFlashcards,
 } from "../anki-templates";
 import type { AnkiModel } from "../anki-types";
 
@@ -14,7 +14,10 @@ import type { AnkiModel } from "../anki-types";
 
 describe("renderTemplate", () => {
   it("substitutes basic field placeholders", () => {
-    const result = renderTemplate("{{Front}}", { Front: "Hello", Back: "World" });
+    const result = renderTemplate("{{Front}}", {
+      Front: "Hello",
+      Back: "World",
+    });
     expect(result).toBe("Hello");
   });
 
@@ -40,10 +43,9 @@ describe("renderTemplate", () => {
   });
 
   it("renders conditional blocks when field is non-empty", () => {
-    const result = renderTemplate(
-      "{{#Extra}}Extra: {{Extra}}{{/Extra}}",
-      { Extra: "bonus info" },
-    );
+    const result = renderTemplate("{{#Extra}}Extra: {{Extra}}{{/Extra}}", {
+      Extra: "bonus info",
+    });
     expect(result).toBe("Extra: bonus info");
   });
 
@@ -56,26 +58,23 @@ describe("renderTemplate", () => {
   });
 
   it("hides conditional blocks when field is whitespace-only", () => {
-    const result = renderTemplate(
-      "{{#Notes}}Has notes{{/Notes}}",
-      { Notes: "   " },
-    );
+    const result = renderTemplate("{{#Notes}}Has notes{{/Notes}}", {
+      Notes: "   ",
+    });
     expect(result).toBe("");
   });
 
   it("renders inverted blocks when field is empty", () => {
-    const result = renderTemplate(
-      "{{^Hint}}No hint available{{/Hint}}",
-      { Hint: "" },
-    );
+    const result = renderTemplate("{{^Hint}}No hint available{{/Hint}}", {
+      Hint: "",
+    });
     expect(result).toBe("No hint available");
   });
 
   it("hides inverted blocks when field is non-empty", () => {
-    const result = renderTemplate(
-      "{{^Hint}}No hint{{/Hint}}",
-      { Hint: "a hint" },
-    );
+    const result = renderTemplate("{{^Hint}}No hint{{/Hint}}", {
+      Hint: "a hint",
+    });
     expect(result).toBe("");
   });
 
@@ -153,7 +152,9 @@ describe("expandCloze", () => {
   });
 
   it("expands multiple cloze numbers to multiple cards", () => {
-    const result = expandCloze("{{c1::Berlin}} is the capital of {{c2::Germany}}");
+    const result = expandCloze(
+      "{{c1::Berlin}} is the capital of {{c2::Germany}}",
+    );
     expect(result).toHaveLength(2);
 
     // Card for c1: Berlin blanked, Germany revealed
@@ -166,7 +167,9 @@ describe("expandCloze", () => {
   });
 
   it("uses hint text when provided", () => {
-    const result = expandCloze("The {{c1::mitochondria::organelle}} is the powerhouse");
+    const result = expandCloze(
+      "The {{c1::mitochondria::organelle}} is the powerhouse",
+    );
     expect(result).toHaveLength(1);
     expect(result[0].front).toBe("The [organelle] is the powerhouse");
     expect(result[0].back).toBe("The mitochondria is the powerhouse");
@@ -209,8 +212,18 @@ describe("expandTemplates", () => {
     const model = {
       type: 0,
       tmpls: [
-        { name: "Card 1", ord: 0, qfmt: "{{Front}}", afmt: "{{FrontSide}}<hr>{{Back}}" },
-        { name: "Card 2", ord: 1, qfmt: "{{Back}}", afmt: "{{FrontSide}}<hr>{{Front}}" },
+        {
+          name: "Card 1",
+          ord: 0,
+          qfmt: "{{Front}}",
+          afmt: "{{FrontSide}}<hr>{{Back}}",
+        },
+        {
+          name: "Card 2",
+          ord: 1,
+          qfmt: "{{Back}}",
+          afmt: "{{FrontSide}}<hr>{{Front}}",
+        },
       ],
     };
 
@@ -243,9 +256,7 @@ describe("expandTemplates", () => {
     const fields = { Front: "Question?", Back: "" };
     const model = {
       type: 0,
-      tmpls: [
-        { name: "Card 1", ord: 0, qfmt: "{{Front}}", afmt: "{{Back}}" },
-      ],
+      tmpls: [{ name: "Card 1", ord: 0, qfmt: "{{Front}}", afmt: "{{Back}}" }],
     };
 
     const result = expandTemplates(fields, model);
@@ -260,7 +271,12 @@ describe("expandTemplates", () => {
     const model = {
       type: 1,
       tmpls: [
-        { name: "Cloze", ord: 0, qfmt: "{{Text}}", afmt: "{{FrontSide}}<hr>{{Extra}}" },
+        {
+          name: "Cloze",
+          ord: 0,
+          qfmt: "{{Text}}",
+          afmt: "{{FrontSide}}<hr>{{Extra}}",
+        },
       ],
     };
 
@@ -298,9 +314,7 @@ describe("expandTemplates", () => {
     };
     const model = {
       type: 1,
-      tmpls: [
-        { name: "Cloze", ord: 0, qfmt: "{{Text}}", afmt: "{{Text}}" },
-      ],
+      tmpls: [{ name: "Cloze", ord: 0, qfmt: "{{Text}}", afmt: "{{Text}}" }],
     };
 
     const result = expandTemplates(fields, model);
@@ -424,15 +438,13 @@ describe("sanitizeHtml", () => {
   });
 
   it("removes <iframe> tags and content", () => {
-    expect(
-      sanitizeHtml('<iframe src="evil.html">content</iframe>safe'),
-    ).toBe("safe");
+    expect(sanitizeHtml('<iframe src="evil.html">content</iframe>safe')).toBe(
+      "safe",
+    );
   });
 
   it("removes <object> and <embed> tags", () => {
-    expect(
-      sanitizeHtml('<object data="x">content</object>safe'),
-    ).toBe("safe");
+    expect(sanitizeHtml('<object data="x">content</object>safe')).toBe("safe");
     expect(sanitizeHtml('<embed src="x.swf">safe')).toBe("safe");
   });
 
@@ -499,7 +511,12 @@ describe("processNoteToFlashcards", () => {
     const fields = ["<b>Question</b>", "<i>Answer</i>", ""];
     const fieldNames = ["Front", "Back", "Notes"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, standardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      standardModel,
+      [],
+    );
     expect(result).toHaveLength(1);
     expect(result[0].front).toBe("**Question**");
     expect(result[0].back).toContain("*Answer*");
@@ -510,7 +527,12 @@ describe("processNoteToFlashcards", () => {
     const fields = ["Front text", "Back text", "Some <b>extra</b> notes"];
     const fieldNames = ["Front", "Back", "Notes"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, standardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      standardModel,
+      [],
+    );
     expect(result).toHaveLength(1);
     expect(result[0].extra).toBe("Some **extra** notes");
   });
@@ -533,10 +555,19 @@ describe("processNoteToFlashcards", () => {
   });
 
   it("sanitizes field values (removes scripts)", () => {
-    const fields = ['<script>alert("xss")</script>Clean question', "Answer", ""];
+    const fields = [
+      '<script>alert("xss")</script>Clean question',
+      "Answer",
+      "",
+    ];
     const fieldNames = ["Front", "Back", "Notes"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, standardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      standardModel,
+      [],
+    );
     expect(result[0].front).not.toContain("script");
     expect(result[0].front).toContain("Clean question");
   });
@@ -582,7 +613,12 @@ describe("processNoteToFlashcards", () => {
     const fields = ["", "", ""];
     const fieldNames = ["Front", "Back", "Notes"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, standardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      standardModel,
+      [],
+    );
     expect(result).toEqual([]);
   });
 
@@ -590,7 +626,12 @@ describe("processNoteToFlashcards", () => {
     const fields = ["Only front"];
     const fieldNames = ["Front", "Back", "Notes"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, standardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      standardModel,
+      [],
+    );
     // fields[1] is undefined → fieldMap["Back"] = "" via ?? ""
     // The back template is "{{FrontSide}}<hr id=answer>{{Back}}" which renders
     // to "Only front<hr id=answer>" — after HTML stripping this is "Only front" (non-empty)
@@ -608,7 +649,12 @@ describe("processNoteToFlashcards", () => {
     ];
     const fieldNames = ["Front", "Back", "Notes"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, standardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      standardModel,
+      [],
+    );
     expect(result).toHaveLength(1);
     expect(result[0].front).toBe("What is **H2O**?");
     expect(result[0].back).toContain("*water*");
@@ -626,15 +672,30 @@ describe("processNoteToFlashcards", () => {
         { name: "Back", ord: 1 },
       ],
       tmpls: [
-        { name: "Card 1", ord: 0, qfmt: "{{Front}}", afmt: "{{FrontSide}}<hr>{{Back}}" },
-        { name: "Card 2", ord: 1, qfmt: "{{Back}}", afmt: "{{FrontSide}}<hr>{{Front}}" },
+        {
+          name: "Card 1",
+          ord: 0,
+          qfmt: "{{Front}}",
+          afmt: "{{FrontSide}}<hr>{{Back}}",
+        },
+        {
+          name: "Card 2",
+          ord: 1,
+          qfmt: "{{Back}}",
+          afmt: "{{FrontSide}}<hr>{{Front}}",
+        },
       ],
     };
 
     const fields = ["Capital of France?", "Paris"];
     const fieldNames = ["Front", "Back"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, twoCardModel, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      twoCardModel,
+      [],
+    );
     expect(result).toHaveLength(2);
     expect(result[0].templateName).toBe("Card 1");
     expect(result[0].front).toBe("Capital of France?");
@@ -674,7 +735,12 @@ document.addEventListener('keypress', function(event) {
     const fields = ["chose", "thing"];
     const fieldNames = ["Word", "Translation"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, modelWithScript, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      modelWithScript,
+      [],
+    );
     expect(result).toHaveLength(1);
     expect(result[0].back).not.toContain("document.querySelector");
     expect(result[0].back).not.toContain("addEventListener");
@@ -707,7 +773,12 @@ if (x) { x.click(); }`,
     const fields = ["Question", "Answer"];
     const fieldNames = ["Front", "Back"];
 
-    const result = processNoteToFlashcards(fields, fieldNames, modelWithUnclosedScript, []);
+    const result = processNoteToFlashcards(
+      fields,
+      fieldNames,
+      modelWithUnclosedScript,
+      [],
+    );
     expect(result).toHaveLength(1);
     expect(result[0].back).not.toContain("document.querySelector");
     expect(result[0].back).not.toContain("var x");
@@ -758,7 +829,8 @@ function doThing() {
   });
 
   it("preserves non-JS content completely", () => {
-    const text = "This is normal flashcard content\n\nWith paragraphs\n\nAnd more text";
+    const text =
+      "This is normal flashcard content\n\nWith paragraphs\n\nAnd more text";
     expect(stripOrphanedJS(text)).toBe(text);
   });
 

@@ -1,10 +1,10 @@
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { preprocessTooltips } from "../preprocess-tooltips";
 
 describe("preprocessTooltips", () => {
   it("converts basic tooltip syntax", () => {
     expect(preprocessTooltips("{{term|explanation}}")).toBe(
-      '[term](tooltip "explanation")'
+      '[term](tooltip "explanation")',
     );
   });
 
@@ -17,7 +17,7 @@ describe("preprocessTooltips", () => {
 
   it("escapes double quotes in explanations", () => {
     expect(preprocessTooltips('{{term|say "hello"}}')).toBe(
-      '[term](tooltip "say &quot;hello&quot;")'
+      '[term](tooltip "say &quot;hello&quot;")',
     );
   });
 
@@ -44,21 +44,21 @@ describe("preprocessTooltips", () => {
   it("works in bold context", () => {
     const input = "**{{term|explanation}}** text";
     expect(preprocessTooltips(input)).toBe(
-      '**[term](tooltip "explanation")** text'
+      '**[term](tooltip "explanation")** text',
     );
   });
 
   it("works in italic context", () => {
     const input = "*{{term|explanation}}* text";
     expect(preprocessTooltips(input)).toBe(
-      '*[term](tooltip "explanation")* text'
+      '*[term](tooltip "explanation")* text',
     );
   });
 
   it("processes text between code segments", () => {
     const input = "`code` {{term|desc}} `more`";
     expect(preprocessTooltips(input)).toBe(
-      '`code` [term](tooltip "desc") `more`'
+      '`code` [term](tooltip "desc") `more`',
     );
   });
 
@@ -69,8 +69,6 @@ describe("preprocessTooltips", () => {
 
   it("handles pipe characters in explanation", () => {
     const input = "{{term|this | that}}";
-    expect(preprocessTooltips(input)).toBe(
-      '[term](tooltip "this | that")'
-    );
+    expect(preprocessTooltips(input)).toBe('[term](tooltip "this | that")');
   });
 });

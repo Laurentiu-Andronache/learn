@@ -136,7 +136,9 @@ export function QuizResults({
               className={cn(
                 "rounded-lg border p-3 space-y-1",
                 a.wasCorrect && "border-rating-good/30 bg-rating-good/5",
-                !a.wasCorrect && !a.wasIdk && "border-rating-again/30 bg-rating-again/5",
+                !a.wasCorrect &&
+                  !a.wasIdk &&
+                  "border-rating-again/30 bg-rating-again/5",
                 a.wasIdk && "border-rating-hard/30 bg-rating-hard/5",
               )}
             >
@@ -164,9 +166,7 @@ export function QuizResults({
                         </p>
                       )}
                       {a.wasIdk && (
-                        <p className="text-rating-hard italic">
-                          Skipped
-                        </p>
+                        <p className="text-rating-hard italic">Skipped</p>
                       )}
                       <p className="text-rating-good">
                         {t("correctAnswer")}: {a.options[a.correctIndex]}

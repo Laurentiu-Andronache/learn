@@ -5,6 +5,7 @@
  */
 
 import JSZip from "jszip";
+import { processNoteToFlashcards } from "./anki-templates";
 import type {
   AnkiModel,
   AnkiNote,
@@ -13,7 +14,6 @@ import type {
   ParsedFlashcard,
 } from "./anki-types";
 import { IMPORT_LIMITS } from "./anki-types";
-import { processNoteToFlashcards } from "./anki-templates";
 
 function slugify(text: string): string {
   return text
@@ -28,8 +28,8 @@ function slugify(text: string): string {
  */
 export async function parseApkg(buffer: ArrayBuffer): Promise<ParsedDeck> {
   const { readAnkiCollection } = await import("anki-reader");
-  const fs = await import("fs");
-  const path = await import("path");
+  const fs = await import("node:fs");
+  const path = await import("node:path");
 
   // sql.js needs the WASM binary
   const wasmPath = path.join(process.cwd(), "public", "sql-wasm.wasm");
@@ -65,16 +65,29 @@ export async function parseApkg(buffer: ArrayBuffer): Promise<ParsedDeck> {
   const models = new Map<string, AnkiModel>();
 
   // getModels() may return an array or a record keyed by ID
-  const modelEntries: [string, Record<string, unknown>][] = Array.isArray(rawModels)
-    ? rawModels.map((m: Record<string, unknown>) => [String(m.id ?? m.mid ?? ""), m])
-    : (Object.entries(rawModels as Record<string, unknown>) as [string, Record<string, unknown>][]);
+  const modelEntries: [string, Record<string, unknown>][] = Array.isArray(
+    rawModels,
+  )
+    ? rawModels.map((m: Record<string, unknown>) => [
+        String(m.id ?? m.mid ?? ""),
+        m,
+      ])
+    : (Object.entries(rawModels as Record<string, unknown>) as [
+        string,
+        Record<string, unknown>,
+      ][]);
 
   for (const [id, raw] of modelEntries) {
     // anki-reader wraps model data in a `modelJson` property
     const wrapper = raw as Record<string, unknown>;
     const m = (wrapper.modelJson ?? wrapper) as Record<string, unknown>;
     const flds = (m.flds ?? []) as { name: string; ord: number }[];
-    const tmpls = (m.tmpls ?? []) as { name: string; ord: number; qfmt: string; afmt: string }[];
+    const tmpls = (m.tmpls ?? []) as {
+      name: string;
+      ord: number;
+      qfmt: string;
+      afmt: string;
+    }[];
 
     if (!Array.isArray(flds) || !Array.isArray(tmpls)) {
       warnings.push(`Model ${id}: invalid fields or templates, skipped`);

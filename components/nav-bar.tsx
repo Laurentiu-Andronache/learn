@@ -26,7 +26,10 @@ export async function NavBar() {
   return (
     <nav className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:bg-gradient-to-r after:from-transparent after:via-primary/20 after:to-transparent">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="font-display text-xl tracking-tight ml-4 dark:bg-gradient-to-r dark:from-primary dark:to-primary/70 dark:bg-clip-text dark:text-transparent font-bold">
+        <Link
+          href="/"
+          className="font-display text-xl tracking-tight ml-4 dark:bg-gradient-to-r dark:from-primary dark:to-primary/70 dark:bg-clip-text dark:text-transparent font-bold"
+        >
           LEARN
         </Link>
 

@@ -284,9 +284,7 @@ const CLOZE_RE = /\{\{c(\d+)::([^}]*?)(?:::([^}]*?))?\}\}/g;
  * - Front: {{cN::text}} → `[...]` or `[hint]`; other cloze numbers → revealed text
  * - Back: all cloze deletions → revealed text
  */
-export function expandCloze(
-  text: string,
-): { front: string; back: string }[] {
+export function expandCloze(text: string): { front: string; back: string }[] {
   // Discover which cloze numbers exist
   const numbers = new Set<number>();
   let m: RegExpExecArray | null;
@@ -303,15 +301,12 @@ export function expandCloze(
   const back = text.replace(CLOZE_RE, (_, _n, answer) => answer);
 
   return sorted.map((n) => {
-    const front = text.replace(
-      CLOZE_RE,
-      (_, num, answer, hint) => {
-        if (Number(num) === n) {
-          return hint ? `[${hint}]` : "[...]";
-        }
-        return answer;
-      },
-    );
+    const front = text.replace(CLOZE_RE, (_, num, answer, hint) => {
+      if (Number(num) === n) {
+        return hint ? `[${hint}]` : "[...]";
+      }
+      return answer;
+    });
     return { front, back };
   });
 }

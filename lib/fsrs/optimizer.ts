@@ -132,11 +132,8 @@ export async function optimizeUserParameters(userId: string): Promise<{
   }
 
   // Dynamic import to keep the native binary out of edge runtime bundles
-  const {
-    computeParameters,
-    FSRSBindingItem,
-    FSRSBindingReview,
-  } = await import("@open-spaced-repetition/binding");
+  const { computeParameters, FSRSBindingItem, FSRSBindingReview } =
+    await import("@open-spaced-repetition/binding");
 
   // Convert plain data to binding class instances
   const bindingItems = validItems.map(

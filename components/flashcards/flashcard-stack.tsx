@@ -1,14 +1,17 @@
 "use client";
 
+import { ChevronRight } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronRight } from "lucide-react";
 import { QuestionReportForm } from "@/components/feedback/question-report-form";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useTTS } from "@/hooks/use-tts";
-import { isExtraDuplicate, stripFrontFromAnswer } from "@/lib/flashcards/strip-front-from-answer";
+import {
+  isExtraDuplicate,
+  stripFrontFromAnswer,
+} from "@/lib/flashcards/strip-front-from-answer";
 import type { UserCardState } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 import { FlashcardProgress } from "./flashcard-progress";
@@ -137,7 +140,15 @@ export function FlashcardStack({
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
-    [currentIndex, flashcards, ratings, onGrade, onComplete, onIndexChange, onFlipChange],
+    [
+      currentIndex,
+      flashcards,
+      ratings,
+      onGrade,
+      onComplete,
+      onIndexChange,
+      onFlipChange,
+    ],
   );
 
   // Rate signal — grade from parent
@@ -188,7 +199,9 @@ export function FlashcardStack({
     stopAutoPlayRef.current = true;
     const container = backCardRef.current;
     if (container) {
-      for (const audio of container.querySelectorAll<HTMLAudioElement>("audio[data-inline-audio]")) {
+      for (const audio of container.querySelectorAll<HTMLAudioElement>(
+        "audio[data-inline-audio]",
+      )) {
         audio.pause();
         audio.currentTime = 0;
       }
@@ -196,7 +209,6 @@ export function FlashcardStack({
   }, []);
 
   // Stop TTS + auto-play on card change, then auto-read question if enabled
-  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on card change
   useEffect(() => {
     stopTTS();
     stopAutoPlay();
@@ -206,7 +218,6 @@ export function FlashcardStack({
   }, [currentIndex]);
 
   // Auto-play inline audio when card flips to back
-  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on flip/index change
   useEffect(() => {
     if (!isFlipped) {
       stopAutoPlay();
@@ -219,7 +230,9 @@ export function FlashcardStack({
     const timeout = setTimeout(() => {
       // Only auto-play audio NOT inside collapsed <details> (avoids duplicates in "Learn More")
       const audios = Array.from(
-        container.querySelectorAll<HTMLAudioElement>("audio[data-inline-audio]"),
+        container.querySelectorAll<HTMLAudioElement>(
+          "audio[data-inline-audio]",
+        ),
       ).filter((a) => !a.closest("details:not([open])"));
       if (audios.length === 0) return;
 
@@ -250,9 +263,12 @@ export function FlashcardStack({
   const questionText =
     locale === "es" ? current.question_es : current.question_en;
   const rawAnswer = locale === "es" ? current.answer_es : current.answer_en;
-  const answer = rawAnswer ? stripFrontFromAnswer(rawAnswer, questionText) : rawAnswer;
+  const answer = rawAnswer
+    ? stripFrontFromAnswer(rawAnswer, questionText)
+    : rawAnswer;
   const rawExtra = locale === "es" ? current.extra_es : current.extra_en;
-  const extra = rawExtra && answer && isExtraDuplicate(answer, rawExtra) ? null : rawExtra;
+  const extra =
+    rawExtra && answer && isExtraDuplicate(answer, rawExtra) ? null : rawExtra;
 
   const handleFlip = () => {
     stopTTS();
@@ -291,7 +307,6 @@ export function FlashcardStack({
       />
 
       {/* Flashcard */}
-      {/* biome-ignore lint/a11y/useSemanticElements: div needed for 3D perspective container */}
       <div
         role="button"
         tabIndex={0}
@@ -315,31 +330,56 @@ export function FlashcardStack({
               ref={questionRef}
               className={cn(
                 "text-lg font-semibold mb-4 transition-colors duration-200",
-                playingEl === questionRef.current && "bg-[hsl(var(--primary)/0.10)] rounded-md px-2 -mx-2",
+                playingEl === questionRef.current &&
+                  "bg-[hsl(var(--primary)/0.10)] rounded-md px-2 -mx-2",
               )}
             >
-              <MarkdownContent text={questionText} className="text-lg font-semibold" />
+              <MarkdownContent
+                text={questionText}
+                className="text-lg font-semibold"
+              />
             </div>
-            <p className="text-sm text-muted-foreground">{hasBeenRevealed ? tf("tapToSeeAnswer") : tf("tapToReveal")}</p>
+            <p className="text-sm text-muted-foreground">
+              {hasBeenRevealed ? tf("tapToSeeAnswer") : tf("tapToReveal")}
+            </p>
           </Card>
 
           {/* Back */}
-          <Card ref={backCardRef} className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto border-[hsl(var(--flashcard-accent)/0.2)]">
+          <Card
+            ref={backCardRef}
+            className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto border-[hsl(var(--flashcard-accent)/0.2)]"
+          >
             <div className="flex-1 space-y-3">
               {answer && (
                 <div>
                   <p className="text-sm font-medium mb-1">{tf("answer")}</p>
-                  <MarkdownContent text={answer} className="text-sm text-muted-foreground" onBlockClick={handleTTSClick} playingEl={playingEl} ttsPaused={paused} />
+                  <MarkdownContent
+                    text={answer}
+                    className="text-sm text-muted-foreground"
+                    onBlockClick={handleTTSClick}
+                    playingEl={playingEl}
+                    ttsPaused={paused}
+                  />
                 </div>
               )}
               {extra && (
-                <details key={current.id} className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)]" onClick={(e) => e.stopPropagation()}>
+                <details
+                  key={current.id}
+                  className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)]"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <summary className="pl-1 py-2 cursor-pointer text-sm font-medium text-[hsl(var(--flashcard-accent))] list-none flex items-center gap-1">
                     <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
                     {tq("learnMore")}
                   </summary>
                   <div className="pl-1 pb-3">
-                    <MarkdownContent text={extra} className="text-sm text-muted-foreground" onBlockClick={handleTTSClick} playingEl={playingEl} ttsPaused={paused} />
+                    <MarkdownContent
+                      text={extra}
+                      className="text-sm text-muted-foreground"
+                      onBlockClick={handleTTSClick}
+                      playingEl={playingEl}
+                      ttsPaused={paused}
+                    />
                   </div>
                 </details>
               )}
@@ -389,7 +429,6 @@ export function FlashcardStack({
         open={reportOpen}
         onOpenChange={setReportOpen}
       />
-
     </div>
   );
 }

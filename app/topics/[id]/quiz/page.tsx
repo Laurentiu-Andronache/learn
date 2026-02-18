@@ -4,10 +4,7 @@ import { QuizSession } from "@/components/quiz/quiz-session";
 import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
-import {
-  isUuidParam,
-  resolveTopicSelect,
-} from "@/lib/topics/resolve-topic";
+import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
 interface QuizPageProps {
@@ -25,7 +22,10 @@ function shuffleArray<T>(arr: T[]): T[] {
   return a;
 }
 
-export default async function QuizPage({ params, searchParams }: QuizPageProps) {
+export default async function QuizPage({
+  params,
+  searchParams,
+}: QuizPageProps) {
   const { id } = await params;
   const { mode } = await searchParams;
   const supabase = await createClient();

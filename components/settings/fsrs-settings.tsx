@@ -5,31 +5,24 @@ import { useTranslations } from "next-intl";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import {
-  optimizeFsrsParameters,
-  resetFsrsWeights,
-} from "@/lib/fsrs/actions";
+import { optimizeFsrsParameters, resetFsrsWeights } from "@/lib/fsrs/actions";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
 import { updateFsrsSettings } from "@/lib/services/user-preferences";
 
-const DEFAULTS: Omit<FsrsSettings, "fsrs_weights" | "fsrs_weights_updated_at"> = {
-  desired_retention: 0.9,
-  max_review_interval: 36500,
-  new_cards_per_day: 10,
-  new_cards_ramp_up: true,
-  show_review_time: true,
-  read_questions_aloud: false,
-};
+const DEFAULTS: Omit<FsrsSettings, "fsrs_weights" | "fsrs_weights_updated_at"> =
+  {
+    desired_retention: 0.9,
+    max_review_interval: 36500,
+    new_cards_per_day: 10,
+    new_cards_ramp_up: true,
+    show_review_time: true,
+    read_questions_aloud: false,
+  };
 
 interface FsrsSettingsCardProps {
   userId: string;
@@ -37,7 +30,11 @@ interface FsrsSettingsCardProps {
   reviewCount: number;
 }
 
-export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettingsCardProps) {
+export function FsrsSettingsCard({
+  userId,
+  settings,
+  reviewCount,
+}: FsrsSettingsCardProps) {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
   const [retention, setRetention] = useState(settings.desired_retention);
@@ -48,7 +45,9 @@ export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettings
   const [readAloud, setReadAloud] = useState(settings.read_questions_aloud);
   const [saving, setSaving] = useState(false);
 
-  const [weightsUpdatedAt, setWeightsUpdatedAt] = useState(settings.fsrs_weights_updated_at);
+  const [weightsUpdatedAt, setWeightsUpdatedAt] = useState(
+    settings.fsrs_weights_updated_at,
+  );
   const [optimizing, setOptimizing] = useState(false);
 
   const handleSave = useCallback(async () => {
@@ -68,7 +67,17 @@ export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettings
     } finally {
       setSaving(false);
     }
-  }, [userId, retention, maxInterval, newCards, rampUp, showIntervals, readAloud, t, tc]);
+  }, [
+    userId,
+    retention,
+    maxInterval,
+    newCards,
+    rampUp,
+    showIntervals,
+    readAloud,
+    t,
+    tc,
+  ]);
 
   const handleReset = useCallback(() => {
     setRetention(DEFAULTS.desired_retention);
@@ -87,7 +96,9 @@ export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettings
         setWeightsUpdatedAt(new Date().toISOString());
         toast.success(t("optimizer.optimized"));
       } else if (result.error === "not_enough_reviews") {
-        toast.error(t("optimizer.needMoreReviews", { count: reviewCount, threshold: 50 }));
+        toast.error(
+          t("optimizer.needMoreReviews", { count: reviewCount, threshold: 50 }),
+        );
       } else {
         toast.error(tc("error"));
       }
@@ -163,7 +174,10 @@ export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettings
           </div>
           {!canOptimize && (
             <p className="text-xs text-muted-foreground">
-              {t("optimizer.needMoreReviews", { count: reviewCount, threshold: 50 })}
+              {t("optimizer.needMoreReviews", {
+                count: reviewCount,
+                threshold: 50,
+              })}
             </p>
           )}
         </div>
@@ -225,11 +239,7 @@ export function FsrsSettingsCard({ userId, settings, reviewCount }: FsrsSettings
               {t("rampUpDescription")}
             </p>
           </div>
-          <Switch
-            id="rampUp"
-            checked={rampUp}
-            onCheckedChange={setRampUp}
-          />
+          <Switch id="rampUp" checked={rampUp} onCheckedChange={setRampUp} />
         </div>
 
         {/* New Cards Per Day */}

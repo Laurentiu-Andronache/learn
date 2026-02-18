@@ -130,7 +130,9 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-2xl bg-muted rounded-full p-2">{topic.icon}</span>
+              <span className="text-2xl bg-muted rounded-full p-2">
+                {topic.icon}
+              </span>
               <h3 className="font-semibold text-lg leading-tight">{title}</h3>
             </div>
             <DropdownMenu
@@ -240,7 +242,9 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
               </Badge>
             )}
             {progress?.fullyMemorized && (
-              <Badge className="bg-progress-mastered/15 text-progress-mastered border-progress-mastered/30 border">{t("fullyMemorized")}</Badge>
+              <Badge className="bg-progress-mastered/15 text-progress-mastered border-progress-mastered/30 border">
+                {t("fullyMemorized")}
+              </Badge>
             )}
           </div>
         </CardContent>

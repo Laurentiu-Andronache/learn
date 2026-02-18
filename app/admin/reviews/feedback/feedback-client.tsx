@@ -27,7 +27,12 @@ function shortenUrl(url: string): string {
   try {
     const u = new URL(url);
     // Replace UUIDs with "..."
-    return u.pathname.replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "...") + u.search;
+    return (
+      u.pathname.replace(
+        /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
+        "...",
+      ) + u.search
+    );
   } catch {
     return url;
   }

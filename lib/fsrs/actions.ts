@@ -1,7 +1,7 @@
 "use server";
 
-import type { Grade } from "ts-fsrs";
 import { after } from "next/server";
+import type { Grade } from "ts-fsrs";
 import { createNewCard, fromCard, toCard } from "@/lib/fsrs/card-mapper";
 import {
   MIN_REVIEWS_FOR_OPTIMIZATION,
@@ -382,7 +382,9 @@ export async function findNextTopic(
 /** Reviews required since last optimization before auto-re-optimizing */
 const AUTO_REOPTIMIZE_REVIEWS = 100;
 
-export async function optimizeFsrsParameters(userId: string): Promise<
+export async function optimizeFsrsParameters(
+  userId: string,
+): Promise<
   | { success: true; weights: number[]; reviewCount: number }
   | { success: false; error: string; reviewCount?: number }
 > {

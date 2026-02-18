@@ -4,6 +4,9 @@
  */
 
 import JSZip from "jszip";
+import { importAnkiDeck } from "./anki-db-insert";
+import { processAllMedia, rewriteMediaRefs } from "./anki-media";
+import { parseApkg } from "./anki-parser";
 import type {
   AnkiImportOptions,
   AnkiImportResult,
@@ -11,10 +14,7 @@ import type {
   ProcessedMedia,
 } from "./anki-types";
 import { IMPORT_LIMITS } from "./anki-types";
-import { parseApkg } from "./anki-parser";
 import { parseCrowdAnki } from "./crowdanki-parser";
-import { processAllMedia, rewriteMediaRefs } from "./anki-media";
-import { importAnkiDeck } from "./anki-db-insert";
 
 type DeckFormat = "apkg" | "crowdanki" | "unknown";
 
@@ -114,7 +114,7 @@ export async function importAnkiFile(
 
   // Process and upload media
   let mediaUploaded = 0;
-  let mediaMap = new Map<string, ProcessedMedia>();
+  const mediaMap = new Map<string, ProcessedMedia>();
 
   if (parsed.mediaFiles.size > 0) {
     // We need a topic ID for media storage path - generate a temp one,

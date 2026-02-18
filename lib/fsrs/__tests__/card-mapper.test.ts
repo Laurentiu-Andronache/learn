@@ -159,14 +159,16 @@ describe("card-mapper", () => {
       expect(db.learning_steps).toBe(4);
     });
 
-    it.each(["new", "learning", "review", "relearning"] as const)(
-      "roundtrip preserves learning_steps for state '%s'",
-      (state) => {
-        const original = makeDbState({ state, learning_steps: 2 });
-        const roundtripped = fromCard(toCard(original));
-        expect(roundtripped.learning_steps).toBe(2);
-      },
-    );
+    it.each([
+      "new",
+      "learning",
+      "review",
+      "relearning",
+    ] as const)("roundtrip preserves learning_steps for state '%s'", (state) => {
+      const original = makeDbState({ state, learning_steps: 2 });
+      const roundtripped = fromCard(toCard(original));
+      expect(roundtripped.learning_steps).toBe(2);
+    });
 
     it("createNewCard() has learning_steps: 0", () => {
       const card = createNewCard();

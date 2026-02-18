@@ -69,7 +69,6 @@ export function QuizCard({
   }
 
   // Stop TTS on question change, then auto-read if enabled
-  // biome-ignore lint/correctness/useExhaustiveDependencies: trigger on question change
   useEffect(() => {
     stopTTS();
     if (readQuestionsAloud && questionRef.current) {
@@ -87,7 +86,6 @@ export function QuizCard({
   const correctIdx = question.correct_index ?? 0;
 
   // Shuffle once per question (not true/false)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentionally re-shuffle only when question changes
   const shuffled = useMemo(() => {
     if (question.type === "true_false") {
       return { options: rawOptions, correctIndex: correctIdx };
@@ -148,9 +146,15 @@ export function QuizCard({
           className={cn(
             "text-xl font-semibold leading-relaxed transition-colors duration-200",
             readQuestionsAloud && "cursor-pointer",
-            playingEl === questionRef.current && "bg-[hsl(var(--primary)/0.10)] rounded-md px-1 -mx-1",
+            playingEl === questionRef.current &&
+              "bg-[hsl(var(--primary)/0.10)] rounded-md px-1 -mx-1",
           )}
-          onClick={readQuestionsAloud ? () => questionRef.current && handleBlockClick(questionRef.current) : undefined}
+          onClick={
+            readQuestionsAloud
+              ? () =>
+                  questionRef.current && handleBlockClick(questionRef.current)
+              : undefined
+          }
         >
           {questionText}
         </p>
@@ -161,7 +165,8 @@ export function QuizCard({
             const isSelected = selectedIndex === i;
             const isCorrectOption = i === shuffled.correctIndex;
             const showResult = phase === "feedback";
-            const isWrongSelected = showResult && isSelected && !isCorrectOption;
+            const isWrongSelected =
+              showResult && isSelected && !isCorrectOption;
 
             return (
               <button
@@ -238,7 +243,13 @@ export function QuizCard({
             {/* Explanation */}
             {explanation && (
               <div className="rounded-lg bg-muted p-4">
-                <MarkdownContent text={explanation} className="text-sm leading-relaxed" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
+                <MarkdownContent
+                  text={explanation}
+                  className="text-sm leading-relaxed"
+                  onBlockClick={handleBlockClick}
+                  playingEl={playingEl}
+                  ttsPaused={paused}
+                />
               </div>
             )}
 
@@ -249,7 +260,13 @@ export function QuizCard({
                   {t("learnMore")}
                 </summary>
                 <div className="px-4 pb-3 text-sm leading-relaxed">
-                  <MarkdownContent text={extra} className="text-sm leading-relaxed" onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
+                  <MarkdownContent
+                    text={extra}
+                    className="text-sm leading-relaxed"
+                    onBlockClick={handleBlockClick}
+                    playingEl={playingEl}
+                    ttsPaused={paused}
+                  />
                 </div>
               </details>
             )}

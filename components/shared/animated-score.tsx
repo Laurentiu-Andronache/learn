@@ -9,7 +9,11 @@ interface AnimatedScoreProps {
   showRing?: boolean;
 }
 
-export function AnimatedScore({ value, className, showRing = false }: AnimatedScoreProps) {
+export function AnimatedScore({
+  value,
+  className,
+  showRing = false,
+}: AnimatedScoreProps) {
   const [display, setDisplay] = useState(0);
   const rafRef = useRef<number | null>(null);
   const startRef = useRef<number>(0);
@@ -40,21 +44,32 @@ export function AnimatedScore({ value, className, showRing = false }: AnimatedSc
   const strokeDashoffset = circumference - (circumference * display) / 100;
 
   return (
-    <div className={cn(
-      "relative inline-flex items-center justify-center",
-      showRing && "w-[120px] h-[120px]",
-      className
-    )}>
+    <div
+      className={cn(
+        "relative inline-flex items-center justify-center",
+        showRing && "w-[120px] h-[120px]",
+        className,
+      )}
+    >
       {showRing && (
-        <svg className="absolute -rotate-90" width="120" height="120" viewBox="0 0 100 100">
+        <svg
+          className="absolute -rotate-90"
+          width="120"
+          height="120"
+          viewBox="0 0 100 100"
+        >
           <circle
-            cx="50" cy="50" r="45"
+            cx="50"
+            cy="50"
+            r="45"
             fill="none"
             stroke="hsl(var(--muted))"
             strokeWidth="6"
           />
           <circle
-            cx="50" cy="50" r="45"
+            cx="50"
+            cy="50"
+            r="45"
             fill="none"
             stroke="hsl(var(--primary))"
             strokeWidth="6"
@@ -65,7 +80,12 @@ export function AnimatedScore({ value, className, showRing = false }: AnimatedSc
           />
         </svg>
       )}
-      <span className={cn("font-display font-bold tabular-nums", showRing ? "text-4xl" : "text-5xl")}>
+      <span
+        className={cn(
+          "font-display font-bold tabular-nums",
+          showRing ? "text-4xl" : "text-5xl",
+        )}
+      >
         {display}%
       </span>
     </div>

@@ -3,8 +3,8 @@
 import { createContext, useContext, useMemo, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { GlossaryTerm } from "@/components/reading/glossary-term";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { preprocessTooltips } from "@/lib/markdown/preprocess-tooltips";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +64,7 @@ function TTSBlock({
   children: React.ReactNode;
   className?: string;
 }) {
-  const { onBlockClick, playingEl, ttsPaused } = useContext(TTSContext);
+  const { onBlockClick, playingEl } = useContext(TTSContext);
   const ref = useRef<HTMLSpanElement>(null);
   const isActive = playingEl !== null && ref.current === playingEl;
 
@@ -104,9 +104,7 @@ const markdownComponents = {
     children?: React.ReactNode;
   }) => {
     if (href === "tooltip" && title) {
-      return (
-        <GlossaryTerm term={String(children)} explanation={title} />
-      );
+      return <GlossaryTerm term={String(children)} explanation={title} />;
     }
     // Inline audio player for [audio](url) links from Anki imports
     if (String(children) === "audio" && href && !href.startsWith("tooltip")) {
@@ -144,21 +142,21 @@ const markdownComponents = {
     </TTSBlock>
   ),
   h5: ({ children }: { children?: React.ReactNode }) => (
-    <TTSBlock className="text-sm font-semibold mt-3 mb-1">
-      {children}
-    </TTSBlock>
+    <TTSBlock className="text-sm font-semibold mt-3 mb-1">{children}</TTSBlock>
   ),
   h6: ({ children }: { children?: React.ReactNode }) => (
-    <TTSBlock className="text-sm font-semibold mt-2 mb-1">
-      {children}
-    </TTSBlock>
+    <TTSBlock className="text-sm font-semibold mt-2 mb-1">{children}</TTSBlock>
   ),
   li: ({ children }: { children?: React.ReactNode }) => (
     <TTSBlock className="list-item">{children}</TTSBlock>
   ),
   img: ({ src, alt }: { src?: string | Blob; alt?: string }) => (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={typeof src === "string" ? src : undefined} alt={alt ?? ""} className="max-w-full max-h-64 rounded-md mx-auto my-2" loading="lazy" />
+    <img
+      src={typeof src === "string" ? src : undefined}
+      alt={alt ?? ""}
+      className="max-w-full max-h-64 rounded-md mx-auto my-2"
+      loading="lazy"
+    />
   ),
 };
 

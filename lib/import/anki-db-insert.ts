@@ -88,9 +88,7 @@ export async function importAnkiDeck(
         difficulty: 5,
       }));
 
-      const { error: fcErr } = await supabase
-        .from("flashcards")
-        .insert(rows);
+      const { error: fcErr } = await supabase.from("flashcards").insert(rows);
 
       if (fcErr) {
         warnings.push(

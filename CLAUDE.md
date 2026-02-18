@@ -137,7 +137,11 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 
 **Animation**: Static `bg-[hsl(var(--primary)/0.10)]` highlight on playing paragraph (no pulse/flash).
 
+**Race condition fix**: `requestIdRef` counter in `useTTS` — `stop()` increments it (invalidating in-flight requests), `handleBlockClick` captures it after `stop()` and bails out after each async step if stale. Prevents dual audio streams from overlapping fetch results.
+
 **Auto-Read Questions**: `read_questions_aloud` profile setting (default false). When enabled, questions are auto-read via `handleBlockClick(ref)` on appear. Quiz: auto-read on question change + click question to pause/resume. Flashcard: auto-read on front side, stop on flip (no click-to-control — would conflict with card flip handler). Setting in `/settings` study settings card.
+
+**Auto-play inline audio**: Flashcard back side auto-plays `audio[data-inline-audio]` elements sequentially after flip (350ms delay for animation). `InlineAudioPlayer` in `markdown-content.tsx` uses event-based state sync (`onPlay`/`onPause`/`onEnded`) so external `.play()` calls keep UI in sync. Auto-play scoped to exclude `details:not([open])` to avoid playing duplicate audio in collapsed "Learn More".
 
 ## Topic Visibility
 
@@ -167,6 +171,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/fsrs/optimizer.ts` — `optimizeUserParameters()`, `transformReviewLogs()`
 - `components/admin/topic-visibility-toggle.tsx` — Public/Private switch for admin topics list
 - `lib/services/admin-topics.ts` — `toggleTopicVisibility` server action
+- `lib/flashcards/strip-front-from-answer.ts` — `stripFrontFromAnswer` (Anki `{{FrontSide}}` dedup), `isExtraDuplicate` (audio URL + word overlap detection)
 
 ## Admin Editing (shared components)
 
@@ -248,8 +253,18 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `components/flashcards/flashcard-logic.test.ts` | 17 | 4-point grading, stack advance, categories |
 | `lib/markdown/__tests__/preprocess-tooltips.test.ts` | 12 | Tooltip syntax conversion, escaping, code block skipping |
 | `lib/fsrs/__tests__/fsrs6-verification.test.ts` | 1 | FSRS-6 default params verification |
+| `lib/flashcards/__tests__/strip-front-from-answer.test.ts` | 11 | Anki answer dedup, extra duplicate detection |
 
-**Total: 231+ tests across 21+ test files.**
+**Total: 334 tests across 24 test files.**
+
+## Anki Import Cleanup
+
+Anki templates often produce duplicate content in imported flashcards:
+- **Answer dedup**: `stripFrontFromAnswer(answer, question)` strips `{{FrontSide}}<hr>` pattern (question repeated before `---` separator)
+- **Extra dedup**: `isExtraDuplicate(answer, extra)` detects when extra is a rearranged duplicate (same audio URLs, or >80% word overlap) — hides "Learn More" section
+- Applied in `flashcard-stack.tsx` at render time (no DB mutation)
+
+**Imported topic detection**: `app/topics/[id]/page.tsx` hides Quiz/Reading/Tips sections when topic has no quiz questions AND no reading content (`isImportedStyle`). No DB migration needed.
 
 ## UX Patterns
 
@@ -280,3 +295,4 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 - All env vars must be set in both `.env.local` and Vercel dashboard
 - See `CLAUDE-supabase.md` for migration troubleshooting
 - `proxy.ts` is the correct Next.js 16 convention (replaces `middleware.ts`)
+- **Vercel peer dep conflicts**: `.npmrc` has `legacy-peer-deps=true` because `anki-reader@0.3.0` declares `peer typescript@"^4.0.0"` (stale, works fine with TS5). Without this, Vercel's strict `npm install` fails with ERESOLVE.

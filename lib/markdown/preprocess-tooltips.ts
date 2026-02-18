@@ -17,7 +17,7 @@ export function preprocessTooltips(markdown: string): string {
           if (!term.trim() || !explanation.trim()) return match;
           const escaped = explanation.replace(/"/g, "&quot;");
           return `[${term}](tooltip "${escaped}")`;
-        }
+        },
       );
     })
     .join("");

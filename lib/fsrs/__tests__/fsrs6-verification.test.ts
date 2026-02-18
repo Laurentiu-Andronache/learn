@@ -1,5 +1,5 @@
-import { describe, expect, test } from "vitest";
 import { generatorParameters } from "ts-fsrs";
+import { describe, expect, test } from "vitest";
 
 describe("FSRS-6 verification", () => {
   test("default parameters use FSRS-6 (21 weights)", () => {

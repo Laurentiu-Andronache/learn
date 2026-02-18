@@ -35,13 +35,13 @@ vi.mock("@/lib/topics/topic-flashcard-ids", () => ({
   getFlashcardIdsForTopic: vi.fn(() => Promise.resolve(["f1", "f2"])),
 }));
 
+import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 import {
   buryFlashcard,
   resetTodayProgress,
   scheduleFlashcardReview,
   undoLastReview,
 } from "../actions";
-import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -50,7 +50,7 @@ beforeEach(() => {
 // ─── Helpers ─────────────────────────────────────────────────────────
 
 /** Build a chained mock: from(table).method(...).method2(...)... */
-function chainMock(resolvedValue: unknown) {
+function _chainMock(resolvedValue: unknown) {
   return {
     eq: vi.fn().mockReturnValue({
       eq: vi.fn().mockReturnValue({
@@ -68,7 +68,9 @@ describe("scheduleFlashcardReview", () => {
       data: { id: "cs-new" },
       error: null,
     });
-    const insertSelect = vi.fn().mockReturnValue({ single: insertSelectSingle });
+    const insertSelect = vi
+      .fn()
+      .mockReturnValue({ single: insertSelectSingle });
     const insertFn = vi.fn().mockReturnValue({ select: insertSelect });
 
     const reviewInsert = vi.fn().mockResolvedValue({ error: null });
@@ -132,7 +134,9 @@ describe("scheduleFlashcardReview", () => {
       data: { id: "cs-1" },
       error: null,
     });
-    const updateSelect = vi.fn().mockReturnValue({ single: updateSelectSingle });
+    const updateSelect = vi
+      .fn()
+      .mockReturnValue({ single: updateSelectSingle });
     const updateEq = vi.fn().mockReturnValue({ select: updateSelect });
     const updateFn = vi.fn().mockReturnValue({ eq: updateEq });
 
@@ -195,7 +199,9 @@ describe("scheduleFlashcardReview", () => {
       data: { id: "cs-1" },
       error: null,
     });
-    const updateSelect = vi.fn().mockReturnValue({ single: updateSelectSingle });
+    const updateSelect = vi
+      .fn()
+      .mockReturnValue({ single: updateSelectSingle });
     const updateEq = vi.fn().mockReturnValue({ select: updateSelect });
     const updateFn = vi.fn().mockReturnValue({ eq: updateEq });
 
@@ -255,7 +261,9 @@ describe("scheduleFlashcardReview", () => {
       data: { id: "cs-1" },
       error: null,
     });
-    const updateSelect = vi.fn().mockReturnValue({ single: updateSelectSingle });
+    const updateSelect = vi
+      .fn()
+      .mockReturnValue({ single: updateSelectSingle });
     const updateEq = vi.fn().mockReturnValue({ select: updateSelect });
     const updateFn = vi.fn().mockReturnValue({ eq: updateEq });
 
@@ -323,9 +331,9 @@ describe("scheduleFlashcardReview", () => {
       return {};
     });
 
-    await expect(
-      scheduleFlashcardReview("user-1", "f1", 3),
-    ).rejects.toThrow("Failed to insert card state: insert failed");
+    await expect(scheduleFlashcardReview("user-1", "f1", 3)).rejects.toThrow(
+      "Failed to insert card state: insert failed",
+    );
   });
 });
 

@@ -40,7 +40,9 @@ export async function translateTopicContent(
   // Get all flashcards
   const { data: flashcards } = await supabase
     .from("flashcards")
-    .select("id, question_en, question_es, answer_en, answer_es, extra_en, extra_es")
+    .select(
+      "id, question_en, question_es, answer_en, answer_es, extra_en, extra_es",
+    )
     .in("category_id", categoryIds);
 
   if (!flashcards?.length) return;
@@ -51,7 +53,9 @@ export async function translateTopicContent(
 
     const toTranslate = batch.map((fc) => ({
       id: fc.id,
-      question: (sourceLang === "en" ? fc.question_en : fc.question_es) as string,
+      question: (sourceLang === "en"
+        ? fc.question_en
+        : fc.question_es) as string,
       answer: (sourceLang === "en" ? fc.answer_en : fc.answer_es) as string,
       extra: (sourceLang === "en" ? fc.extra_en : fc.extra_es) as string | null,
     }));
@@ -83,7 +87,9 @@ Return ONLY a valid JSON array matching the input structure.`,
 
       const data = await res.json();
       const text: string = data.content?.[0]?.text ?? "";
-      const jsonStr = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+      const jsonStr = text
+        .replace(/^```(?:json)?\s*/, "")
+        .replace(/\s*```$/, "");
       const translated = JSON.parse(jsonStr) as {
         id: string;
         question: string;
@@ -120,8 +126,12 @@ Return ONLY a valid JSON array matching the input structure.`,
       .single();
 
     if (topic) {
-      const title = (sourceLang === "en" ? topic.title_en : topic.title_es) as string;
-      const desc = (sourceLang === "en" ? topic.description_en : topic.description_es) as string | null;
+      const title = (
+        sourceLang === "en" ? topic.title_en : topic.title_es
+      ) as string;
+      const desc = (
+        sourceLang === "en" ? topic.description_en : topic.description_es
+      ) as string | null;
 
       const res = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",
@@ -146,7 +156,9 @@ Return ONLY a valid JSON array matching the input structure.`,
       if (res.ok) {
         const data = await res.json();
         const text: string = data.content?.[0]?.text ?? "";
-        const jsonStr = text.replace(/^```(?:json)?\s*/, "").replace(/\s*```$/, "");
+        const jsonStr = text
+          .replace(/^```(?:json)?\s*/, "")
+          .replace(/\s*```$/, "");
         const translated = JSON.parse(jsonStr);
 
         await supabase
@@ -171,7 +183,9 @@ Return ONLY a valid JSON array matching the input structure.`,
 
     if (cats?.length) {
       for (const cat of cats) {
-        const name = (sourceLang === "en" ? cat.name_en : cat.name_es) as string;
+        const name = (
+          sourceLang === "en" ? cat.name_en : cat.name_es
+        ) as string;
         const res = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: {
@@ -183,9 +197,7 @@ Return ONLY a valid JSON array matching the input structure.`,
             model,
             max_tokens: 256,
             system: `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY the translated text, nothing else.`,
-            messages: [
-              { role: "user", content: name },
-            ],
+            messages: [{ role: "user", content: name }],
           }),
         });
 

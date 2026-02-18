@@ -233,7 +233,8 @@ export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
     .single();
   if (error || !data) return { ...FSRS_DEFAULTS };
   return {
-    desired_retention: data.desired_retention ?? FSRS_DEFAULTS.desired_retention,
+    desired_retention:
+      data.desired_retention ?? FSRS_DEFAULTS.desired_retention,
     max_review_interval:
       data.max_review_interval ?? FSRS_DEFAULTS.max_review_interval,
     new_cards_per_day:

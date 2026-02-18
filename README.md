@@ -26,6 +26,8 @@ A bilingual (EN/ES) quiz and flashcard application with FSRS spaced repetition f
 - **Profiles**: Independent progress for multiple users
 - **RLS Security**: Row-level security for all user data
 - **SEO**: Dynamic OG images, structured data, sitemap, canonical URLs
+- **Anki Import**: Upload `.apkg` decks with automatic media extraction, template rendering, and duplicate detection
+- **Text-to-Speech**: Click/tap any paragraph to hear it read aloud via ElevenLabs (reading mode, flashcard answers, quiz explanations)
 - **Responsive**: Works on mobile, tablet, and desktop
 
 ## Architecture
@@ -173,7 +175,7 @@ Vitest configured with jsdom + @testing-library/react. Run:
 npm run test
 ```
 
-175 tests across 15 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, flashcard grading, and glossary tooltip processing. The MCP server has an additional 175 tests across 9 test files.
+334 tests across 24 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, flashcard grading, glossary tooltip processing, Anki import cleanup, and optimizer integration. The MCP server has an additional 175 tests across 9 test files.
 
 ## Deployment
 

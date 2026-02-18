@@ -35,7 +35,7 @@ export function ReadingView({
 }: ReadingViewProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
-  const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
+  const { playingEl, paused, handleBlockClick } = useTTS();
 
   const title = locale === "es" ? topic.title_es : topic.title_en;
   const rawContent =
@@ -76,7 +76,12 @@ export function ReadingView({
 
         {rawContent ? (
           <article className="prose prose-sm dark:prose-invert max-w-none prose-headings:font-semibold prose-p:leading-7 prose-pre:bg-muted prose-pre:border prose-code:text-sm prose-code:before:content-none prose-code:after:content-none prose-a:text-reading-accent">
-            <MarkdownContent text={rawContent} onBlockClick={handleBlockClick} playingEl={playingEl} ttsPaused={paused} />
+            <MarkdownContent
+              text={rawContent}
+              onBlockClick={handleBlockClick}
+              playingEl={playingEl}
+              ttsPaused={paused}
+            />
           </article>
         ) : (
           <p className="text-muted-foreground text-center py-12">

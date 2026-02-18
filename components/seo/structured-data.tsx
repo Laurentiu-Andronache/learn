@@ -11,7 +11,6 @@ interface StructuredDataProps {
   locale: string;
 }
 
-// biome-ignore lint/correctness/noUnusedFunctionParameters: locale used for future i18n schema
 export function StructuredData({ baseUrl, locale }: StructuredDataProps) {
   const languages = ["en", "es"];
   const webSiteSchema = generateWebSiteSchema(baseUrl);

@@ -48,7 +48,10 @@ export function TopicGrid({
         <div
           key={topic.id}
           className="animate-fade-up"
-          style={{ animationDelay: `${index * 0.05}s`, animationFillMode: "backwards" }}
+          style={{
+            animationDelay: `${index * 0.05}s`,
+            animationFillMode: "backwards",
+          }}
         >
           <TopicCard
             topic={topic}

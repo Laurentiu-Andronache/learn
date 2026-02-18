@@ -9,10 +9,7 @@ import {
 } from "@/lib/fsrs/flashcard-ordering";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { createClient } from "@/lib/supabase/server";
-import {
-  isUuidParam,
-  resolveTopicSelect,
-} from "@/lib/topics/resolve-topic";
+import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
 interface FlashcardsPageProps {

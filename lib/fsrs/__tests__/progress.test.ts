@@ -23,7 +23,7 @@ function setupMocks(opts: {
   cardStates: unknown[] | null;
   suspended: unknown[] | null;
 }) {
-  let callCount = 0;
+  const _callCount = 0;
   mockSupabase.from.mockImplementation((table: string) => {
     if (table === "flashcards") {
       const returnsMock = vi.fn().mockResolvedValue({
@@ -120,8 +120,20 @@ describe("getTopicProgress", () => {
         { id: "f2", category_id: "cat-1", categories: makeCat("topic-1") },
       ],
       cardStates: [
-        { flashcard_id: "f1", state: "learning", stability: 1, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
-        { flashcard_id: "f2", state: "relearning", stability: 2, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        {
+          flashcard_id: "f1",
+          state: "learning",
+          stability: 1,
+          due: "2020-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
+        {
+          flashcard_id: "f2",
+          state: "relearning",
+          stability: 2,
+          due: "2020-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
       ],
       suspended: [],
     });
@@ -137,8 +149,20 @@ describe("getTopicProgress", () => {
         { id: "f2", category_id: "cat-1", categories: makeCat("topic-1") },
       ],
       cardStates: [
-        { flashcard_id: "f1", state: "review", stability: 10, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-01" },
-        { flashcard_id: "f2", state: "review", stability: 50, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        {
+          flashcard_id: "f1",
+          state: "review",
+          stability: 10,
+          due: "2099-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
+        {
+          flashcard_id: "f2",
+          state: "review",
+          stability: 50,
+          due: "2099-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
       ],
       suspended: [],
     });
@@ -172,12 +196,36 @@ describe("getTopicProgress", () => {
         { id: "f4", category_id: "cat-1", categories: makeCat("topic-1") },
       ],
       cardStates: [
-        { flashcard_id: "f1", state: "review", stability: 10, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
-        { flashcard_id: "f2", state: "relearning", stability: 2, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        {
+          flashcard_id: "f1",
+          state: "review",
+          stability: 10,
+          due: "2020-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
+        {
+          flashcard_id: "f2",
+          state: "relearning",
+          stability: 2,
+          due: "2020-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
         // learning-state cards are intra-day steps, NOT counted as dueToday
-        { flashcard_id: "f3", state: "learning", stability: 1, due: "2020-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        {
+          flashcard_id: "f3",
+          state: "learning",
+          stability: 1,
+          due: "2020-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
         // future review card does NOT count as dueToday
-        { flashcard_id: "f4", state: "review", stability: 10, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        {
+          flashcard_id: "f4",
+          state: "review",
+          stability: 10,
+          due: "2099-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
       ],
       suspended: [],
     });
@@ -192,7 +240,13 @@ describe("getTopicProgress", () => {
         { id: "f1", category_id: "cat-1", categories: makeCat("topic-1") },
       ],
       cardStates: [
-        { flashcard_id: "f1", state: "review", stability: 50, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-01" },
+        {
+          flashcard_id: "f1",
+          state: "review",
+          stability: 50,
+          due: "2099-01-01T00:00:00Z",
+          updated_at: "2026-01-01",
+        },
       ],
       suspended: [],
     });
@@ -209,8 +263,20 @@ describe("getTopicProgress", () => {
         { id: "f2", category_id: "cat-1", categories: makeCat("topic-1") },
       ],
       cardStates: [
-        { flashcard_id: "f1", state: "review", stability: 10, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-10" },
-        { flashcard_id: "f2", state: "review", stability: 10, due: "2099-01-01T00:00:00Z", updated_at: "2026-01-15" },
+        {
+          flashcard_id: "f1",
+          state: "review",
+          stability: 10,
+          due: "2099-01-01T00:00:00Z",
+          updated_at: "2026-01-10",
+        },
+        {
+          flashcard_id: "f2",
+          state: "review",
+          stability: 10,
+          due: "2099-01-01T00:00:00Z",
+          updated_at: "2026-01-15",
+        },
       ],
       suspended: [],
     });

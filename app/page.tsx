@@ -29,7 +29,11 @@ export default async function HomePage() {
                 {t("landing.readyToContinue")}
               </p>
             </div>
-            <Button asChild size="lg" className="shadow-glow hover:shadow-glow-lg">
+            <Button
+              asChild
+              size="lg"
+              className="shadow-glow hover:shadow-glow-lg"
+            >
               <Link href="/topics">{t("landing.continueLearning")}</Link>
             </Button>
           </div>
@@ -53,10 +57,19 @@ export default async function HomePage() {
               </p>
             </div>
             <div className="flex flex-row gap-3 w-full max-w-sm mx-auto">
-              <Button asChild size="lg" className="flex-1 min-h-[2.75rem] shadow-glow hover:shadow-glow-lg">
+              <Button
+                asChild
+                size="lg"
+                className="flex-1 min-h-[2.75rem] shadow-glow hover:shadow-glow-lg"
+              >
                 <Link href="/auth/sign-up">{t("landing.cta")}</Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="flex-1 min-h-[2.75rem]">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="flex-1 min-h-[2.75rem]"
+              >
                 <Link href="/auth/login">{t("nav.login")}</Link>
               </Button>
             </div>
@@ -80,7 +93,13 @@ export default async function HomePage() {
               className="hover:ring-primary/20 hover:shadow-glow-sm transition-all duration-200"
               style={{ animationDelay: `${i * 0.1}s` }}
             >
-              <CardContent className="pt-6 text-center space-y-2 animate-fade-up" style={{ animationDelay: `${i * 0.1}s`, animationFillMode: "backwards" }}>
+              <CardContent
+                className="pt-6 text-center space-y-2 animate-fade-up"
+                style={{
+                  animationDelay: `${i * 0.1}s`,
+                  animationFillMode: "backwards",
+                }}
+              >
                 <div className="text-4xl">{feature.icon}</div>
                 <h3 className="font-semibold text-lg">
                   {t(`landing.features.${feature.key}.title`)}

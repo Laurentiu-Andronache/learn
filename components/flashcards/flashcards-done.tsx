@@ -13,7 +13,10 @@ interface FlashcardsDoneProps {
   effectiveLimit: number;
 }
 
-function formatTimeUntil(dueAt: string, t: ReturnType<typeof useTranslations>): string {
+function formatTimeUntil(
+  dueAt: string,
+  t: ReturnType<typeof useTranslations>,
+): string {
   const diffMs = new Date(dueAt).getTime() - Date.now();
   if (diffMs <= 0) return t("dueNow");
   const mins = Math.round(diffMs / 60000);

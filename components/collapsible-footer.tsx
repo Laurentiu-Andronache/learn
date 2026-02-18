@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import Link from "next/link";
 import { ChevronUp } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "footer-collapsed";
 const SM_BREAKPOINT = 640;
@@ -43,6 +43,7 @@ export function CollapsibleFooter({
     <footer className="border-t border-border/50">
       <div className="container flex items-center">
         <button
+          type="button"
           onClick={toggle}
           aria-label={collapsed ? showLabel : hideLabel}
           className="p-2 text-muted-foreground/50 hover:text-muted-foreground transition-colors"

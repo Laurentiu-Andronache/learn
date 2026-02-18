@@ -53,7 +53,9 @@ export function FontSizeSetting({ userId, initialSize }: FontSizeSettingProps) {
           {t("fontSizePx", { size })}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground">{t("fontSizeDescription")}</p>
+      <p className="text-xs text-muted-foreground">
+        {t("fontSizeDescription")}
+      </p>
       <Slider
         min={12}
         max={18}

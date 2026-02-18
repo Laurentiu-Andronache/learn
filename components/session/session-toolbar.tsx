@@ -136,13 +136,16 @@ export function SessionToolbar({
     onDeleteQuestion();
   };
 
-  const glowColor = mode === "flashcard"
-    ? "shadow-[0_0_10px_-3px_hsl(var(--flashcard-accent)/0.3)]"
-    : "shadow-[0_0_10px_-3px_hsl(var(--quiz-accent)/0.3)]";
+  const glowColor =
+    mode === "flashcard"
+      ? "shadow-[0_0_10px_-3px_hsl(var(--flashcard-accent)/0.3)]"
+      : "shadow-[0_0_10px_-3px_hsl(var(--quiz-accent)/0.3)]";
 
   return (
     <>
-      <div className={`mx-auto w-fit flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-lg border border-border/50 ${glowColor} px-2 py-1`}>
+      <div
+        className={`mx-auto w-fit flex items-center gap-1 rounded-full bg-background/80 backdrop-blur-lg border border-border/50 ${glowColor} px-2 py-1`}
+      >
         <TooltipProvider>
           <Button
             variant="ghost"
@@ -268,21 +271,31 @@ export function SessionToolbar({
                   <p className="font-medium mb-2">{t("helpShortcutsTitle")}</p>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
                     <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">1</kbd>
+                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
+                        1
+                      </kbd>
                       <span>{t("helpShortcutAgain")}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">2</kbd>
+                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
+                        2
+                      </kbd>
                       <span>{t("helpShortcutHard")}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">3</kbd>
+                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
+                        3
+                      </kbd>
                       <span>/</span>
-                      <kbd className="inline-flex items-center justify-center h-6 px-1.5 rounded border bg-muted text-xs font-mono">Space</kbd>
+                      <kbd className="inline-flex items-center justify-center h-6 px-1.5 rounded border bg-muted text-xs font-mono">
+                        Space
+                      </kbd>
                       <span>{t("helpShortcutGood")}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">4</kbd>
+                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
+                        4
+                      </kbd>
                       <span>{t("helpShortcutEasy")}</span>
                     </div>
                   </div>

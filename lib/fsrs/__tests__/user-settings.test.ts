@@ -18,9 +18,7 @@ vi.mock("@/lib/supabase/server", () => ({
           single: () => Promise.resolve(mockSelectResult),
           // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock for await support
           then: (resolve: (v: unknown) => void) =>
-            Promise.resolve(mockUpdateResult ?? mockSelectResult).then(
-              resolve,
-            ),
+            Promise.resolve(mockUpdateResult ?? mockSelectResult).then(resolve),
         };
         return chain;
       },

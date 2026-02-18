@@ -21,9 +21,7 @@ const BUCKET = "anki-media";
 /** Sanitize a filename for Supabase Storage (ASCII-safe, no special chars). */
 function sanitizeStorageName(name: string): string {
   // Transliterate common accented chars, then strip remaining non-ASCII
-  const transliterated = name
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, ""); // strip combining diacritical marks
+  const transliterated = name.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // strip combining diacritical marks
   // Replace non-alphanumeric (except . - _) with underscore
   return transliterated.replace(/[^a-zA-Z0-9._-]/g, "_");
 }
@@ -183,8 +181,7 @@ function extractPcm16(buf: Buffer, header: WavHeader): Int16Array {
       const offset = dataOffset + i * 3;
       // Read 24-bit signed, shift down to 16-bit
       const val =
-        (buf[offset] | (buf[offset + 1] << 8) | (buf[offset + 2] << 16)) <<
-        8;
+        (buf[offset] | (buf[offset + 1] << 8) | (buf[offset + 2] << 16)) << 8;
       samples[i] = val >> 16;
     }
     return samples;
@@ -331,9 +328,8 @@ async function withConcurrency<T, R>(
     }
   }
 
-  const workers = Array.from(
-    { length: Math.min(limit, items.length) },
-    () => worker(),
+  const workers = Array.from({ length: Math.min(limit, items.length) }, () =>
+    worker(),
   );
   await Promise.all(workers);
   return results;
@@ -349,62 +345,66 @@ export async function processAllMedia(
   const warnings: string[] = [];
   const entries = Array.from(mediaFiles.entries());
 
-  await withConcurrency(entries, IMPORT_LIMITS.mediaConcurrency, async ([filename, raw]) => {
-    try {
-      const type = detectMediaType(filename);
+  await withConcurrency(
+    entries,
+    IMPORT_LIMITS.mediaConcurrency,
+    async ([filename, raw]) => {
+      try {
+        const type = detectMediaType(filename);
 
-      if (type === "skip") {
-        warnings.push(`Skipped unsupported file: ${filename}`);
-        return;
-      }
+        if (type === "skip") {
+          warnings.push(`Skipped unsupported file: ${filename}`);
+          return;
+        }
 
-      const buf = Buffer.from(raw);
+        const buf = Buffer.from(raw);
 
-      // Size check for audio
-      if (type === "audio" && raw.length > IMPORT_LIMITS.maxAudioFileSize) {
-        warnings.push(
-          `Skipped oversized audio (${(raw.length / 1024 / 1024).toFixed(1)}MB): ${filename}`,
+        // Size check for audio
+        if (type === "audio" && raw.length > IMPORT_LIMITS.maxAudioFileSize) {
+          warnings.push(
+            `Skipped oversized audio (${(raw.length / 1024 / 1024).toFixed(1)}MB): ${filename}`,
+          );
+          return;
+        }
+
+        let processedBuffer: Buffer;
+        let processedFilename: string;
+
+        if (type === "image") {
+          const result = await optimizeImage(buf, filename);
+          processedBuffer = result.buffer;
+          processedFilename = result.filename;
+        } else if (type === "svg") {
+          // SVG passthrough
+          processedBuffer = buf;
+          processedFilename = filename;
+        } else {
+          // Audio
+          const result = await processAudio(buf, filename);
+          processedBuffer = result.buffer;
+          processedFilename = result.filename;
+        }
+
+        const storagePath = `${topicId}/${sanitizeStorageName(processedFilename)}`;
+        const contentType = contentTypeFor(processedFilename);
+        const publicUrl = await uploadToStorage(
+          new Uint8Array(processedBuffer),
+          storagePath,
+          contentType,
         );
-        return;
+
+        processed.push({
+          filename,
+          storagePath,
+          publicUrl,
+          type,
+        });
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        warnings.push(`Failed to process ${filename}: ${msg}`);
       }
-
-      let processedBuffer: Buffer;
-      let processedFilename: string;
-
-      if (type === "image") {
-        const result = await optimizeImage(buf, filename);
-        processedBuffer = result.buffer;
-        processedFilename = result.filename;
-      } else if (type === "svg") {
-        // SVG passthrough
-        processedBuffer = buf;
-        processedFilename = filename;
-      } else {
-        // Audio
-        const result = await processAudio(buf, filename);
-        processedBuffer = result.buffer;
-        processedFilename = result.filename;
-      }
-
-      const storagePath = `${topicId}/${sanitizeStorageName(processedFilename)}`;
-      const contentType = contentTypeFor(processedFilename);
-      const publicUrl = await uploadToStorage(
-        new Uint8Array(processedBuffer),
-        storagePath,
-        contentType,
-      );
-
-      processed.push({
-        filename,
-        storagePath,
-        publicUrl,
-        type,
-      });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      warnings.push(`Failed to process ${filename}: ${msg}`);
-    }
-  });
+    },
+  );
 
   return { processed, warnings };
 }
@@ -425,10 +425,7 @@ export function rewriteMediaRefs(
 
     // Replace markdown image refs: ![alt](filename) or ![](filename)
     // Replace markdown link refs: [text](filename)
-    const pattern = new RegExp(
-      `(!?\\[[^\\]]*\\])\\(${escaped}\\)`,
-      "g",
-    );
+    const pattern = new RegExp(`(!?\\[[^\\]]*\\])\\(${escaped}\\)`, "g");
     result = result.replace(pattern, `$1(${media.publicUrl})`);
 
     // Also handle bare <img src="filename"> style refs
@@ -439,10 +436,7 @@ export function rewriteMediaRefs(
     result = result.replace(imgPattern, `$1${media.publicUrl}$2`);
 
     // Handle [sound:filename] Anki-style audio refs (converted to markdown links)
-    const soundPattern = new RegExp(
-      `\\[sound:${escaped}\\]`,
-      "g",
-    );
+    const soundPattern = new RegExp(`\\[sound:${escaped}\\]`, "g");
     result = result.replace(soundPattern, `[audio](${media.publicUrl})`);
   }
 

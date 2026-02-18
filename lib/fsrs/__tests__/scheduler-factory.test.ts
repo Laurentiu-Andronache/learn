@@ -1,11 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createNewCard, fromCard } from "../card-mapper";
+import { createNewCard } from "../card-mapper";
 import { createUserScheduler, fsrs, Rating, State } from "../scheduler";
 
 describe("createUserScheduler", () => {
   it("lower retention (0.80) produces longer intervals than higher retention (0.90) for Good", () => {
     const card = createNewCard();
-    const now = new Date();
 
     // Progress card to Review state with default scheduler
     let current = card;

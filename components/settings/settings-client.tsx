@@ -82,7 +82,9 @@ export function SettingsClient({
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
   const router = useRouter();
-  const [suspendedCount, setSuspendedCount] = useState(suspendedFlashcards.length);
+  const [suspendedCount, setSuspendedCount] = useState(
+    suspendedFlashcards.length,
+  );
   const [hiddenCount, setHiddenCount] = useState(hiddenTopics.length);
 
   return (
@@ -157,7 +159,11 @@ export function SettingsClient({
 
       {/* Study Settings */}
       {fsrsSettings && (
-        <FsrsSettingsCard userId={userId} settings={fsrsSettings} reviewCount={reviewCount} />
+        <FsrsSettingsCard
+          userId={userId}
+          settings={fsrsSettings}
+          reviewCount={reviewCount}
+        />
       )}
 
       {/* Suspended Flashcards */}

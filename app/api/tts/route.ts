@@ -1,4 +1,4 @@
-import { createHash } from "crypto";
+import { createHash } from "node:crypto";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
@@ -18,7 +18,8 @@ const SILENCE_MP3 = Buffer.from(
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 // LEARN_SERVICE_ROLE_KEY avoids collision with ~/.bashrc SUPABASE_SERVICE_ROLE_KEY (Launcher project)
-const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ??
+  process.env.SUPABASE_SERVICE_ROLE_KEY)!;
 
 // In-memory rate limiter: userId → timestamps[]
 const rateLimits = new Map<string, number[]>();
@@ -100,9 +101,7 @@ export async function POST(request: Request) {
   }
 
   // Cache key: SHA-256(voiceId:text)
-  const hash = createHash("sha256")
-    .update(`${VOICE_ID}:${text}`)
-    .digest("hex");
+  const hash = createHash("sha256").update(`${VOICE_ID}:${text}`).digest("hex");
   const storagePath = `${hash}.mp3`;
 
   // Check Supabase Storage cache (raw fetch to bypass Next.js fetch patching)
