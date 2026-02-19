@@ -43,6 +43,43 @@ export interface TopicProgress {
 // Mastered = stability > 30 days
 const MASTERY_THRESHOLD = 30;
 
+/** Classify a single flashcard into the appropriate progress bucket. */
+function applyClassification(
+  target: {
+    newCount: number;
+    learningCount: number;
+    reviewCount: number;
+    masteredCount: number;
+    dueToday: number;
+  },
+  cardState: { state: string; stability: number; due: string } | undefined,
+  now: string,
+): void {
+  if (!cardState) {
+    target.newCount++;
+    return;
+  }
+  if (cardState.state === "review" && cardState.stability > MASTERY_THRESHOLD) {
+    target.masteredCount++;
+  } else if (
+    cardState.state === "learning" ||
+    cardState.state === "relearning"
+  ) {
+    target.learningCount++;
+  } else if (cardState.state === "review") {
+    target.reviewCount++;
+  } else {
+    target.newCount++;
+  }
+  if (
+    cardState.due &&
+    new Date(cardState.due) <= new Date(now) &&
+    (cardState.state === "review" || cardState.state === "relearning")
+  ) {
+    target.dueToday++;
+  }
+}
+
 export async function getTopicProgress(
   userId: string,
   topicId: string,
@@ -124,29 +161,9 @@ export async function getTopicProgress(
     catProgress.total++;
 
     const cs = stateMap.get(f.id);
-    if (!cs) {
-      catProgress.newCount++;
-    } else {
-      if (cs.state === "review" && cs.stability > MASTERY_THRESHOLD) {
-        catProgress.masteredCount++;
-      } else if (cs.state === "learning" || cs.state === "relearning") {
-        catProgress.learningCount++;
-      } else if (cs.state === "review") {
-        catProgress.reviewCount++;
-      } else {
-        catProgress.newCount++;
-      }
-      // dueToday: only genuine reviews (learning steps are intra-day, not due)
-      if (
-        cs.due &&
-        new Date(cs.due) <= new Date(now) &&
-        (cs.state === "review" || cs.state === "relearning")
-      ) {
-        catProgress.dueToday++;
-      }
-      if (cs.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
-        lastStudied = cs.updated_at;
-      }
+    applyClassification(catProgress, cs, now);
+    if (cs?.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
+      lastStudied = cs.updated_at;
     }
   }
 
@@ -259,29 +276,9 @@ export async function getAllTopicsProgress(
       catProgress.total++;
 
       const cs = stateMap.get(f.id);
-      if (!cs) {
-        catProgress.newCount++;
-      } else {
-        if (cs.state === "review" && cs.stability > MASTERY_THRESHOLD) {
-          catProgress.masteredCount++;
-        } else if (cs.state === "learning" || cs.state === "relearning") {
-          catProgress.learningCount++;
-        } else if (cs.state === "review") {
-          catProgress.reviewCount++;
-        } else {
-          catProgress.newCount++;
-        }
-        // dueToday: only count review and relearning state
-        if (
-          cs.due &&
-          new Date(cs.due) <= new Date(now) &&
-          (cs.state === "review" || cs.state === "relearning")
-        ) {
-          catProgress.dueToday++;
-        }
-        if (cs.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
-          lastStudied = cs.updated_at;
-        }
+      applyClassification(catProgress, cs, now);
+      if (cs?.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
+        lastStudied = cs.updated_at;
       }
     }
 
@@ -350,22 +347,32 @@ export async function getCategoryProgress(
   const flashcardIds = flashcards.map((f) => f.id);
   const now = new Date().toISOString();
 
-  const { data: cardStates } = await supabase
-    .from("user_card_state")
-    .select("flashcard_id, state, stability, due")
-    .eq("user_id", userId)
-    .in("flashcard_id", flashcardIds);
+  const [{ data: cardStates }, { data: suspended }] = await Promise.all([
+    supabase
+      .from("user_card_state")
+      .select("flashcard_id, state, stability, due")
+      .eq("user_id", userId)
+      .in("flashcard_id", flashcardIds),
+    supabase
+      .from("suspended_flashcards")
+      .select("flashcard_id")
+      .eq("user_id", userId)
+      .in("flashcard_id", flashcardIds),
+  ]);
 
   const stateMap = new Map(
     (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
   );
+  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
+
+  const activeFlashcards = flashcards.filter((f) => !suspendedSet.has(f.id));
 
   const result: CategoryProgress = {
     categoryId,
     categoryNameEn: category.name_en,
     categoryNameEs: category.name_es,
     categoryColor: category.color,
-    total: flashcards.length,
+    total: activeFlashcards.length,
     newCount: 0,
     learningCount: 0,
     reviewCount: 0,
@@ -373,29 +380,8 @@ export async function getCategoryProgress(
     dueToday: 0,
   };
 
-  for (const f of flashcards) {
-    const cs = stateMap.get(f.id);
-    if (!cs) {
-      result.newCount++;
-    } else {
-      if (cs.state === "review" && cs.stability > MASTERY_THRESHOLD) {
-        result.masteredCount++;
-      } else if (cs.state === "learning" || cs.state === "relearning") {
-        result.learningCount++;
-      } else if (cs.state === "review") {
-        result.reviewCount++;
-      } else {
-        result.newCount++;
-      }
-      // dueToday: only genuine reviews (learning steps are intra-day, not due)
-      if (
-        cs.due &&
-        new Date(cs.due) <= new Date(now) &&
-        (cs.state === "review" || cs.state === "relearning")
-      ) {
-        result.dueToday++;
-      }
-    }
+  for (const f of activeFlashcards) {
+    applyClassification(result, stateMap.get(f.id), now);
   }
 
   return result;

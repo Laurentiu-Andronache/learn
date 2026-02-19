@@ -135,15 +135,3 @@ export function generatePageMetadata(
     },
   };
 }
-
-export function generateNoIndexMetadata(): Metadata {
-  return {
-    robots: {
-      index: false,
-      follow: false,
-      noarchive: true,
-      nosnippet: true,
-      noimageindex: true,
-    },
-  };
-}

@@ -76,51 +76,6 @@ export async function handleTopicStats(
   });
 }
 
-// ─── learn_content_overview ────────────────────────────────────────
-export async function handleContentOverview(
-  supabase: TypedClient,
-): Promise<McpResult> {
-  const { data: topics, error: tErr } = await supabase
-    .from("topics")
-    .select("id, title_en, title_es, is_active, categories(id, questions(id, question_es, options_es, explanation_es), flashcards(id, question_es, answer_es))")
-    .eq("is_active", true);
-  if (tErr) return err(tErr.message);
-
-  const ts = topics || [];
-  let totalCats = 0;
-  let totalQs = 0;
-  let totalFcs = 0;
-
-  const topicStats = ts.map((t) => {
-    const cats = t.categories || [];
-    const qs = cats.flatMap((c) => c.questions || []);
-    const fcs = cats.flatMap((c) => c.flashcards || []);
-    totalCats += cats.length;
-    totalQs += qs.length;
-    totalFcs += fcs.length;
-    const qTranslated = qs.filter(
-      (q) => q.question_es && q.explanation_es,
-    ).length;
-    const fcTranslated = fcs.filter(
-      (fc) => fc.question_es && fc.answer_es,
-    ).length;
-    return {
-      id: t.id,
-      title_en: t.title_en,
-      category_count: cats.length,
-      question_count: qs.length,
-      flashcard_count: fcs.length,
-      question_translation_pct: qs.length > 0 ? Math.round((qTranslated / qs.length) * 10000) / 100 : 100,
-      flashcard_translation_pct: fcs.length > 0 ? Math.round((fcTranslated / fcs.length) * 10000) / 100 : 100,
-    };
-  });
-
-  return ok({
-    topics: topicStats,
-    totals: { topics: ts.length, categories: totalCats, questions: totalQs, flashcards: totalFcs },
-  });
-}
-
 // ─── learn_question_quality_report ─────────────────────────────────
 export async function handleQuestionQualityReport(
   supabase: TypedClient,
@@ -748,10 +703,10 @@ export function registerAnalyticsTools(server: McpServer): void {
 
   server.tool(
     "learn_content_overview",
-    "Global content dashboard: per-topic stats (category count, question count, translation %) and totals",
+    "Global content dashboard (alias for learn_content_health): per-topic summary with quality issues, translation gaps, and totals",
     {},
     { readOnlyHint: true },
-    async () => handleContentOverview(getSupabaseClient()),
+    async () => handleContentHealth(getSupabaseClient()),
   );
 
   server.tool(

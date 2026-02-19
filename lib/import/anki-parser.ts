@@ -14,14 +14,7 @@ import type {
   ParsedFlashcard,
 } from "./anki-types";
 import { IMPORT_LIMITS } from "./anki-types";
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
-}
+import { slugify } from "./utils";
 
 /**
  * Parse an .apkg ArrayBuffer into a unified ParsedDeck.

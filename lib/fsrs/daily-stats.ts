@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
 export interface DailyStats {
   reviewsToday: number;
@@ -10,42 +11,22 @@ export interface DailyStats {
   dueTomorrow: number;
 }
 
+const EMPTY_STATS: DailyStats = {
+  reviewsToday: 0,
+  newCardsToday: 0,
+  correctRate: null,
+  avgAnswerTimeMs: null,
+  dueTomorrow: 0,
+};
+
 export async function getDailyStats(
   userId: string,
   topicId: string,
 ): Promise<DailyStats> {
   const supabase = await createClient();
 
-  // Get flashcard IDs for this topic
-  const { data: cats } = await supabase
-    .from("categories")
-    .select("id")
-    .eq("topic_id", topicId);
-  if (!cats?.length)
-    return {
-      reviewsToday: 0,
-      newCardsToday: 0,
-      correctRate: null,
-      avgAnswerTimeMs: null,
-      dueTomorrow: 0,
-    };
-
-  const { data: flashcards } = await supabase
-    .from("flashcards")
-    .select("id")
-    .in(
-      "category_id",
-      cats.map((c) => c.id),
-    );
-  const flashcardIds = flashcards?.map((f) => f.id) ?? [];
-  if (!flashcardIds.length)
-    return {
-      reviewsToday: 0,
-      newCardsToday: 0,
-      correctRate: null,
-      avgAnswerTimeMs: null,
-      dueTomorrow: 0,
-    };
+  const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
+  if (!flashcardIds.length) return EMPTY_STATS;
 
   const todayMidnight = new Date();
   todayMidnight.setUTCHours(0, 0, 0, 0);
