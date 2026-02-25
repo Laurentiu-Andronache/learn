@@ -5,22 +5,14 @@ import { LogoutButton } from "@/components/logout-button";
 import { MobileNav } from "@/components/mobile-nav";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { checkIsAdmin, createClient } from "@/lib/supabase/server";
 
 export async function NavBar() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  let isAdmin = false;
-  if (user) {
-    const { data: admin } = await supabase
-      .from("admin_users")
-      .select("id")
-      .eq("email", user.email!)
-      .maybeSingle();
-    isAdmin = !!admin;
-  }
+  const isAdmin = user ? await checkIsAdmin(supabase, user.email!) : false;
   const t = await getTranslations("nav");
 
   return (

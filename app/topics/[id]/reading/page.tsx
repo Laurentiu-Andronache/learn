@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { ReadingView } from "@/components/reading/reading-view";
 import { getReadingProgress } from "@/lib/services/user-preferences";
-import { createClient } from "@/lib/supabase/server";
+import { checkIsAdmin, createClient } from "@/lib/supabase/server";
 import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
@@ -19,12 +19,7 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   } = await supabase.auth.getUser();
   if (!user) return <AutoGuestLogin />;
 
-  const { data: adminRow } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("email", user.email!)
-    .maybeSingle();
-  const isAdmin = !!adminRow;
+  const isAdmin = await checkIsAdmin(supabase, user.email!);
 
   const topic = await resolveTopicSelect<{
     id: string;

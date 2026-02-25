@@ -1,3 +1,4 @@
+import { shuffleArray } from "@/lib/shuffle";
 import { createClient } from "@/lib/supabase/server";
 import type { Question } from "@/lib/types/database";
 
@@ -40,26 +41,17 @@ export async function getOrderedQuestions(
 
   if (qError || !questions || questions.length === 0) return [];
 
-  const orderedQuestions: OrderedQuestion[] = questions.map((q) => {
-    const { categories: cat, ...questionFields } = q;
-    return {
-      question: questionFields,
-      categoryNameEn: cat.name_en,
-      categoryNameEs: cat.name_es,
-      categoryColor: cat.color,
-    };
-  });
-
-  // Shuffle (Fisher-Yates)
-  for (let i = orderedQuestions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [orderedQuestions[i], orderedQuestions[j]] = [
-      orderedQuestions[j],
-      orderedQuestions[i],
-    ];
-  }
-
-  return orderedQuestions;
+  return shuffleArray(
+    questions.map((q) => {
+      const { categories: cat, ...questionFields } = q;
+      return {
+        question: questionFields,
+        categoryNameEn: cat.name_en,
+        categoryNameEs: cat.name_es,
+        categoryColor: cat.color,
+      };
+    }),
+  );
 }
 
 /** Get total quiz question count for a topic */

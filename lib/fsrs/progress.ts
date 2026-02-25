@@ -80,6 +80,74 @@ function applyClassification(
   }
 }
 
+/** Compute progress for a single topic from pre-fetched data. */
+function computeTopicProgress(
+  topicId: string,
+  flashcards: FlashcardWithCategory[],
+  stateMap: Map<
+    string,
+    { state: string; stability: number; due: string; updated_at?: string }
+  >,
+  suspendedSet: Set<string>,
+  now: string,
+): TopicProgress {
+  const categoryMap = new Map<string, CategoryProgress>();
+  let lastStudied: string | null = null;
+
+  for (const f of flashcards) {
+    if (suspendedSet.has(f.id)) continue;
+    const { categories: cat } = f;
+    const catId = cat.id;
+    if (!categoryMap.has(catId)) {
+      categoryMap.set(catId, {
+        categoryId: catId,
+        categoryNameEn: cat.name_en,
+        categoryNameEs: cat.name_es,
+        categoryColor: cat.color,
+        total: 0,
+        newCount: 0,
+        learningCount: 0,
+        reviewCount: 0,
+        masteredCount: 0,
+        dueToday: 0,
+      });
+    }
+    const catProgress = categoryMap.get(catId)!;
+    catProgress.total++;
+
+    const cs = stateMap.get(f.id);
+    applyClassification(catProgress, cs, now);
+    if (cs?.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
+      lastStudied = cs.updated_at;
+    }
+  }
+
+  const categories = Array.from(categoryMap.values());
+  const total = categories.reduce((s, c) => s + c.total, 0);
+  const newCount = categories.reduce((s, c) => s + c.newCount, 0);
+  const learningCount = categories.reduce((s, c) => s + c.learningCount, 0);
+  const reviewCount = categories.reduce((s, c) => s + c.reviewCount, 0);
+  const masteredCount = categories.reduce((s, c) => s + c.masteredCount, 0);
+  const dueToday = categories.reduce((s, c) => s + c.dueToday, 0);
+  const fullyMemorized = total > 0 && masteredCount === total && dueToday === 0;
+  const percentComplete =
+    total > 0 ? Math.round((masteredCount / total) * 100) : 0;
+
+  return {
+    topicId,
+    total,
+    newCount,
+    learningCount,
+    reviewCount,
+    masteredCount,
+    dueToday,
+    fullyMemorized,
+    lastStudied,
+    percentComplete,
+    categories,
+  };
+}
+
 export async function getTopicProgress(
   userId: string,
   topicId: string,
@@ -134,63 +202,7 @@ export async function getTopicProgress(
     .in("flashcard_id", flashcardIds);
   const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
 
-  // Build category map
-  const categoryMap = new Map<string, CategoryProgress>();
-  let lastStudied: string | null = null;
-
-  for (const f of flashcards) {
-    if (suspendedSet.has(f.id)) continue;
-
-    const { categories: cat } = f;
-    const catId = cat.id;
-    if (!categoryMap.has(catId)) {
-      categoryMap.set(catId, {
-        categoryId: catId,
-        categoryNameEn: cat.name_en,
-        categoryNameEs: cat.name_es,
-        categoryColor: cat.color,
-        total: 0,
-        newCount: 0,
-        learningCount: 0,
-        reviewCount: 0,
-        masteredCount: 0,
-        dueToday: 0,
-      });
-    }
-    const catProgress = categoryMap.get(catId)!;
-    catProgress.total++;
-
-    const cs = stateMap.get(f.id);
-    applyClassification(catProgress, cs, now);
-    if (cs?.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
-      lastStudied = cs.updated_at;
-    }
-  }
-
-  const categories = Array.from(categoryMap.values());
-  const total = categories.reduce((s, c) => s + c.total, 0);
-  const newCount = categories.reduce((s, c) => s + c.newCount, 0);
-  const learningCount = categories.reduce((s, c) => s + c.learningCount, 0);
-  const reviewCount = categories.reduce((s, c) => s + c.reviewCount, 0);
-  const masteredCount = categories.reduce((s, c) => s + c.masteredCount, 0);
-  const dueToday = categories.reduce((s, c) => s + c.dueToday, 0);
-  const fullyMemorized = total > 0 && masteredCount === total && dueToday === 0;
-  const percentComplete =
-    total > 0 ? Math.round((masteredCount / total) * 100) : 0;
-
-  return {
-    topicId,
-    total,
-    newCount,
-    learningCount,
-    reviewCount,
-    masteredCount,
-    dueToday,
-    fullyMemorized,
-    lastStudied,
-    percentComplete,
-    categories,
-  };
+  return computeTopicProgress(topicId, flashcards, stateMap, suspendedSet, now);
 }
 
 export async function getAllTopicsProgress(
@@ -251,62 +263,13 @@ export async function getAllTopicsProgress(
   // 4. Compute progress per topic in-memory
   return topicIds.map((topicId) => {
     const flashcards = flashcardsByTopic.get(topicId) || [];
-    const categoryMap = new Map<string, CategoryProgress>();
-    let lastStudied: string | null = null;
-
-    for (const f of flashcards) {
-      if (suspendedSet.has(f.id)) continue;
-      const { categories: cat } = f;
-      const catId = cat.id;
-      if (!categoryMap.has(catId)) {
-        categoryMap.set(catId, {
-          categoryId: catId,
-          categoryNameEn: cat.name_en,
-          categoryNameEs: cat.name_es,
-          categoryColor: cat.color,
-          total: 0,
-          newCount: 0,
-          learningCount: 0,
-          reviewCount: 0,
-          masteredCount: 0,
-          dueToday: 0,
-        });
-      }
-      const catProgress = categoryMap.get(catId)!;
-      catProgress.total++;
-
-      const cs = stateMap.get(f.id);
-      applyClassification(catProgress, cs, now);
-      if (cs?.updated_at && (!lastStudied || cs.updated_at > lastStudied)) {
-        lastStudied = cs.updated_at;
-      }
-    }
-
-    const categories = Array.from(categoryMap.values());
-    const total = categories.reduce((s, c) => s + c.total, 0);
-    const newCount = categories.reduce((s, c) => s + c.newCount, 0);
-    const learningCount = categories.reduce((s, c) => s + c.learningCount, 0);
-    const reviewCount = categories.reduce((s, c) => s + c.reviewCount, 0);
-    const masteredCount = categories.reduce((s, c) => s + c.masteredCount, 0);
-    const dueToday = categories.reduce((s, c) => s + c.dueToday, 0);
-    const fullyMemorized =
-      total > 0 && masteredCount === total && dueToday === 0;
-    const percentComplete =
-      total > 0 ? Math.round((masteredCount / total) * 100) : 0;
-
-    return {
+    return computeTopicProgress(
       topicId,
-      total,
-      newCount,
-      learningCount,
-      reviewCount,
-      masteredCount,
-      dueToday,
-      fullyMemorized,
-      lastStudied,
-      percentComplete,
-      categories,
-    };
+      flashcards,
+      stateMap,
+      suspendedSet,
+      now,
+    );
   });
 }
 

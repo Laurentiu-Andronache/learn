@@ -8,7 +8,7 @@ import {
   getOrderedFlashcards,
 } from "@/lib/fsrs/flashcard-ordering";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
-import { createClient } from "@/lib/supabase/server";
+import { checkIsAdmin, createClient } from "@/lib/supabase/server";
 import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
@@ -30,12 +30,8 @@ export default async function FlashcardsPage({
   } = await supabase.auth.getUser();
   if (!user) return <AutoGuestLogin />;
 
-  const [{ data: adminRow }, topic, fsrsSettings] = await Promise.all([
-    supabase
-      .from("admin_users")
-      .select("id")
-      .eq("email", user.email!)
-      .maybeSingle(),
+  const [isAdmin, topic, fsrsSettings] = await Promise.all([
+    checkIsAdmin(supabase, user.email!),
     resolveTopicSelect<{
       id: string;
       title_en: string;
@@ -44,8 +40,6 @@ export default async function FlashcardsPage({
     }>(id, "id, title_en, title_es, slug"),
     getFsrsSettings(user.id),
   ]);
-
-  const isAdmin = !!adminRow;
   if (!topic) redirect("/topics");
 
   // Canonical redirect: UUID in URL but topic has a slug

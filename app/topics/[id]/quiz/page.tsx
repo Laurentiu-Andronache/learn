@@ -3,23 +3,14 @@ import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
 import { QuizSession } from "@/components/quiz/quiz-session";
 import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
-import { createClient } from "@/lib/supabase/server";
+import { shuffleArray } from "@/lib/shuffle";
+import { checkIsAdmin, createClient } from "@/lib/supabase/server";
 import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
 interface QuizPageProps {
   params: Promise<{ id: string }>;
   searchParams: Promise<{ mode?: string }>;
-}
-
-// Fisher-Yates shuffle
-function shuffleArray<T>(arr: T[]): T[] {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
 }
 
 export default async function QuizPage({
@@ -35,12 +26,7 @@ export default async function QuizPage({
   } = await supabase.auth.getUser();
   if (!user) return <AutoGuestLogin />;
 
-  const { data: adminRow } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("email", user.email!)
-    .maybeSingle();
-  const isAdmin = !!adminRow;
+  const isAdmin = await checkIsAdmin(supabase, user.email!);
 
   const topic = await resolveTopicSelect<{
     id: string;

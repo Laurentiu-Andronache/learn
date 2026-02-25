@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { createClient } from "@/lib/supabase/server";
+import { checkIsAdmin, createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
   robots: {
@@ -25,14 +25,7 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  // Check admin access
-  const { data: admin } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("email", user.email!)
-    .maybeSingle();
-
-  if (!admin) redirect("/topics");
+  if (!(await checkIsAdmin(supabase, user.email!))) redirect("/topics");
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)]">

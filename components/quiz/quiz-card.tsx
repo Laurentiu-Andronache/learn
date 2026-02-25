@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTTS } from "@/hooks/use-tts";
+import { shuffleArray } from "@/lib/shuffle";
 import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
 
@@ -24,14 +25,10 @@ export interface QuizCardProps {
   readQuestionsAloud?: boolean;
 }
 
-// --- Fisher-Yates Shuffle (skip for true/false) ---
+// --- Shuffle options (skip for true/false) ---
 
 export function shuffleOptions(options: string[], correctIndex: number) {
-  const indices = options.map((_, i) => i);
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
+  const indices = shuffleArray(options.map((_, i) => i));
   return {
     options: indices.map((i) => options[i]),
     correctIndex: indices.indexOf(correctIndex),

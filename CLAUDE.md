@@ -77,7 +77,9 @@ All SEO features are implemented following Next.js App Router best practices:
 - Tailwind only (no CSS modules)
 - RLS on all data access, never bypass
 - Never use service role key in client components
-- **Server**: `createClient()` from `@/lib/supabase/server`
+- **Server pages**: `createClient()` from `@/lib/supabase/server`
+- **API routes**: `createApiClient()` from `@/lib/supabase/server` (read-only, no cookie writes)
+- **Admin checks**: `checkIsAdmin(supabase, email)` from `@/lib/supabase/server` — never inline admin_users queries
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
 - **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings.
 
@@ -169,7 +171,10 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/fsrs/scheduler.ts` — FSRS singleton + `createUserScheduler()` factory for per-user retention/interval settings
 - `lib/fsrs/interval-preview.ts` — `getIntervalPreviews()` (accepts optional user settings), `getRetrievability()`, `formatInterval()`
 - `lib/fsrs/daily-stats.ts` — `getDailyStats()` (reviews today, new cards, correct rate, due tomorrow)
-- `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based)
+- `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based), shared `computeTopicProgress` helper
+- `lib/shuffle.ts` — `shuffleArray<T>()` (Fisher-Yates, used by quiz-card, quiz page, question-ordering)
+- `lib/rate-limit.ts` — `createRateLimiter(max, windowMs)` factory (used by TTS + Anki import API routes)
+- `lib/supabase/server.ts` — `createClient`, `createApiClient` (read-only, for API routes), `checkIsAdmin`, `requireAdmin`
 - `lib/services/quiz-attempts.ts` — `saveQuizAttempt`, `getLatestQuizAttempt`
 - `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, `getFsrsSettings`, `updateFsrsSettings`, etc.
 - `components/settings/fsrs-settings.tsx` — Study settings card (retention slider, max interval, ramp-up toggle, new cards/day, show intervals)
@@ -262,8 +267,10 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `lib/markdown/__tests__/preprocess-tooltips.test.ts` | 12 | Tooltip syntax conversion, escaping, code block skipping |
 | `lib/fsrs/__tests__/fsrs6-verification.test.ts` | 1 | FSRS-6 default params verification |
 | `lib/flashcards/__tests__/strip-front-from-answer.test.ts` | 11 | Anki answer dedup, extra duplicate detection |
+| `lib/__tests__/shuffle.test.ts` | 4 | shuffleArray: same elements, no mutation, empty, single |
+| `lib/__tests__/rate-limit.test.ts` | 5 | createRateLimiter: within/exceed limit, independent users, window expiry |
 
-**Total: 334 tests across 24 test files.**
+**Total: 343 tests across 26 test files.**
 
 ## Anki Import Cleanup
 

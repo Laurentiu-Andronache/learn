@@ -1,14 +1,16 @@
 import { createHash } from "node:crypto";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
 import { after } from "next/server";
+import { createRateLimiter } from "@/lib/rate-limit";
+import { createApiClient } from "@/lib/supabase/server";
 
 const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? "XrExE9yKIg1WjnnlVkGX";
 const BUCKET = "tts-audio";
 const MAX_TEXT_LENGTH = 5000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX = 30;
+
+const isRateLimited = createRateLimiter(RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS);
 
 // ~200ms silent MP3 at 44.1kHz 128kbps — prepended to all audio to prevent ElevenLabs first-word clipping
 const SILENCE_MP3 = Buffer.from(
@@ -21,44 +23,6 @@ const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ??
   process.env.SUPABASE_SERVICE_ROLE_KEY)!;
 
-// In-memory rate limiter: userId → timestamps[]
-const rateLimits = new Map<string, number[]>();
-
-function isRateLimited(userId: string): boolean {
-  const now = Date.now();
-  const timestamps = rateLimits.get(userId) ?? [];
-  const recent = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
-  if (recent.length >= RATE_LIMIT_MAX) {
-    rateLimits.set(userId, recent);
-    return true;
-  }
-  recent.push(now);
-  rateLimits.set(userId, recent);
-  return false;
-}
-
-async function getAuthUser() {
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll() {
-          // Read-only in API routes — cookies can't be set here
-        },
-      },
-    },
-  );
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
-
 /** Prepend ~200ms silence to prevent ElevenLabs first-word clipping */
 function withSilencePrefix(audio: Buffer): ArrayBuffer {
   const combined = Buffer.concat([SILENCE_MP3, audio]);
@@ -70,7 +34,10 @@ function withSilencePrefix(audio: Buffer): ArrayBuffer {
 
 export async function POST(request: Request) {
   // Auth check
-  const user = await getAuthUser();
+  const supabase = await createApiClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     return new Response("Unauthorized", { status: 401 });
   }

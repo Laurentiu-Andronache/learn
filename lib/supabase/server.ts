@@ -1,30 +1,27 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
-/**
- * Especially important if using Fluid compute: Don't put this client in a
- * global variable. Always create a new client within each function when using
- * it.
- */
-/**
- * Verifies the current user is authenticated and in admin_users.
- * Returns { supabase, user } for reuse — avoids duplicate client/auth calls.
- * Throws "Unauthorized" if not admin.
- */
+/** Check if the given email belongs to an admin user. */
+export async function checkIsAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  email: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("admin_users")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+  return !!data;
+}
+
 export async function requireAdmin() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) throw new Error("Unauthorized");
-
-  const { data: admin } = await supabase
-    .from("admin_users")
-    .select("id")
-    .eq("email", user.email!)
-    .maybeSingle();
-  if (!admin) throw new Error("Unauthorized");
-
+  if (!(await checkIsAdmin(supabase, user.email!)))
+    throw new Error("Unauthorized");
   return { supabase, user };
 }
 
@@ -52,5 +49,15 @@ export async function createClient() {
         },
       },
     },
+  );
+}
+
+/** Read-only Supabase client for API routes (no cookie writes). */
+export async function createApiClient() {
+  const cookieStore = await cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    { cookies: { getAll: () => cookieStore.getAll(), setAll() {} } },
   );
 }
