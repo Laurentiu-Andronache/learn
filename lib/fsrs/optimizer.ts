@@ -1,7 +1,7 @@
+import { MIN_REVIEWS_FOR_OPTIMIZATION } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
-/** Minimum valid optimizer items before optimization produces meaningful results */
-export const MIN_REVIEWS_FOR_OPTIMIZATION = 50;
+export { MIN_REVIEWS_FOR_OPTIMIZATION };
 
 interface ReviewLogRow {
   flashcard_id: string;

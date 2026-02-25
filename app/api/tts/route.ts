@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { after } from "next/server";
+import { ONE_YEAR_SECONDS } from "@/lib/constants";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { createApiClient } from "@/lib/supabase/server";
 
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
       return new Response(withSilencePrefix(buffer), {
         headers: {
           "Content-Type": "audio/mpeg",
-          "Cache-Control": "public, max-age=31536000, immutable",
+          "Cache-Control": `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
         },
       });
     }
@@ -154,7 +155,7 @@ export async function POST(request: Request) {
     return new Response(withSilencePrefix(audioBuffer), {
       headers: {
         "Content-Type": "audio/mpeg",
-        "Cache-Control": "public, max-age=31536000, immutable",
+        "Cache-Control": `public, max-age=${ONE_YEAR_SECONDS}, immutable`,
       },
     });
   } catch (error) {

@@ -12,6 +12,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { ONE_YEAR_SECONDS } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/client";
 
 const languages = [
@@ -20,7 +21,7 @@ const languages = [
 ] as const;
 
 function setLocaleCookie(locale: string) {
-  document.cookie = `locale=${locale};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+  document.cookie = `locale=${locale};path=/;max-age=${ONE_YEAR_SECONDS};samesite=lax`;
 }
 
 const LanguageSwitcher = () => {

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useState, useTransition } from "react";
 import { Slider } from "@/components/ui/slider";
+import { DEFAULT_BASE_FONT_SIZE, ONE_YEAR_SECONDS } from "@/lib/constants";
 import { updateBaseFontSize } from "@/lib/services/user-preferences";
 
 interface FontSizeSettingProps {
@@ -18,8 +19,8 @@ export function FontSizeSetting({ userId, initialSize }: FontSizeSettingProps) {
   // On mount: apply CSS variable + ensure cookie is set (handles cross-device DB→cookie sync)
   useEffect(() => {
     applySize(initialSize);
-    if (initialSize !== 14) {
-      document.cookie = `base_font_size=${initialSize};path=/;max-age=31536000;SameSite=Lax`;
+    if (initialSize !== DEFAULT_BASE_FONT_SIZE) {
+      document.cookie = `base_font_size=${initialSize};path=/;max-age=${ONE_YEAR_SECONDS};SameSite=Lax`;
     }
   }, [initialSize]);
 
@@ -35,7 +36,7 @@ export function FontSizeSetting({ userId, initialSize }: FontSizeSettingProps) {
 
   function handleCommit(values: number[]) {
     const value = values[0];
-    document.cookie = `base_font_size=${value};path=/;max-age=31536000;SameSite=Lax`;
+    document.cookie = `base_font_size=${value};path=/;max-age=${ONE_YEAR_SECONDS};SameSite=Lax`;
     startTransition(async () => {
       try {
         await updateBaseFontSize(userId, value);

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
+import { MIN_REVIEWS_FOR_OPTIMIZATION } from "@/lib/constants";
 import { optimizeFsrsParameters, resetFsrsWeights } from "@/lib/fsrs/actions";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
 import { updateFsrsSettings } from "@/lib/services/user-preferences";
@@ -97,7 +98,10 @@ export function FsrsSettingsCard({
         toast.success(t("optimizer.optimized"));
       } else if (result.error === "not_enough_reviews") {
         toast.error(
-          t("optimizer.needMoreReviews", { count: reviewCount, threshold: 50 }),
+          t("optimizer.needMoreReviews", {
+            count: reviewCount,
+            threshold: MIN_REVIEWS_FOR_OPTIMIZATION,
+          }),
         );
       } else {
         toast.error(tc("error"));
@@ -119,7 +123,7 @@ export function FsrsSettingsCard({
     }
   }, [userId, t, tc]);
 
-  const canOptimize = reviewCount >= 50;
+  const canOptimize = reviewCount >= MIN_REVIEWS_FOR_OPTIMIZATION;
 
   return (
     <Card>
@@ -176,7 +180,7 @@ export function FsrsSettingsCard({
             <p className="text-xs text-muted-foreground">
               {t("optimizer.needMoreReviews", {
                 count: reviewCount,
-                threshold: 50,
+                threshold: MIN_REVIEWS_FOR_OPTIMIZATION,
               })}
             </p>
           )}

@@ -1,0 +1,3 @@
+export const DEFAULT_BASE_FONT_SIZE = 14;
+export const ONE_YEAR_SECONDS = 31_536_000;
+export const MIN_REVIEWS_FOR_OPTIMIZATION = 50;

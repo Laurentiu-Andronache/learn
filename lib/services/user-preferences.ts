@@ -1,5 +1,6 @@
 "use server";
 
+import { DEFAULT_BASE_FONT_SIZE } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
@@ -270,8 +271,8 @@ export async function getBaseFontSize(userId: string): Promise<number> {
     .select("base_font_size")
     .eq("id", userId)
     .single();
-  if (error || !data) return 14;
-  return data.base_font_size ?? 14;
+  if (error || !data) return DEFAULT_BASE_FONT_SIZE;
+  return data.base_font_size ?? DEFAULT_BASE_FONT_SIZE;
 }
 
 export async function updateBaseFontSize(

@@ -10,6 +10,7 @@ import { Footer } from "@/components/footer";
 import { NavBar } from "@/components/nav-bar";
 import { StructuredData } from "@/components/seo/structured-data";
 import { Toaster } from "@/components/ui/sonner";
+import { DEFAULT_BASE_FONT_SIZE } from "@/lib/constants";
 import { generateBaseMetadata, getBaseUrl } from "@/lib/seo/metadata-utils";
 import "./globals.css";
 
@@ -33,9 +34,12 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   const cookieStore = await cookies();
-  const bfs = parseInt(cookieStore.get("base_font_size")?.value || "14", 10);
+  const bfs = parseInt(
+    cookieStore.get("base_font_size")?.value || String(DEFAULT_BASE_FONT_SIZE),
+    10,
+  );
   const htmlStyle =
-    bfs !== 14
+    bfs !== DEFAULT_BASE_FONT_SIZE
       ? ({ "--text-sm": `${bfs / 16}rem` } as React.CSSProperties)
       : undefined;
 

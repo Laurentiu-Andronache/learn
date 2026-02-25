@@ -24,6 +24,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { DEFAULT_BASE_FONT_SIZE } from "@/lib/constants";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
 import { FontSizeSetting } from "./font-size-setting";
 import { FsrsSettingsCard } from "./fsrs-settings";
@@ -77,7 +78,7 @@ export function SettingsClient({
   hiddenTopics,
   fsrsSettings,
   reviewCount = 0,
-  baseFontSize = 14,
+  baseFontSize = DEFAULT_BASE_FONT_SIZE,
 }: SettingsClientProps) {
   const t = useTranslations("settings");
   const tAuth = useTranslations("auth");
