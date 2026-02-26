@@ -81,7 +81,14 @@ All SEO features are implemented following Next.js App Router best practices:
 - **API routes**: `createApiClient()` from `@/lib/supabase/server` (read-only, no cookie writes)
 - **Admin checks**: `checkIsAdmin(supabase, email)` from `@/lib/supabase/server` — never inline admin_users queries
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
+- **Server actions**: All `"use server"` functions in `user-preferences.ts`, `quiz-attempts.ts`, and `fsrs/actions.ts` derive userId internally via `supabase.auth.getUser()`. No userId parameter — no userId prop drilling through components.
 - **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings.
+
+## Infrastructure Resilience
+
+- **Error boundaries**: `app/global-error.tsx` (root, inline styles, bilingual), `app/error.tsx`, `app/topics/[id]/error.tsx`, `app/admin/error.tsx` — all use `errors` i18n namespace
+- **Loading skeletons**: `loading.tsx` in topics, topic detail, flashcards, quiz, admin, settings — use `Skeleton` component with shimmer animation
+- **Not-found page**: `app/not-found.tsx` — branded 404 with translations
 
 ## Profile Auto-Creation
 
@@ -160,6 +167,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 ## Component/Service Naming
 
 - `lib/constants.ts` — `DEFAULT_BASE_FONT_SIZE`, `ONE_YEAR_SECONDS`, `MIN_REVIEWS_FOR_OPTIMIZATION`
+- `components/shared/segmented-bar.tsx` — `SegmentedBar` (reusable progress/rating bar with colored segments)
 - `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
 - `lib/topics/topic-url.ts` — `topicUrl(topic, sub?)`
 - `components/topics/topic-card.tsx`, `topic-grid.tsx`
