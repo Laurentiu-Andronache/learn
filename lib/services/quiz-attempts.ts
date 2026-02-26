@@ -22,10 +22,7 @@ export interface QuizAttemptData {
   }>;
 }
 
-export async function saveQuizAttempt(
-  topicId: string,
-  data: QuizAttemptData,
-) {
+export async function saveQuizAttempt(topicId: string, data: QuizAttemptData) {
   const { supabase, userId } = await requireUserId();
   const { data: attempt, error } = await supabase
     .from("quiz_attempts")
@@ -48,10 +45,7 @@ export async function saveQuizAttempt(
   return attempt;
 }
 
-export async function getQuizAttempts(
-  topicId: string,
-  limit = 10,
-) {
+export async function getQuizAttempts(topicId: string, limit = 10) {
   const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("quiz_attempts")
@@ -122,9 +116,7 @@ export async function getCorrectQuestionIds(
 }
 
 /** Returns { attemptCount, uniqueCorrectCount } across all attempts */
-export async function getQuizSummary(
-  topicId: string,
-): Promise<QuizSummary> {
+export async function getQuizSummary(topicId: string): Promise<QuizSummary> {
   const attempts = await getQuizAttempts(topicId, 100);
   return {
     attemptCount: attempts.length,

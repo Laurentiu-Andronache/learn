@@ -4,9 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockSupabase = {
   from: vi.fn(),
   auth: {
-    getUser: vi.fn(() =>
-      Promise.resolve({ data: { user: { id: "user-1" } } }),
-    ),
+    getUser: vi.fn(() => Promise.resolve({ data: { user: { id: "user-1" } } })),
   },
 };
 
@@ -68,9 +66,7 @@ describe("suspendFlashcard", () => {
       .mockResolvedValue({ error: { message: "Constraint" } });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await expect(suspendFlashcard("f-1")).rejects.toThrow(
-      "Constraint",
-    );
+    await expect(suspendFlashcard("f-1")).rejects.toThrow("Constraint");
   });
 });
 

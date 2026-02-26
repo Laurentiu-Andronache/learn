@@ -39,11 +39,5 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
 
   const progress = await getReadingProgress(topic.id).catch(() => []);
 
-  return (
-    <ReadingView
-      topic={topic}
-      progress={progress}
-      isAdmin={isAdmin}
-    />
-  );
+  return <ReadingView topic={topic} progress={progress} isAdmin={isAdmin} />;
 }

@@ -15,10 +15,7 @@ async function requireUserId() {
 
 // ============ SUSPENDED FLASHCARDS ============
 
-export async function suspendFlashcard(
-  flashcardId: string,
-  reason?: string,
-) {
+export async function suspendFlashcard(flashcardId: string, reason?: string) {
   const { supabase, userId } = await requireUserId();
   const { error } = await supabase.from("suspended_flashcards").upsert(
     {
@@ -53,7 +50,9 @@ export interface SuspendedFlashcardDetail {
   } | null;
 }
 
-export async function getSuspendedFlashcards(): Promise<SuspendedFlashcardDetail[]> {
+export async function getSuspendedFlashcards(): Promise<
+  SuspendedFlashcardDetail[]
+> {
   const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("suspended_flashcards")
@@ -275,9 +274,7 @@ export async function getBaseFontSize(): Promise<number> {
   return data.base_font_size ?? DEFAULT_BASE_FONT_SIZE;
 }
 
-export async function updateBaseFontSize(
-  size: number,
-): Promise<void> {
+export async function updateBaseFontSize(size: number): Promise<void> {
   const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("profiles")
@@ -288,9 +285,10 @@ export async function updateBaseFontSize(
 
 // ============ PROFILE ============
 
-export async function updateProfile(
-  updates: { display_name?: string; preferred_language?: "en" | "es" },
-) {
+export async function updateProfile(updates: {
+  display_name?: string;
+  preferred_language?: "en" | "es";
+}) {
   const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("profiles")

@@ -8,8 +8,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createClient: () =>
     Promise.resolve({
       auth: {
-        getUser: () =>
-          Promise.resolve({ data: { user: { id: "user-1" } } }),
+        getUser: () => Promise.resolve({ data: { user: { id: "user-1" } } }),
       },
       from: (_table: string) => {
         const chain = {

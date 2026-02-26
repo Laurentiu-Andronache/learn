@@ -12,9 +12,7 @@ interface ProfileEditorProps {
   displayName: string;
 }
 
-export function ProfileEditor({
-  displayName: initial,
-}: ProfileEditorProps) {
+export function ProfileEditor({ displayName: initial }: ProfileEditorProps) {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
   const [name, setName] = useState(initial);

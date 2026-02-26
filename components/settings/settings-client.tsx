@@ -141,9 +141,7 @@ export function SettingsClient({
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
-          <ProfileEditor
-            displayName={profile?.display_name ?? ""}
-          />
+          <ProfileEditor displayName={profile?.display_name ?? ""} />
           <Separator />
           <div className="flex flex-col gap-1">
             <span className="text-sm font-medium">{t("account")}</span>
@@ -157,10 +155,7 @@ export function SettingsClient({
 
       {/* Study Settings */}
       {fsrsSettings && (
-        <FsrsSettingsCard
-          settings={fsrsSettings}
-          reviewCount={reviewCount}
-        />
+        <FsrsSettingsCard settings={fsrsSettings} reviewCount={reviewCount} />
       )}
 
       {/* Suspended Flashcards */}

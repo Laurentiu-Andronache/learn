@@ -23,11 +23,7 @@ interface TopicGridProps {
   locale: string;
 }
 
-export function TopicGrid({
-  topics,
-  progress,
-  locale,
-}: TopicGridProps) {
+export function TopicGrid({ topics, progress, locale }: TopicGridProps) {
   const t = useTranslations("topics");
   const progressMap = new Map(progress.map((p) => [p.topicId, p]));
 

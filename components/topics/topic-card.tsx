@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { SegmentedBar } from "@/components/shared/segmented-bar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,7 +15,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { SegmentedBar } from "@/components/shared/segmented-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -198,9 +198,18 @@ export function TopicCard({ topic, progress, locale }: TopicCardProps) {
             <div className="space-y-1">
               <SegmentedBar
                 segments={[
-                  { className: "bg-progress-mastered", value: progress.masteredCount },
-                  { className: "bg-progress-review", value: progress.reviewCount },
-                  { className: "bg-progress-learning", value: progress.learningCount },
+                  {
+                    className: "bg-progress-mastered",
+                    value: progress.masteredCount,
+                  },
+                  {
+                    className: "bg-progress-review",
+                    value: progress.reviewCount,
+                  },
+                  {
+                    className: "bg-progress-learning",
+                    value: progress.learningCount,
+                  },
                   { className: "bg-progress-new", value: progress.newCount },
                 ]}
                 total={total}

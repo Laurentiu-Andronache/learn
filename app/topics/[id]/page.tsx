@@ -164,9 +164,15 @@ export default async function TopicDetailPage({ params }: Props) {
         <CardContent className="space-y-3">
           <SegmentedBar
             segments={[
-              { className: "bg-progress-mastered", value: progress.masteredCount },
+              {
+                className: "bg-progress-mastered",
+                value: progress.masteredCount,
+              },
               { className: "bg-progress-review", value: progress.reviewCount },
-              { className: "bg-progress-learning", value: progress.learningCount },
+              {
+                className: "bg-progress-learning",
+                value: progress.learningCount,
+              },
             ]}
             total={progress.total}
             className="bg-muted"
@@ -371,9 +377,18 @@ export default async function TopicDetailPage({ params }: Props) {
                 <div className="flex items-center gap-2">
                   <SegmentedBar
                     segments={[
-                      { className: "bg-progress-mastered", value: cat.masteredCount },
-                      { className: "bg-progress-review", value: cat.reviewCount },
-                      { className: "bg-progress-learning", value: cat.learningCount },
+                      {
+                        className: "bg-progress-mastered",
+                        value: cat.masteredCount,
+                      },
+                      {
+                        className: "bg-progress-review",
+                        value: cat.reviewCount,
+                      },
+                      {
+                        className: "bg-progress-learning",
+                        value: cat.learningCount,
+                      },
                     ]}
                     total={cat.total}
                     height="h-1.5"

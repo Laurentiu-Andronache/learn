@@ -291,9 +291,7 @@ export async function undoLastReview(flashcardId: string) {
   await restoreFromSnapshot(supabase, userId, flashcardId, lastLog);
 }
 
-export async function resetTodayProgress(
-  topicId: string,
-): Promise<number> {
+export async function resetTodayProgress(topicId: string): Promise<number> {
   const { supabase, userId } = await requireUserId();
   const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
   if (!flashcardIds.length) return 0;

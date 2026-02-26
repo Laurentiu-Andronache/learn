@@ -104,10 +104,9 @@ export function FlashcardSession({
 
   const handleSuspend = useCallback(
     (flashcardId: string) => {
-      suspendFlashcard(
-        flashcardId,
-        "Suspended from flashcard session",
-      ).catch(() => toast.error("Failed to suspend flashcard."));
+      suspendFlashcard(flashcardId, "Suspended from flashcard session").catch(
+        () => toast.error("Failed to suspend flashcard."),
+      );
       toast.success(tq("questionSuspended"), { duration: 3000 });
     },
     [tq],

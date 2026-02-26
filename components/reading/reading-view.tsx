@@ -26,11 +26,7 @@ interface ReadingViewProps {
   isAdmin?: boolean;
 }
 
-export function ReadingView({
-  topic,
-  progress,
-  isAdmin,
-}: ReadingViewProps) {
+export function ReadingView({ topic, progress, isAdmin }: ReadingViewProps) {
   const tCommon = useTranslations("common");
   const locale = useLocale();
   const { playingEl, paused, handleBlockClick } = useTTS();
@@ -49,10 +45,7 @@ export function ReadingView({
 
   return (
     <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,hsl(var(--reading-accent)/0.04)_0%,transparent_50%)]">
-      <ReadingProgressBar
-        topicId={topic.id}
-        initialPercent={totalProgress}
-      />
+      <ReadingProgressBar topicId={topic.id} initialPercent={totalProgress} />
 
       <div className="max-w-[680px] mx-auto px-4 py-8 animate-fade-up">
         <div className="flex items-center gap-3 mb-8">

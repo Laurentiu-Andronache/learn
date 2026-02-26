@@ -5,9 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mockSupabase = {
   from: vi.fn(),
   auth: {
-    getUser: vi.fn(() =>
-      Promise.resolve({ data: { user: { id: "user-1" } } }),
-    ),
+    getUser: vi.fn(() => Promise.resolve({ data: { user: { id: "user-1" } } })),
   },
 };
 

@@ -59,11 +59,7 @@ export default async function TopicsPage() {
   return (
     <div className="container max-w-5xl mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">{t("title")}</h1>
-      <TopicGrid
-        topics={visibleTopics}
-        progress={progress}
-        locale={locale}
-      />
+      <TopicGrid topics={visibleTopics} progress={progress} locale={locale} />
     </div>
   );
 }
