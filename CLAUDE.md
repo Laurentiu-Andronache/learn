@@ -24,7 +24,7 @@ learn-app/
 ## Dev Workflow
 
 - Dev server: `npm run dev` on `:4000` (it should already be running)
-- Lint: `npm run lint` (Biome) / `npm run lint:fix` (auto-fix)
+- Lint: `npm run lint` (Biome only, no ESLint) / `npm run lint:fix` (auto-fix)
 - Tests: `npm run test` (Vitest)
 - Validate all: `npm run validate` (lint:fix → test → build)
 - Deploy: `npm run build`; if it succeeds, then push to main → Vercel auto-deploys to https://learn.gift
@@ -53,7 +53,7 @@ All SEO features are implemented following Next.js App Router best practices:
 - `app/icon.tsx` - Dynamic favicon generator
 - `app/apple-icon.tsx` - Apple touch icon generator
 - `app/layout.tsx` - Full metadata with OG, Twitter Cards, canonical URLs
-- `lib/seo/metadata-utils.ts` - Metadata helper functions
+- `lib/seo/metadata-utils.ts` - `generateBaseMetadata()`, `getBaseUrl()`
 - `lib/seo/structured-data.ts` - JSON-LD schema generators
 - `components/seo/structured-data.tsx` - Structured data components
 
@@ -159,6 +159,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 
 ## Component/Service Naming
 
+- `lib/constants.ts` — `DEFAULT_BASE_FONT_SIZE`, `ONE_YEAR_SECONDS`, `MIN_REVIEWS_FOR_OPTIMIZATION`
 - `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
 - `lib/topics/topic-url.ts` — `topicUrl(topic, sub?)`
 - `components/topics/topic-card.tsx`, `topic-grid.tsx`

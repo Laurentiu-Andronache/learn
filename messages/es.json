@@ -487,5 +487,16 @@
       "imported": "Importado",
       "private": "Privado"
     }
+  },
+  "errors": {
+    "somethingWentWrong": "Algo salió mal",
+    "unexpectedError": "Ocurrió un error inesperado. Por favor, inténtalo de nuevo.",
+    "tryAgain": "Intentar de nuevo",
+    "goHome": "Ir a Temas",
+    "notFound": "Página no encontrada",
+    "notFoundDescription": "La página que buscas no existe o ha sido movida.",
+    "topicError": "No se pudo cargar este tema. Es posible que no exista o hubo un error del servidor.",
+    "adminError": "Ocurrió un error en el panel de administración.",
+    "backToTopics": "Volver a Temas"
   }
 }

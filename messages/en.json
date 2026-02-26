@@ -487,5 +487,16 @@
       "imported": "Imported",
       "private": "Private"
     }
+  },
+  "errors": {
+    "somethingWentWrong": "Something went wrong",
+    "unexpectedError": "An unexpected error occurred. Please try again.",
+    "tryAgain": "Try Again",
+    "goHome": "Go to Topics",
+    "notFound": "Page Not Found",
+    "notFoundDescription": "The page you're looking for doesn't exist or has been moved.",
+    "topicError": "Failed to load this topic. It may not exist or there was a server error.",
+    "adminError": "An error occurred in the admin panel.",
+    "backToTopics": "Back to Topics"
   }
 }
