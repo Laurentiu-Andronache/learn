@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect } from "react";
 import { AnimatedScore } from "@/components/shared/animated-score";
+import { SegmentedBar } from "@/components/shared/segmented-bar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { triggerCelebration } from "@/lib/confetti";
@@ -58,34 +59,15 @@ export function FlashcardResults({
           </div>
 
           {/* 4-segment colored bar */}
-          {total > 0 && (
-            <div className="flex h-3 rounded-full overflow-hidden">
-              {again > 0 && (
-                <div
-                  className="bg-rating-again"
-                  style={{ width: `${(again / total) * 100}%` }}
-                />
-              )}
-              {hard > 0 && (
-                <div
-                  className="bg-rating-hard"
-                  style={{ width: `${(hard / total) * 100}%` }}
-                />
-              )}
-              {good > 0 && (
-                <div
-                  className="bg-rating-good"
-                  style={{ width: `${(good / total) * 100}%` }}
-                />
-              )}
-              {easy > 0 && (
-                <div
-                  className="bg-rating-easy"
-                  style={{ width: `${(easy / total) * 100}%` }}
-                />
-              )}
-            </div>
-          )}
+          <SegmentedBar
+            segments={[
+              { className: "bg-rating-again", value: again },
+              { className: "bg-rating-hard", value: hard },
+              { className: "bg-rating-good", value: good },
+              { className: "bg-rating-easy", value: easy },
+            ]}
+            total={total}
+          />
 
           {/* 4-rating counts */}
           <div className="grid grid-cols-4 gap-2 text-center">
@@ -128,34 +110,16 @@ export function FlashcardResults({
                       {cat.good + cat.easy}/{catTotal}
                     </span>
                   </div>
-                  {catTotal > 0 && (
-                    <div className="flex h-1.5 rounded-full overflow-hidden">
-                      {cat.again > 0 && (
-                        <div
-                          className="bg-rating-again"
-                          style={{ width: `${(cat.again / catTotal) * 100}%` }}
-                        />
-                      )}
-                      {cat.hard > 0 && (
-                        <div
-                          className="bg-rating-hard"
-                          style={{ width: `${(cat.hard / catTotal) * 100}%` }}
-                        />
-                      )}
-                      {cat.good > 0 && (
-                        <div
-                          className="bg-rating-good"
-                          style={{ width: `${(cat.good / catTotal) * 100}%` }}
-                        />
-                      )}
-                      {cat.easy > 0 && (
-                        <div
-                          className="bg-rating-easy"
-                          style={{ width: `${(cat.easy / catTotal) * 100}%` }}
-                        />
-                      )}
-                    </div>
-                  )}
+                  <SegmentedBar
+                    segments={[
+                      { className: "bg-rating-again", value: cat.again },
+                      { className: "bg-rating-hard", value: cat.hard },
+                      { className: "bg-rating-good", value: cat.good },
+                      { className: "bg-rating-easy", value: cat.easy },
+                    ]}
+                    total={catTotal}
+                    height="h-1.5"
+                  />
                 </div>
               );
             })}
