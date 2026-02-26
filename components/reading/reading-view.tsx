@@ -10,7 +10,6 @@ import { topicUrl } from "@/lib/topics/topic-url";
 import { ReadingProgressBar } from "./reading-progress";
 
 interface ReadingViewProps {
-  userId: string;
   topic: {
     id: string;
     slug?: string | null;
@@ -28,7 +27,6 @@ interface ReadingViewProps {
 }
 
 export function ReadingView({
-  userId,
   topic,
   progress,
   isAdmin,
@@ -52,7 +50,6 @@ export function ReadingView({
   return (
     <div className="relative min-h-screen bg-[radial-gradient(ellipse_at_top,hsl(var(--reading-accent)/0.04)_0%,transparent_50%)]">
       <ReadingProgressBar
-        userId={userId}
         topicId={topic.id}
         initialPercent={totalProgress}
       />

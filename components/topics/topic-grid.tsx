@@ -20,14 +20,12 @@ interface TopicData {
 interface TopicGridProps {
   topics: TopicData[];
   progress: TopicProgress[];
-  userId: string;
   locale: string;
 }
 
 export function TopicGrid({
   topics,
   progress,
-  userId,
   locale,
 }: TopicGridProps) {
   const t = useTranslations("topics");
@@ -56,7 +54,6 @@ export function TopicGrid({
           <TopicCard
             topic={topic}
             progress={progressMap.get(topic.id) || null}
-            userId={userId}
             locale={locale}
           />
         </div>

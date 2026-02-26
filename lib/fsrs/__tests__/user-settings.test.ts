@@ -7,6 +7,10 @@ let lastUpdateArgs: unknown;
 vi.mock("@/lib/supabase/server", () => ({
   createClient: () =>
     Promise.resolve({
+      auth: {
+        getUser: () =>
+          Promise.resolve({ data: { user: { id: "user-1" } } }),
+      },
       from: (_table: string) => {
         const chain = {
           select: () => chain,
@@ -51,7 +55,7 @@ describe("getFsrsSettings", () => {
       error: null,
     };
 
-    const result = await getFsrsSettings("user-1");
+    const result = await getFsrsSettings();
     expect(result).toEqual({
       desired_retention: 0.85,
       max_review_interval: 180,
@@ -79,7 +83,7 @@ describe("getFsrsSettings", () => {
       error: null,
     };
 
-    const result = await getFsrsSettings("user-1");
+    const result = await getFsrsSettings();
     expect(result).toEqual({
       desired_retention: 0.9,
       max_review_interval: 36500,
@@ -98,7 +102,7 @@ describe("getFsrsSettings", () => {
       error: { message: "not found" },
     };
 
-    const result = await getFsrsSettings("user-1");
+    const result = await getFsrsSettings();
     expect(result).toEqual({
       desired_retention: 0.9,
       max_review_interval: 36500,
@@ -122,7 +126,7 @@ describe("updateFsrsSettings", () => {
   it("calls update with the provided fields", async () => {
     mockUpdateResult = { error: null };
 
-    await updateFsrsSettings("user-1", {
+    await updateFsrsSettings({
       desired_retention: 0.85,
       max_review_interval: 180,
     });
@@ -137,7 +141,7 @@ describe("updateFsrsSettings", () => {
     mockUpdateResult = { error: { message: "update failed" } };
 
     await expect(
-      updateFsrsSettings("user-1", { desired_retention: 0.8 }),
+      updateFsrsSettings({ desired_retention: 0.8 }),
     ).rejects.toThrow("update failed");
   });
 });

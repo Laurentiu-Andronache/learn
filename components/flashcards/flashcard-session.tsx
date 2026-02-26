@@ -34,7 +34,6 @@ interface FlashcardItemData {
 }
 
 interface FlashcardSessionProps {
-  userId: string;
   topicId: string;
   topicTitleEn: string;
   topicTitleEs: string;
@@ -44,7 +43,6 @@ interface FlashcardSessionProps {
 }
 
 export function FlashcardSession({
-  userId,
   topicId,
   topicTitleEn,
   topicTitleEs,
@@ -94,26 +92,25 @@ export function FlashcardSession({
   const handleGrade = useCallback(
     (flashcardId: string, rating: 1 | 2 | 3 | 4) => {
       const timeMs = Date.now() - startTime.current;
-      scheduleFlashcardReview(userId, flashcardId, rating, timeMs).catch(() =>
+      scheduleFlashcardReview(flashcardId, rating, timeMs).catch(() =>
         toast.error(
           "Failed to save progress. Your answer was recorded locally but may not persist.",
         ),
       );
       startTime.current = Date.now();
     },
-    [userId],
+    [],
   );
 
   const handleSuspend = useCallback(
     (flashcardId: string) => {
       suspendFlashcard(
-        userId,
         flashcardId,
         "Suspended from flashcard session",
       ).catch(() => toast.error("Failed to suspend flashcard."));
       toast.success(tq("questionSuspended"), { duration: 3000 });
     },
-    [userId, tq],
+    [tq],
   );
 
   const handleComplete = useCallback(
@@ -154,18 +151,18 @@ export function FlashcardSession({
   const handleBury = useCallback(() => {
     const fc = flashcards[currentIdx];
     if (!fc) return;
-    buryFlashcard(userId, fc.id).catch(() => {});
+    buryFlashcard(fc.id).catch(() => {});
     toast.success(ts("cardBuried"), { duration: 3000 });
     setSkipSignal((s) => s + 1);
-  }, [flashcards, currentIdx, userId, ts]);
+  }, [flashcards, currentIdx, ts]);
 
   const handleUndo = useCallback(() => {
     if (currentIdx === 0) return;
     const prevFc = flashcards[currentIdx - 1];
-    undoLastReview(userId, prevFc.id).catch(() => {});
+    undoLastReview(prevFc.id).catch(() => {});
     toast.success(ts("undone"), { duration: 3000 });
     setUndoSignal((s) => s + 1);
-  }, [flashcards, currentIdx, userId, ts]);
+  }, [flashcards, currentIdx, ts]);
 
   const handleDeleteQuestion = useCallback(() => {
     const fc = flashcards[currentIdx];
@@ -308,7 +305,6 @@ export function FlashcardSession({
         )}
         {currentFc && (
           <SessionToolbar
-            userId={userId}
             topicId={topicId}
             mode="flashcard"
             isAdmin={isAdmin}

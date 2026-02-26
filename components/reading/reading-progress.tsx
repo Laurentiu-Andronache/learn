@@ -9,13 +9,11 @@ import { Button } from "@/components/ui/button";
 import { updateReadingProgress } from "@/lib/services/user-preferences";
 
 interface ReadingProgressBarProps {
-  userId: string;
   topicId: string;
   initialPercent: number;
 }
 
 export function ReadingProgressBar({
-  userId,
   topicId,
   initialPercent,
 }: ReadingProgressBarProps) {
@@ -45,12 +43,12 @@ export function ReadingProgressBar({
 
   const handleMarkAsRead = useCallback(() => {
     startTransition(async () => {
-      await updateReadingProgress(userId, topicId, null, 1, 100);
+      await updateReadingProgress(topicId, null, 1, 100);
       setCompleted(true);
       toast.success(t("completed"));
       setTimeout(() => router.push(`/topics/${topicId}`), 1500);
     });
-  }, [userId, topicId, t, router]);
+  }, [topicId, t, router]);
 
   return (
     <>

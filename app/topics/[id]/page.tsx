@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { cache } from "react";
 import { AutoGuestLogin } from "@/components/auth/auto-guest-login";
+import { SegmentedBar } from "@/components/shared/segmented-bar";
 import { ClickableCard } from "@/components/topics/clickable-card";
 import { StudyTipsDialog } from "@/components/topics/study-tips-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -100,7 +101,7 @@ export default async function TopicDetailPage({ params }: Props) {
       })
       .eq("categories.topic_id", topic.id),
   ]);
-  const quizSummary = await getQuizSummary(user.id, topic.id);
+  const quizSummary = await getQuizSummary(topic.id);
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
@@ -161,30 +162,15 @@ export default async function TopicDetailPage({ params }: Props) {
           <CardTitle className="text-lg">{tTopics("recallProgress")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <div className="flex h-3 rounded-full overflow-hidden bg-muted">
-            {progress.total > 0 && (
-              <>
-                <div
-                  className="bg-progress-mastered"
-                  style={{
-                    width: `${(progress.masteredCount / progress.total) * 100}%`,
-                  }}
-                />
-                <div
-                  className="bg-progress-review"
-                  style={{
-                    width: `${(progress.reviewCount / progress.total) * 100}%`,
-                  }}
-                />
-                <div
-                  className="bg-progress-learning"
-                  style={{
-                    width: `${(progress.learningCount / progress.total) * 100}%`,
-                  }}
-                />
-              </>
-            )}
-          </div>
+          <SegmentedBar
+            segments={[
+              { className: "bg-progress-mastered", value: progress.masteredCount },
+              { className: "bg-progress-review", value: progress.reviewCount },
+              { className: "bg-progress-learning", value: progress.learningCount },
+            ]}
+            total={progress.total}
+            className="bg-muted"
+          />
           <div className="grid grid-cols-4 gap-2 text-center text-xs">
             <div>
               <span className="block text-lg font-display font-semibold">
@@ -383,30 +369,16 @@ export default async function TopicDetailPage({ params }: Props) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="flex h-1.5 w-24 rounded-full overflow-hidden bg-muted">
-                    {cat.total > 0 && (
-                      <>
-                        <div
-                          className="bg-progress-mastered"
-                          style={{
-                            width: `${(cat.masteredCount / cat.total) * 100}%`,
-                          }}
-                        />
-                        <div
-                          className="bg-progress-review"
-                          style={{
-                            width: `${(cat.reviewCount / cat.total) * 100}%`,
-                          }}
-                        />
-                        <div
-                          className="bg-progress-learning"
-                          style={{
-                            width: `${(cat.learningCount / cat.total) * 100}%`,
-                          }}
-                        />
-                      </>
-                    )}
-                  </div>
+                  <SegmentedBar
+                    segments={[
+                      { className: "bg-progress-mastered", value: cat.masteredCount },
+                      { className: "bg-progress-review", value: cat.reviewCount },
+                      { className: "bg-progress-learning", value: cat.learningCount },
+                    ]}
+                    total={cat.total}
+                    height="h-1.5"
+                    className="w-24 bg-muted"
+                  />
                   <span className="text-xs text-muted-foreground w-12 text-right">
                     {cat.masteredCount}/{cat.total}
                   </span>

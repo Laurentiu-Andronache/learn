@@ -22,7 +22,6 @@ export interface QuizQuestionData {
 }
 
 export interface QuizSessionProps {
-  userId: string;
   topicId: string;
   topicTitleEn: string;
   topicTitleEs: string;
@@ -36,7 +35,6 @@ type SessionPhase = "quiz" | "results";
 // --- Component ---
 
 export function QuizSession({
-  userId,
   topicId,
   questions: allQuestions,
   isAdmin = false,
@@ -87,7 +85,7 @@ export function QuizSession({
         // Quiz complete — save attempt
         const score = newAnswers.filter((a) => a.wasCorrect).length;
         setSaving(true);
-        saveQuizAttempt(userId, topicId, {
+        saveQuizAttempt(topicId, {
           score,
           total: newAnswers.length,
           answers: newAnswers.map((a) => ({
@@ -105,7 +103,7 @@ export function QuizSession({
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
     },
-    [questions, currentIndex, locale, userId, topicId, answers],
+    [questions, currentIndex, locale, topicId, answers],
   );
 
   // Retry failed questions
@@ -129,7 +127,7 @@ export function QuizSession({
     if (answers.length === 0) return;
     const score = answers.filter((a) => a.wasCorrect).length;
     try {
-      await saveQuizAttempt(userId, topicId, {
+      await saveQuizAttempt(topicId, {
         score,
         total: answers.length,
         answers: answers.map((a) => ({
@@ -142,7 +140,7 @@ export function QuizSession({
     } catch {
       // Best-effort — don't block navigation
     }
-  }, [answers, userId, topicId]);
+  }, [answers, topicId]);
 
   // Delete question (admin)
   const handleDeleteQuestion = useCallback(() => {
@@ -210,7 +208,6 @@ export function QuizSession({
       </div>
       <div className="shrink-0 pt-3 pb-4">
         <SessionToolbar
-          userId={userId}
           topicId={topicId}
           mode="quiz"
           isAdmin={isAdmin}

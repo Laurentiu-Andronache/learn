@@ -62,7 +62,6 @@ export default async function TopicsPage() {
       <TopicGrid
         topics={visibleTopics}
         progress={progress}
-        userId={user.id}
         locale={locale}
       />
     </div>

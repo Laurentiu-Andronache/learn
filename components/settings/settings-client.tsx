@@ -33,7 +33,6 @@ import { ProfileEditor } from "./profile-editor";
 import { SuspendedFlashcardsList } from "./suspended-flashcards-list";
 
 interface SettingsClientProps {
-  userId: string;
   email: string | null;
   isAnonymous: boolean;
   createdAt: string;
@@ -69,7 +68,6 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({
-  userId,
   email,
   isAnonymous,
   createdAt,
@@ -130,7 +128,7 @@ export function SettingsClient({
             <ThemeSwitcher />
           </div>
           <Separator />
-          <FontSizeSetting userId={userId} initialSize={baseFontSize} />
+          <FontSizeSetting initialSize={baseFontSize} />
         </CardContent>
       </Card>
 
@@ -144,7 +142,6 @@ export function SettingsClient({
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           <ProfileEditor
-            userId={userId}
             displayName={profile?.display_name ?? ""}
           />
           <Separator />
@@ -161,7 +158,6 @@ export function SettingsClient({
       {/* Study Settings */}
       {fsrsSettings && (
         <FsrsSettingsCard
-          userId={userId}
           settings={fsrsSettings}
           reviewCount={reviewCount}
         />
@@ -183,7 +179,6 @@ export function SettingsClient({
         {suspendedCount > 0 && (
           <CardContent>
             <SuspendedFlashcardsList
-              userId={userId}
               items={suspendedFlashcards}
               onCountChange={setSuspendedCount}
             />
@@ -207,7 +202,6 @@ export function SettingsClient({
         {hiddenCount > 0 && (
           <CardContent>
             <HiddenTopicsList
-              userId={userId}
               items={hiddenTopics}
               onCountChange={setHiddenCount}
             />

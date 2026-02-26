@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { unhideTopic } from "@/lib/services/user-preferences";
 
 interface HiddenTopicsListProps {
-  userId: string;
   items: Array<{
     id: string;
     hidden_at: string;
@@ -23,7 +22,6 @@ interface HiddenTopicsListProps {
 }
 
 export function HiddenTopicsList({
-  userId,
   items: initial,
   onCountChange,
 }: HiddenTopicsListProps) {
@@ -37,7 +35,7 @@ export function HiddenTopicsList({
   const handleUnhide = (topicId: string) => {
     setPending(topicId);
     startTransition(async () => {
-      await unhideTopic(userId, topicId);
+      await unhideTopic(topicId);
       setItems((prev) => {
         const next = prev.filter((i) => i.topic?.id !== topicId);
         onCountChange?.(next.length);

@@ -54,7 +54,7 @@ export default async function QuizPage({
 
   // In "remaining" mode, exclude questions already answered correctly
   if (mode === "remaining") {
-    const correctIds = new Set(await getCorrectQuestionIds(user.id, topic.id));
+    const correctIds = new Set(await getCorrectQuestionIds(topic.id));
     filtered = filtered.filter((q) => !correctIds.has(q.id));
     if (filtered.length === 0) redirect(topicUrl(topic));
   }
@@ -63,11 +63,10 @@ export default async function QuizPage({
 
   if (questions.length === 0) redirect(topicUrl(topic));
 
-  const fsrsSettings = await getFsrsSettings(user.id);
+  const fsrsSettings = await getFsrsSettings();
 
   return (
     <QuizSession
-      userId={user.id}
       topicId={topic.id}
       topicTitleEn={topic.title_en}
       topicTitleEs={topic.title_es}

@@ -17,6 +17,15 @@ import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
 type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
+async function requireUserId() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  return { supabase, userId: user.id };
+}
+
 interface BeforeSnapshot {
   stability_before: number | null;
   difficulty_before: number | null;
@@ -130,12 +139,11 @@ async function insertReviewLog(
 // --- Exported server actions ---
 
 export async function scheduleFlashcardReview(
-  userId: string,
   flashcardId: string,
   rating: 1 | 2 | 3 | 4,
   answerTimeMs?: number,
 ) {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
 
   // Fetch current card state + user FSRS settings in parallel
   const [{ data: existingState }, userSettings] = await Promise.all([
@@ -145,7 +153,7 @@ export async function scheduleFlashcardReview(
       .eq("user_id", userId)
       .eq("flashcard_id", flashcardId)
       .single(),
-    getFsrsSettings(userId),
+    getFsrsSettings(),
   ]);
 
   const now = new Date();
@@ -231,8 +239,8 @@ export async function scheduleFlashcardReview(
   return { cardStateId, newState: dbFields };
 }
 
-export async function buryFlashcard(userId: string, flashcardId: string) {
-  const supabase = await createClient();
+export async function buryFlashcard(flashcardId: string) {
+  const { supabase, userId } = await requireUserId();
 
   const tomorrow = new Date();
   tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
@@ -265,8 +273,8 @@ export async function buryFlashcard(userId: string, flashcardId: string) {
   }
 }
 
-export async function undoLastReview(userId: string, flashcardId: string) {
-  const supabase = await createClient();
+export async function undoLastReview(flashcardId: string) {
+  const { supabase, userId } = await requireUserId();
 
   const { data: lastLog } = await supabase
     .from("review_logs")
@@ -284,10 +292,9 @@ export async function undoLastReview(userId: string, flashcardId: string) {
 }
 
 export async function resetTodayProgress(
-  userId: string,
   topicId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
   if (!flashcardIds.length) return 0;
 
@@ -327,10 +334,9 @@ export async function resetTodayProgress(
 }
 
 export async function resetAllProgress(
-  userId: string,
   topicId: string,
 ): Promise<{ reviewLogs: number; cardStates: number; suspended: number }> {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
   if (!flashcardIds.length)
     return { reviewLogs: 0, cardStates: 0, suspended: 0 };
@@ -367,9 +373,9 @@ export async function resetAllProgress(
 }
 
 export async function findNextTopic(
-  userId: string,
   excludeTopicId: string,
 ): Promise<string | null> {
+  const { userId } = await requireUserId();
   const allProgress = await getAllTopicsProgress(userId);
   const next = allProgress.find(
     (p) => p.topicId !== excludeTopicId && p.dueToday > 0,
@@ -382,13 +388,11 @@ export async function findNextTopic(
 /** Reviews required since last optimization before auto-re-optimizing */
 const AUTO_REOPTIMIZE_REVIEWS = 100;
 
-export async function optimizeFsrsParameters(
-  userId: string,
-): Promise<
+export async function optimizeFsrsParameters(): Promise<
   | { success: true; weights: number[]; reviewCount: number }
   | { success: false; error: string; reviewCount?: number }
 > {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
 
   try {
     const result = await optimizeUserParameters(userId);
@@ -430,8 +434,8 @@ export async function optimizeFsrsParameters(
   }
 }
 
-export async function resetFsrsWeights(userId: string): Promise<void> {
-  const supabase = await createClient();
+export async function resetFsrsWeights(): Promise<void> {
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("profiles")
     .update({
@@ -469,7 +473,7 @@ async function maybeAutoOptimize(userId: string): Promise<void> {
 
     if (!profile?.fsrs_weights_updated_at) {
       // Never optimized — run it
-      await optimizeFsrsParameters(userId);
+      await optimizeFsrsParameters();
       return;
     }
 
@@ -481,7 +485,7 @@ async function maybeAutoOptimize(userId: string): Promise<void> {
       .gt("reviewed_at", profile.fsrs_weights_updated_at);
 
     if ((reviewsSinceOpt ?? 0) >= AUTO_REOPTIMIZE_REVIEWS) {
-      await optimizeFsrsParameters(userId);
+      await optimizeFsrsParameters();
     }
   } catch (e) {
     // Auto-optimization is best-effort, don't throw

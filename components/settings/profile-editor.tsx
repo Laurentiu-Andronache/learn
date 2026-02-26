@@ -9,12 +9,10 @@ import { Label } from "@/components/ui/label";
 import { updateProfile } from "@/lib/services/user-preferences";
 
 interface ProfileEditorProps {
-  userId: string;
   displayName: string;
 }
 
 export function ProfileEditor({
-  userId,
   displayName: initial,
 }: ProfileEditorProps) {
   const t = useTranslations("settings");
@@ -26,7 +24,7 @@ export function ProfileEditor({
   const handleSave = () => {
     setSaved(false);
     startTransition(async () => {
-      await updateProfile(userId, { display_name: name || undefined });
+      await updateProfile({ display_name: name || undefined });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     });

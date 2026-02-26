@@ -44,7 +44,6 @@ import {
 } from "@/lib/services/admin-reviews";
 
 interface SessionToolbarProps {
-  userId: string;
   topicId: string;
   mode: "quiz" | "flashcard";
   isAdmin: boolean;
@@ -58,7 +57,6 @@ interface SessionToolbarProps {
 }
 
 export function SessionToolbar({
-  userId,
   topicId,
   mode,
   isAdmin,
@@ -94,7 +92,7 @@ export function SessionToolbar({
   const handleNextTopic = async () => {
     setFindingNext(true);
     try {
-      const nextId = await findNextTopic(userId, topicId);
+      const nextId = await findNextTopic(topicId);
       if (nextId) {
         router.push(
           `/topics/${nextId}/${mode === "quiz" ? "quiz" : "flashcards"}`,

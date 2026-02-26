@@ -4,14 +4,22 @@ import { DEFAULT_BASE_FONT_SIZE } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
+async function requireUserId() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  return { supabase, userId: user.id };
+}
+
 // ============ SUSPENDED FLASHCARDS ============
 
 export async function suspendFlashcard(
-  userId: string,
   flashcardId: string,
   reason?: string,
 ) {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase.from("suspended_flashcards").upsert(
     {
       user_id: userId,
@@ -23,8 +31,8 @@ export async function suspendFlashcard(
   if (error) throw new Error(error.message);
 }
 
-export async function unsuspendFlashcard(userId: string, flashcardId: string) {
-  const supabase = await createClient();
+export async function unsuspendFlashcard(flashcardId: string) {
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("suspended_flashcards")
     .delete()
@@ -45,10 +53,8 @@ export interface SuspendedFlashcardDetail {
   } | null;
 }
 
-export async function getSuspendedFlashcards(
-  userId: string,
-): Promise<SuspendedFlashcardDetail[]> {
-  const supabase = await createClient();
+export async function getSuspendedFlashcards(): Promise<SuspendedFlashcardDetail[]> {
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("suspended_flashcards")
     .select(`
@@ -65,10 +71,9 @@ export async function getSuspendedFlashcards(
 }
 
 export async function unsuspendAllFlashcardsForTopic(
-  userId: string,
   topicId: string,
 ): Promise<number> {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const flashcardIds = await getFlashcardIdsForTopic(supabase, topicId);
   if (!flashcardIds.length) return 0;
   const { data: deleted } = await supabase
@@ -82,8 +87,8 @@ export async function unsuspendAllFlashcardsForTopic(
 
 // ============ HIDDEN TOPICS ============
 
-export async function hideTopic(userId: string, topicId: string) {
-  const supabase = await createClient();
+export async function hideTopic(topicId: string) {
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase.from("hidden_topics").upsert(
     {
       user_id: userId,
@@ -94,8 +99,8 @@ export async function hideTopic(userId: string, topicId: string) {
   if (error) throw new Error(error.message);
 }
 
-export async function unhideTopic(userId: string, topicId: string) {
-  const supabase = await createClient();
+export async function unhideTopic(topicId: string) {
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("hidden_topics")
     .delete()
@@ -116,10 +121,8 @@ export interface HiddenTopicDetail {
   } | null;
 }
 
-export async function getHiddenTopics(
-  userId: string,
-): Promise<HiddenTopicDetail[]> {
-  const supabase = await createClient();
+export async function getHiddenTopics(): Promise<HiddenTopicDetail[]> {
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("hidden_topics")
     .select(`
@@ -137,13 +140,12 @@ export async function getHiddenTopics(
 // ============ READING PROGRESS ============
 
 export async function updateReadingProgress(
-  userId: string,
   topicId: string,
   categoryId: string | null,
   currentSection: number,
   completionPercent: number,
 ) {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const now = new Date().toISOString();
   // Check for existing row (NULL-safe category_id comparison)
   let query = supabase
@@ -186,10 +188,9 @@ export interface ReadingProgressDetail {
 }
 
 export async function getReadingProgress(
-  userId: string,
   topicId: string,
 ): Promise<ReadingProgressDetail[]> {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("reading_progress")
     .select("*")
@@ -223,8 +224,8 @@ const FSRS_DEFAULTS: FsrsSettings = {
   fsrs_weights_updated_at: null,
 };
 
-export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
-  const supabase = await createClient();
+export async function getFsrsSettings(): Promise<FsrsSettings> {
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("profiles")
     .select(
@@ -251,10 +252,9 @@ export async function getFsrsSettings(userId: string): Promise<FsrsSettings> {
 }
 
 export async function updateFsrsSettings(
-  userId: string,
   settings: Partial<FsrsSettings>,
 ): Promise<void> {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("profiles")
     .update({ ...settings, updated_at: new Date().toISOString() })
@@ -264,8 +264,8 @@ export async function updateFsrsSettings(
 
 // ============ BASE FONT SIZE ============
 
-export async function getBaseFontSize(userId: string): Promise<number> {
-  const supabase = await createClient();
+export async function getBaseFontSize(): Promise<number> {
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("profiles")
     .select("base_font_size")
@@ -276,10 +276,9 @@ export async function getBaseFontSize(userId: string): Promise<number> {
 }
 
 export async function updateBaseFontSize(
-  userId: string,
   size: number,
 ): Promise<void> {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("profiles")
     .update({ base_font_size: size, updated_at: new Date().toISOString() })
@@ -290,10 +289,9 @@ export async function updateBaseFontSize(
 // ============ PROFILE ============
 
 export async function updateProfile(
-  userId: string,
   updates: { display_name?: string; preferred_language?: "en" | "es" },
 ) {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { error } = await supabase
     .from("profiles")
     .update({ ...updates, updated_at: new Date().toISOString() })
@@ -301,8 +299,8 @@ export async function updateProfile(
   if (error) throw new Error(error.message);
 }
 
-export async function getProfile(userId: string) {
-  const supabase = await createClient();
+export async function getProfile() {
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("profiles")
     .select("*")

@@ -4,6 +4,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockSupabase = {
   from: vi.fn(),
+  auth: {
+    getUser: vi.fn(() =>
+      Promise.resolve({ data: { user: { id: "user-1" } } }),
+    ),
+  },
 };
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -45,6 +50,9 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockSupabase.auth.getUser.mockResolvedValue({
+    data: { user: { id: "user-1" } },
+  });
 });
 
 // ─── Helpers ─────────────────────────────────────────────────────────
@@ -100,7 +108,7 @@ describe("scheduleFlashcardReview", () => {
       return {};
     });
 
-    const result = await scheduleFlashcardReview("user-1", "f1", 3);
+    const result = await scheduleFlashcardReview("f1", 3);
 
     expect(result.cardStateId).toBe("cs-new");
     expect(insertFn).toHaveBeenCalledWith(
@@ -165,7 +173,7 @@ describe("scheduleFlashcardReview", () => {
       return {};
     });
 
-    const result = await scheduleFlashcardReview("user-1", "f1", 3);
+    const result = await scheduleFlashcardReview("f1", 3);
 
     expect(result.cardStateId).toBe("cs-1");
     expect(updateFn).toHaveBeenCalledWith(
@@ -228,7 +236,7 @@ describe("scheduleFlashcardReview", () => {
       return {};
     });
 
-    await scheduleFlashcardReview("user-1", "f1", 1); // Again
+    await scheduleFlashcardReview("f1", 1); // Again
 
     expect(updateFn).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -290,7 +298,7 @@ describe("scheduleFlashcardReview", () => {
       return {};
     });
 
-    await scheduleFlashcardReview("user-1", "f1", 2); // Hard
+    await scheduleFlashcardReview("f1", 2); // Hard
 
     expect(updateFn).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -331,7 +339,7 @@ describe("scheduleFlashcardReview", () => {
       return {};
     });
 
-    await expect(scheduleFlashcardReview("user-1", "f1", 3)).rejects.toThrow(
+    await expect(scheduleFlashcardReview("f1", 3)).rejects.toThrow(
       "Failed to insert card state: insert failed",
     );
   });
@@ -363,7 +371,7 @@ describe("buryFlashcard", () => {
       return { update: updateFn };
     });
 
-    await buryFlashcard("user-1", "f1");
+    await buryFlashcard("f1");
 
     expect(updateFn).toHaveBeenCalledWith(
       expect.objectContaining({ due: expect.any(String) }),
@@ -391,7 +399,7 @@ describe("buryFlashcard", () => {
       return { insert: insertFn };
     });
 
-    await buryFlashcard("user-1", "f1");
+    await buryFlashcard("f1");
 
     expect(insertFn).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -424,7 +432,7 @@ describe("buryFlashcard", () => {
       };
     });
 
-    await expect(buryFlashcard("user-1", "f1")).rejects.toThrow(
+    await expect(buryFlashcard("f1")).rejects.toThrow(
       "Failed to bury card: update boom",
     );
   });
@@ -449,7 +457,7 @@ describe("undoLastReview", () => {
     }));
 
     // Should not throw
-    await undoLastReview("user-1", "f1");
+    await undoLastReview("f1");
   });
 
   it("deletes log and restores snapshot when state_before is present", async () => {
@@ -505,7 +513,7 @@ describe("undoLastReview", () => {
       return { update: updateMock };
     });
 
-    await undoLastReview("user-1", "f1");
+    await undoLastReview("f1");
 
     expect(deleteEqMock).toHaveBeenCalledWith("id", "log-1");
     expect(updateMock).toHaveBeenCalledWith(
@@ -566,7 +574,7 @@ describe("undoLastReview", () => {
       return { delete: stateDelete };
     });
 
-    await undoLastReview("user-1", "f1");
+    await undoLastReview("f1");
 
     expect(logDeleteEq).toHaveBeenCalledWith("id", "log-1");
     expect(stateDeleteEq1).toHaveBeenCalledWith("user_id", "user-1");
@@ -580,7 +588,7 @@ describe("resetTodayProgress", () => {
   it("returns 0 when no flashcard ids for topic", async () => {
     vi.mocked(getFlashcardIdsForTopic).mockResolvedValueOnce([]);
 
-    const result = await resetTodayProgress("user-1", "topic-1");
+    const result = await resetTodayProgress("topic-1");
     expect(result).toBe(0);
   });
 
@@ -602,7 +610,7 @@ describe("resetTodayProgress", () => {
       return {};
     });
 
-    const result = await resetTodayProgress("user-1", "topic-1");
+    const result = await resetTodayProgress("topic-1");
     expect(result).toBe(0);
   });
 
@@ -675,7 +683,7 @@ describe("resetTodayProgress", () => {
       return {};
     });
 
-    const result = await resetTodayProgress("user-1", "topic-1");
+    const result = await resetTodayProgress("topic-1");
 
     expect(result).toBe(2); // 2 logs deleted
     expect(deleteInMock).toHaveBeenCalledWith("id", ["log-1", "log-2"]);

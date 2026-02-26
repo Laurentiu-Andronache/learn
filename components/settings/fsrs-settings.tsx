@@ -26,13 +26,11 @@ const DEFAULTS: Omit<FsrsSettings, "fsrs_weights" | "fsrs_weights_updated_at"> =
   };
 
 interface FsrsSettingsCardProps {
-  userId: string;
   settings: FsrsSettings;
   reviewCount: number;
 }
 
 export function FsrsSettingsCard({
-  userId,
   settings,
   reviewCount,
 }: FsrsSettingsCardProps) {
@@ -54,7 +52,7 @@ export function FsrsSettingsCard({
   const handleSave = useCallback(async () => {
     setSaving(true);
     try {
-      await updateFsrsSettings(userId, {
+      await updateFsrsSettings({
         desired_retention: retention,
         max_review_interval: maxInterval,
         new_cards_per_day: newCards,
@@ -69,7 +67,6 @@ export function FsrsSettingsCard({
       setSaving(false);
     }
   }, [
-    userId,
     retention,
     maxInterval,
     newCards,
@@ -92,7 +89,7 @@ export function FsrsSettingsCard({
   const handleOptimize = useCallback(async () => {
     setOptimizing(true);
     try {
-      const result = await optimizeFsrsParameters(userId);
+      const result = await optimizeFsrsParameters();
       if (result.success) {
         setWeightsUpdatedAt(new Date().toISOString());
         toast.success(t("optimizer.optimized"));
@@ -111,17 +108,17 @@ export function FsrsSettingsCard({
     } finally {
       setOptimizing(false);
     }
-  }, [userId, reviewCount, t, tc]);
+  }, [reviewCount, t, tc]);
 
   const handleResetWeights = useCallback(async () => {
     try {
-      await resetFsrsWeights(userId);
+      await resetFsrsWeights();
       setWeightsUpdatedAt(null);
       toast.success(t("optimizer.resetDone"));
     } catch {
       toast.error(tc("error"));
     }
-  }, [userId, t, tc]);
+  }, [t, tc]);
 
   const canOptimize = reviewCount >= MIN_REVIEWS_FOR_OPTIMIZATION;
 

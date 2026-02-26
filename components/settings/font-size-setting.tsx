@@ -7,11 +7,10 @@ import { DEFAULT_BASE_FONT_SIZE, ONE_YEAR_SECONDS } from "@/lib/constants";
 import { updateBaseFontSize } from "@/lib/services/user-preferences";
 
 interface FontSizeSettingProps {
-  userId: string;
   initialSize: number;
 }
 
-export function FontSizeSetting({ userId, initialSize }: FontSizeSettingProps) {
+export function FontSizeSetting({ initialSize }: FontSizeSettingProps) {
   const t = useTranslations("settings");
   const [size, setSize] = useState(initialSize);
   const [, startTransition] = useTransition();
@@ -39,7 +38,7 @@ export function FontSizeSetting({ userId, initialSize }: FontSizeSettingProps) {
     document.cookie = `base_font_size=${value};path=/;max-age=${ONE_YEAR_SECONDS};SameSite=Lax`;
     startTransition(async () => {
       try {
-        await updateBaseFontSize(userId, value);
+        await updateBaseFontSize(value);
       } catch {
         // Silently fail — cookie already persists locally
       }

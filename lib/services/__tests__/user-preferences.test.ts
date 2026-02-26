@@ -3,6 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // Mock Supabase server client
 const mockSupabase = {
   from: vi.fn(),
+  auth: {
+    getUser: vi.fn(() =>
+      Promise.resolve({ data: { user: { id: "user-1" } } }),
+    ),
+  },
 };
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -24,6 +29,9 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockSupabase.auth.getUser.mockResolvedValue({
+    data: { user: { id: "user-1" } },
+  });
 });
 
 // ─── SUSPENDED FLASHCARDS ────────────────────────────────────────────
@@ -33,7 +41,7 @@ describe("suspendFlashcard", () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await suspendFlashcard("user-1", "f-1", "too_easy");
+    await suspendFlashcard("f-1", "too_easy");
 
     expect(mockSupabase.from).toHaveBeenCalledWith("suspended_flashcards");
     expect(upsertMock).toHaveBeenCalledWith(
@@ -46,7 +54,7 @@ describe("suspendFlashcard", () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await suspendFlashcard("user-1", "f-1");
+    await suspendFlashcard("f-1");
 
     expect(upsertMock).toHaveBeenCalledWith(
       { user_id: "user-1", flashcard_id: "f-1", reason: null },
@@ -60,7 +68,7 @@ describe("suspendFlashcard", () => {
       .mockResolvedValue({ error: { message: "Constraint" } });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await expect(suspendFlashcard("user-1", "f-1")).rejects.toThrow(
+    await expect(suspendFlashcard("f-1")).rejects.toThrow(
       "Constraint",
     );
   });
@@ -77,7 +85,7 @@ describe("unsuspendFlashcard", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ error: null });
 
-    await unsuspendFlashcard("user-1", "f-1");
+    await unsuspendFlashcard("f-1");
 
     expect(mockSupabase.from).toHaveBeenCalledWith("suspended_flashcards");
     expect(eq1Mock).toHaveBeenCalledWith("user_id", "user-1");
@@ -112,7 +120,7 @@ describe("getSuspendedFlashcards", () => {
       returns: vi.fn().mockResolvedValue({ data: mockData, error: null }),
     });
 
-    const result = await getSuspendedFlashcards("user-1");
+    const result = await getSuspendedFlashcards();
     expect(result).toEqual(mockData);
     expect(eqMock).toHaveBeenCalledWith("user_id", "user-1");
   });
@@ -129,7 +137,7 @@ describe("getSuspendedFlashcards", () => {
       returns: vi.fn().mockResolvedValue({ data: null, error: null }),
     });
 
-    const result = await getSuspendedFlashcards("user-1");
+    const result = await getSuspendedFlashcards();
     expect(result).toEqual([]);
   });
 });
@@ -141,7 +149,7 @@ describe("hideTopic", () => {
     const upsertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValue({ upsert: upsertMock });
 
-    await hideTopic("user-1", "topic-1");
+    await hideTopic("topic-1");
 
     expect(mockSupabase.from).toHaveBeenCalledWith("hidden_topics");
     expect(upsertMock).toHaveBeenCalledWith(
@@ -162,7 +170,7 @@ describe("unhideTopic", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ error: null });
 
-    await unhideTopic("user-1", "topic-1");
+    await unhideTopic("topic-1");
 
     expect(eq1Mock).toHaveBeenCalledWith("user_id", "user-1");
     expect(eq2Mock).toHaveBeenCalledWith("topic_id", "topic-1");
@@ -196,7 +204,7 @@ describe("getHiddenTopics", () => {
       returns: vi.fn().mockResolvedValue({ data: mockData, error: null }),
     });
 
-    const result = await getHiddenTopics("user-1");
+    const result = await getHiddenTopics();
     expect(result).toEqual(mockData);
   });
 });
@@ -225,7 +233,7 @@ describe("updateReadingProgress", () => {
     updateMock.mockReturnValue({ eq: updateEqMock });
     updateEqMock.mockResolvedValue({ error: null });
 
-    await updateReadingProgress("user-1", "topic-1", "cat-1", 3, 75);
+    await updateReadingProgress("topic-1", "cat-1", 3, 75);
 
     expect(updateMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -253,7 +261,7 @@ describe("updateReadingProgress", () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValueOnce({ insert: insertMock });
 
-    await updateReadingProgress("user-1", "topic-1", "cat-1", 0, 0);
+    await updateReadingProgress("topic-1", "cat-1", 0, 0);
 
     expect(insertMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -282,7 +290,7 @@ describe("updateReadingProgress", () => {
     const insertMock = vi.fn().mockResolvedValue({ error: null });
     mockSupabase.from.mockReturnValueOnce({ insert: insertMock });
 
-    await updateReadingProgress("user-1", "topic-1", null, 1, 50);
+    await updateReadingProgress("topic-1", null, 1, 50);
 
     expect(isMock).toHaveBeenCalledWith("category_id", null);
     expect(insertMock).toHaveBeenCalledWith(
@@ -306,7 +314,7 @@ describe("getReadingProgress", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ data: mockData, error: null });
 
-    const result = await getReadingProgress("user-1", "topic-1");
+    const result = await getReadingProgress("topic-1");
     expect(result).toEqual(mockData);
   });
 
@@ -320,7 +328,7 @@ describe("getReadingProgress", () => {
     eq1Mock.mockReturnValue({ eq: eq2Mock });
     eq2Mock.mockResolvedValue({ data: null, error: null });
 
-    const result = await getReadingProgress("user-1", "topic-1");
+    const result = await getReadingProgress("topic-1");
     expect(result).toEqual([]);
   });
 });
@@ -336,7 +344,7 @@ describe("updateProfile", () => {
     updateMock.mockReturnValue({ eq: eqMock });
     eqMock.mockResolvedValue({ error: null });
 
-    await updateProfile("user-1", { display_name: "Alice" });
+    await updateProfile({ display_name: "Alice" });
 
     expect(mockSupabase.from).toHaveBeenCalledWith("profiles");
     expect(updateMock).toHaveBeenCalledWith(
@@ -355,7 +363,7 @@ describe("updateProfile", () => {
     updateMock.mockReturnValue({ eq: eqMock });
     eqMock.mockResolvedValue({ error: null });
 
-    await updateProfile("user-1", { preferred_language: "es" });
+    await updateProfile({ preferred_language: "es" });
 
     const arg = updateMock.mock.calls[0][0];
     expect(arg.preferred_language).toBe("es");
@@ -379,7 +387,7 @@ describe("getProfile", () => {
     eqMock.mockReturnValue({ single: singleMock });
     singleMock.mockResolvedValue({ data: mockProfile, error: null });
 
-    const result = await getProfile("user-1");
+    const result = await getProfile();
     expect(result).toEqual(mockProfile);
     expect(eqMock).toHaveBeenCalledWith("id", "user-1");
   });
@@ -397,6 +405,6 @@ describe("getProfile", () => {
       error: { message: "No rows" },
     });
 
-    await expect(getProfile("user-bad")).rejects.toThrow("No rows");
+    await expect(getProfile()).rejects.toThrow("No rows");
   });
 });

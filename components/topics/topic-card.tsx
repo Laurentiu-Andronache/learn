@@ -14,6 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { SegmentedBar } from "@/components/shared/segmented-bar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -48,11 +49,10 @@ interface TopicData {
 interface TopicCardProps {
   topic: TopicData;
   progress: TopicProgress | null;
-  userId: string;
   locale: string;
 }
 
-export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
+export function TopicCard({ topic, progress, locale }: TopicCardProps) {
   const router = useRouter();
   const t = useTranslations("topics");
   const tc = useTranslations("common");
@@ -69,13 +69,9 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
       : topic.description_en;
 
   const total = progress?.total ?? 0;
-  const newPct = total > 0 ? (progress!.newCount / total) * 100 : 100;
-  const learningPct = total > 0 ? (progress!.learningCount / total) * 100 : 0;
-  const reviewPct = total > 0 ? (progress!.reviewCount / total) * 100 : 0;
-  const masteredPct = total > 0 ? (progress!.masteredCount / total) * 100 : 0;
 
   const handleHide = async () => {
-    await hideTopic(userId, topic.id);
+    await hideTopic(topic.id);
     router.refresh();
   };
 
@@ -86,7 +82,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
   };
 
   const handleUnsuspendAll = async () => {
-    const count = await unsuspendAllFlashcardsForTopic(userId, topic.id);
+    const count = await unsuspendAllFlashcardsForTopic(topic.id);
     if (count > 0) {
       toast.success(t("unsuspendAllSuccess", { count }));
       router.refresh();
@@ -96,7 +92,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
   };
 
   const handleResetToday = async () => {
-    const count = await resetTodayProgress(userId, topic.id);
+    const count = await resetTodayProgress(topic.id);
     if (count > 0) {
       toast.success(t("resetTodaySuccess", { count }));
       router.refresh();
@@ -107,7 +103,7 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
   };
 
   const handleResetAll = async () => {
-    const result = await resetAllProgress(userId, topic.id);
+    const result = await resetAllProgress(topic.id);
     const total = result.reviewLogs + result.cardStates + result.suspended;
     if (total > 0) {
       toast.success(t("resetAllSuccess"));
@@ -198,26 +194,19 @@ export function TopicCard({ topic, progress, userId, locale }: TopicCardProps) {
           </p>
 
           {/* Progress bar */}
-          {total > 0 && (
+          {total > 0 && progress && (
             <div className="space-y-1">
-              <div className="flex h-2 rounded-full overflow-hidden bg-muted">
-                <div
-                  className="bg-progress-mastered"
-                  style={{ width: `${masteredPct}%` }}
-                />
-                <div
-                  className="bg-progress-review"
-                  style={{ width: `${reviewPct}%` }}
-                />
-                <div
-                  className="bg-progress-learning"
-                  style={{ width: `${learningPct}%` }}
-                />
-                <div
-                  className="bg-progress-new"
-                  style={{ width: `${newPct}%` }}
-                />
-              </div>
+              <SegmentedBar
+                segments={[
+                  { className: "bg-progress-mastered", value: progress.masteredCount },
+                  { className: "bg-progress-review", value: progress.reviewCount },
+                  { className: "bg-progress-learning", value: progress.learningCount },
+                  { className: "bg-progress-new", value: progress.newCount },
+                ]}
+                total={total}
+                height="h-2"
+                className="bg-muted"
+              />
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>
                   {total} {t("flashcardCount")}

@@ -38,7 +38,7 @@ export default async function FlashcardsPage({
       title_es: string;
       slug: string | null;
     }>(id, "id, title_en, title_es, slug"),
-    getFsrsSettings(user.id),
+    getFsrsSettings(),
   ]);
   if (!topic) redirect("/topics");
 
@@ -74,7 +74,6 @@ export default async function FlashcardsPage({
 
   return (
     <FlashcardSession
-      userId={user.id}
       topicId={topic.id}
       topicTitleEn={topic.title_en}
       topicTitleEs={topic.title_es}

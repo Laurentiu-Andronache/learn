@@ -54,23 +54,22 @@ export default async function SettingsPage() {
     dbFontSize,
     reviewCountResult,
   ] = await Promise.all([
-    getProfile(user.id).catch(() => null),
-    getSuspendedFlashcards(user.id).catch(() => []),
-    getHiddenTopics(user.id).catch(() => []),
-    getFsrsSettings(user.id).catch(() => null),
-    getBaseFontSize(user.id).catch(() => 14),
+    getProfile().catch(() => null),
+    getSuspendedFlashcards().catch(() => []),
+    getHiddenTopics().catch(() => []),
+    getFsrsSettings().catch(() => null),
+    getBaseFontSize().catch(() => 14),
     countValidOptimizerItems(user.id).catch(() => 0),
   ]);
 
   // Cookie is the source of truth (works without DB); sync to DB if they differ
   const baseFontSize = validCookieFont ?? dbFontSize;
   if (validCookieFont && validCookieFont !== dbFontSize) {
-    updateBaseFontSize(user.id, validCookieFont).catch(() => {});
+    updateBaseFontSize(validCookieFont).catch(() => {});
   }
 
   return (
     <SettingsClient
-      userId={user.id}
       email={user.email ?? null}
       isAnonymous={isAnonymous}
       createdAt={user.created_at}

@@ -2,6 +2,15 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+async function requireUserId() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+  return { supabase, userId: user.id };
+}
+
 export interface QuizAttemptData {
   score: number;
   total: number;
@@ -14,11 +23,10 @@ export interface QuizAttemptData {
 }
 
 export async function saveQuizAttempt(
-  userId: string,
   topicId: string,
   data: QuizAttemptData,
 ) {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { data: attempt, error } = await supabase
     .from("quiz_attempts")
     .insert({
@@ -41,11 +49,10 @@ export async function saveQuizAttempt(
 }
 
 export async function getQuizAttempts(
-  userId: string,
   topicId: string,
   limit = 10,
 ) {
-  const supabase = await createClient();
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("quiz_attempts")
     .select("*")
@@ -63,8 +70,8 @@ export async function getQuizAttempts(
   return data || [];
 }
 
-export async function getLatestQuizAttempt(userId: string, topicId: string) {
-  const supabase = await createClient();
+export async function getLatestQuizAttempt(topicId: string) {
+  const { supabase, userId } = await requireUserId();
   const { data, error } = await supabase
     .from("quiz_attempts")
     .select("*")
@@ -108,19 +115,17 @@ function collectCorrectIds(
 
 /** Returns IDs of questions correctly answered in ANY attempt */
 export async function getCorrectQuestionIds(
-  userId: string,
   topicId: string,
 ): Promise<string[]> {
-  const attempts = await getQuizAttempts(userId, topicId, 100);
+  const attempts = await getQuizAttempts(topicId, 100);
   return [...collectCorrectIds(attempts)];
 }
 
 /** Returns { attemptCount, uniqueCorrectCount } across all attempts */
 export async function getQuizSummary(
-  userId: string,
   topicId: string,
 ): Promise<QuizSummary> {
-  const attempts = await getQuizAttempts(userId, topicId, 100);
+  const attempts = await getQuizAttempts(topicId, 100);
   return {
     attemptCount: attempts.length,
     uniqueCorrectCount: collectCorrectIds(attempts).size,

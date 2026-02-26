@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { unsuspendFlashcard } from "@/lib/services/user-preferences";
 
 interface SuspendedFlashcardsListProps {
-  userId: string;
   items: Array<{
     id: string;
     reason: string | null;
@@ -23,7 +22,6 @@ interface SuspendedFlashcardsListProps {
 }
 
 export function SuspendedFlashcardsList({
-  userId,
   items: initial,
   onCountChange,
 }: SuspendedFlashcardsListProps) {
@@ -36,7 +34,7 @@ export function SuspendedFlashcardsList({
   const handleUnsuspend = (flashcardId: string) => {
     setPending(flashcardId);
     startTransition(async () => {
-      await unsuspendFlashcard(userId, flashcardId);
+      await unsuspendFlashcard(flashcardId);
       setItems((prev) => {
         const next = prev.filter((i) => i.flashcard?.id !== flashcardId);
         onCountChange?.(next.length);

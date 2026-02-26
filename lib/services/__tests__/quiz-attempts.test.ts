@@ -2,6 +2,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockSupabase = {
   from: vi.fn(),
+  auth: {
+    getUser: vi.fn(() =>
+      Promise.resolve({ data: { user: { id: "user-1" } } }),
+    ),
+  },
 };
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -16,6 +21,9 @@ import {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockSupabase.auth.getUser.mockResolvedValue({
+    data: { user: { id: "user-1" } },
+  });
 });
 
 // ─── saveQuizAttempt ─────────────────────────────────────────────────
@@ -31,7 +39,7 @@ describe("saveQuizAttempt", () => {
     selectMock.mockReturnValue({ single: singleMock });
     singleMock.mockResolvedValue({ data: { id: "attempt-1" }, error: null });
 
-    const result = await saveQuizAttempt("user-1", "topic-1", {
+    const result = await saveQuizAttempt("topic-1", {
       score: 8,
       total: 10,
       answers: [
@@ -75,7 +83,7 @@ describe("saveQuizAttempt", () => {
       error: { message: "schema cache lookup failed", code: "PGRST204" },
     });
 
-    const result = await saveQuizAttempt("user-1", "topic-1", {
+    const result = await saveQuizAttempt("topic-1", {
       score: 0,
       total: 5,
       answers: [],
@@ -97,7 +105,7 @@ describe("saveQuizAttempt", () => {
     });
 
     await expect(
-      saveQuizAttempt("user-1", "topic-1", { score: 0, total: 0, answers: [] }),
+      saveQuizAttempt("topic-1", { score: 0, total: 0, answers: [] }),
     ).rejects.toThrow("permission denied");
   });
 });
@@ -124,7 +132,7 @@ describe("getQuizAttempts", () => {
     orderMock.mockReturnValue({ limit: limitMock });
     limitMock.mockResolvedValue({ data: mockData, error: null });
 
-    const result = await getQuizAttempts("user-1", "topic-1");
+    const result = await getQuizAttempts("topic-1");
     expect(result).toEqual(mockData);
     expect(limitMock).toHaveBeenCalledWith(10);
   });
@@ -143,7 +151,7 @@ describe("getQuizAttempts", () => {
     orderMock.mockReturnValue({ limit: limitMock });
     limitMock.mockResolvedValue({ data: [], error: null });
 
-    await getQuizAttempts("user-1", "topic-1", 5);
+    await getQuizAttempts("topic-1", 5);
     expect(limitMock).toHaveBeenCalledWith(5);
   });
 
@@ -164,7 +172,7 @@ describe("getQuizAttempts", () => {
       error: { message: "schema cache lookup", code: "PGRST204" },
     });
 
-    const result = await getQuizAttempts("user-1", "topic-1");
+    const result = await getQuizAttempts("topic-1");
     expect(result).toEqual([]);
   });
 });
@@ -190,7 +198,7 @@ describe("getLatestQuizAttempt", () => {
     limitMock.mockReturnValue({ maybeSingle: maybeSingleMock });
     maybeSingleMock.mockResolvedValue({ data: mockAttempt, error: null });
 
-    const result = await getLatestQuizAttempt("user-1", "topic-1");
+    const result = await getLatestQuizAttempt("topic-1");
     expect(result).toEqual(mockAttempt);
   });
 
@@ -210,7 +218,7 @@ describe("getLatestQuizAttempt", () => {
     limitMock.mockReturnValue({ maybeSingle: maybeSingleMock });
     maybeSingleMock.mockResolvedValue({ data: null, error: null });
 
-    const result = await getLatestQuizAttempt("user-1", "topic-1");
+    const result = await getLatestQuizAttempt("topic-1");
     expect(result).toBeNull();
   });
 
@@ -233,7 +241,7 @@ describe("getLatestQuizAttempt", () => {
       error: { message: "schema cache", code: "PGRST204" },
     });
 
-    const result = await getLatestQuizAttempt("user-1", "topic-1");
+    const result = await getLatestQuizAttempt("topic-1");
     expect(result).toBeNull();
   });
 });

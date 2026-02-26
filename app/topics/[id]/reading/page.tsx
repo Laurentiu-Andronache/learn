@@ -37,11 +37,10 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
     redirect(topicUrl(topic, "reading"));
   }
 
-  const progress = await getReadingProgress(user.id, topic.id).catch(() => []);
+  const progress = await getReadingProgress(topic.id).catch(() => []);
 
   return (
     <ReadingView
-      userId={user.id}
       topic={topic}
       progress={progress}
       isAdmin={isAdmin}
