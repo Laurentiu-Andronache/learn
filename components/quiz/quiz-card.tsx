@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTTS } from "@/hooks/use-tts";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { shuffleArray } from "@/lib/shuffle";
 import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -73,13 +74,12 @@ export function QuizCard({
     }
   }, [question.id]);
 
-  const questionText =
-    locale === "es" ? question.question_es : question.question_en;
+  const q = question as unknown as Record<string, unknown>;
+  const questionText = localizedField(q, "question", locale);
   const rawOptions =
     (locale === "es" ? question.options_es : question.options_en) ?? [];
-  const explanation =
-    locale === "es" ? question.explanation_es : question.explanation_en;
-  const extra = locale === "es" ? question.extra_es : question.extra_en;
+  const explanation = localizedField(q, "explanation", locale);
+  const extra = localizedField(q, "extra", locale) || null;
   const correctIdx = question.correct_index ?? 0;
 
   // Shuffle once per question (not true/false)
@@ -281,11 +281,7 @@ export function QuizCard({
             </div>
             <QuestionReportForm
               questionId={question.id}
-              questionText={
-                locale === "es" && question.question_es
-                  ? question.question_es
-                  : question.question_en
-              }
+              questionText={localizedField(q, "question", locale)}
               open={reportOpen}
               onOpenChange={setReportOpen}
             />

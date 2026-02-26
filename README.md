@@ -189,7 +189,7 @@ Vitest configured with jsdom + @testing-library/react. Run:
 npm run test
 ```
 
-343 tests across 26 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, flashcard grading, glossary tooltip processing, Anki import cleanup, and optimizer integration. The MCP server has an additional 175 tests across 9 test files.
+393 tests across 32 test files covering FSRS ordering, card mapping, scheduling, admin CRUD, user preferences, quiz logic, flashcard grading, glossary tooltip processing, Anki import/export pipeline (parser, orchestrator, DB insert, API routes), TTS API route, and optimizer integration. The MCP server has an additional 175 tests across 9 test files.
 
 ## Deployment
 

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import type { FlashcardUpdate } from "@/lib/types/database";
 
 export interface FlashcardEditFormData {
   id: string;
@@ -20,7 +21,7 @@ export interface FlashcardEditFormData {
 
 interface FlashcardEditFormProps {
   flashcard: FlashcardEditFormData;
-  onSave: (updates: Record<string, unknown>) => void;
+  onSave: (updates: FlashcardUpdate) => void;
   onCancel: () => void;
   onDelete?: () => void;
   saving?: boolean;
@@ -52,7 +53,7 @@ export function FlashcardEditForm({
     for (const key of ["question_es", "answer_es", "extra_en", "extra_es"]) {
       if (updates[key] === "") updates[key] = null;
     }
-    onSave(updates);
+    onSave(updates as FlashcardUpdate);
   };
 
   return (

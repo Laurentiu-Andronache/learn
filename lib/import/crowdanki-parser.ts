@@ -16,6 +16,33 @@ import type {
 import { IMPORT_LIMITS } from "./anki-types";
 import { slugify } from "./utils";
 
+function extractCategoryName(tags: string[]): string {
+  for (const tag of tags) {
+    const cleaned = tag.replace(/^[A-Z]+::/, "");
+    if (cleaned && cleaned !== tag) return cleaned.replace(/_/g, " ");
+  }
+  if (tags.length > 0) {
+    const first = tags[0].replace(/::/g, " > ").replace(/_/g, " ").trim();
+    if (first) return first;
+  }
+  return "General";
+}
+
+function collectMediaRefs(card: {
+  front: string;
+  back: string;
+  extra: string;
+}): string[] {
+  const refs: string[] = [];
+  const imgRegex = /!\[.*?\]\(([^)]+)\)/g;
+  const audioRegex = /\[audio\]\(([^)]+)\)/g;
+  for (const content of [card.front, card.back, card.extra]) {
+    for (const match of content.matchAll(imgRegex)) refs.push(match[1]);
+    for (const match of content.matchAll(audioRegex)) refs.push(match[1]);
+  }
+  return refs;
+}
+
 function crowdAnkiModelToAnkiModel(m: CrowdAnkiNoteModel): AnkiModel {
   return {
     id: m.crowdanki_uuid,
@@ -140,19 +167,7 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
 
       if (cards.length === 0) continue;
 
-      // Determine category from tags or deck name
-      let categoryName = "General";
-      for (const tag of note.tags ?? []) {
-        const cleaned = tag.replace(/^[A-Z]+::/, "");
-        if (cleaned && cleaned !== tag) {
-          categoryName = cleaned.replace(/_/g, " ");
-          break;
-        }
-      }
-      if (categoryName === "General" && (note.tags?.length ?? 0) > 0) {
-        const firstTag = note.tags[0].replace(/::/g, " > ").replace(/_/g, " ");
-        if (firstTag.trim()) categoryName = firstTag.trim();
-      }
+      const categoryName = extractCategoryName(note.tags ?? []);
 
       for (const card of cards) {
         if (totalFlashcards >= IMPORT_LIMITS.maxFlashcards) {
@@ -162,23 +177,12 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
           return;
         }
 
-        // Collect media refs
-        const mediaRefs: string[] = [];
-        const imgRegex = /!\[.*?\]\(([^)]+)\)/g;
-        const audioRegex = /\[audio\]\(([^)]+)\)/g;
-        for (const content of [card.front, card.back, card.extra]) {
-          for (const match of content.matchAll(imgRegex))
-            mediaRefs.push(match[1]);
-          for (const match of content.matchAll(audioRegex))
-            mediaRefs.push(match[1]);
-        }
-
         const flashcard: ParsedFlashcard = {
           front: card.front,
           back: card.back,
           extra: card.extra,
           tags: note.tags ?? [],
-          mediaRefs,
+          mediaRefs: collectMediaRefs(card),
         };
 
         const existing = categoryMap.get(categoryName) ?? [];

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { useAutoTranslate } from "@/hooks/use-auto-translate";
 import { getQuestionById, updateQuestion } from "@/lib/services/admin-reviews";
+import type { QuestionUpdate } from "@/lib/types/database";
 
 interface QuestionEditDialogProps {
   questionId: string;
@@ -92,12 +93,12 @@ export function QuestionEditDialog({
     if (open) loadQuestion();
   }, [open, loadQuestion]);
 
-  const handleSave = async (updates: Record<string, unknown>) => {
+  const handleSave = async (updates: QuestionUpdate) => {
     interceptSave(updates, async (finalUpdates) => {
       setSaving(true);
       setError(null);
       try {
-        await updateQuestion(questionId, finalUpdates);
+        await updateQuestion(questionId, finalUpdates as QuestionUpdate);
         onSaved?.();
         onOpenChange(false);
       } catch (err) {

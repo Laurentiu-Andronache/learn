@@ -9,6 +9,9 @@ const mockSupabase = {
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(() => Promise.resolve(mockSupabase)),
+  requireUserId: vi.fn(() =>
+    Promise.resolve({ supabase: mockSupabase, userId: "user-1" }),
+  ),
 }));
 
 import {
@@ -68,7 +71,7 @@ describe("saveQuizAttempt", () => {
     expect(result).toEqual({ id: "attempt-1" });
   });
 
-  it("returns null for schema cache error (missing table)", async () => {
+  it("throws on schema cache error", async () => {
     const insertMock = vi.fn();
     const selectMock = vi.fn();
     const singleMock = vi.fn();
@@ -81,12 +84,9 @@ describe("saveQuizAttempt", () => {
       error: { message: "schema cache lookup failed", code: "PGRST204" },
     });
 
-    const result = await saveQuizAttempt("topic-1", {
-      score: 0,
-      total: 5,
-      answers: [],
-    });
-    expect(result).toBeNull();
+    await expect(
+      saveQuizAttempt("topic-1", { score: 0, total: 5, answers: [] }),
+    ).rejects.toThrow("schema cache lookup failed");
   });
 
   it("throws on unexpected error", async () => {
@@ -153,7 +153,7 @@ describe("getQuizAttempts", () => {
     expect(limitMock).toHaveBeenCalledWith(5);
   });
 
-  it("returns empty array for schema cache error", async () => {
+  it("throws on schema cache error", async () => {
     const selectMock = vi.fn();
     const eq1Mock = vi.fn();
     const eq2Mock = vi.fn();
@@ -170,8 +170,9 @@ describe("getQuizAttempts", () => {
       error: { message: "schema cache lookup", code: "PGRST204" },
     });
 
-    const result = await getQuizAttempts("topic-1");
-    expect(result).toEqual([]);
+    await expect(getQuizAttempts("topic-1")).rejects.toThrow(
+      "schema cache lookup",
+    );
   });
 });
 
@@ -220,7 +221,7 @@ describe("getLatestQuizAttempt", () => {
     expect(result).toBeNull();
   });
 
-  it("returns null for schema cache error", async () => {
+  it("throws on schema cache error", async () => {
     const selectMock = vi.fn();
     const eq1Mock = vi.fn();
     const eq2Mock = vi.fn();
@@ -239,7 +240,8 @@ describe("getLatestQuizAttempt", () => {
       error: { message: "schema cache", code: "PGRST204" },
     });
 
-    const result = await getLatestQuizAttempt("topic-1");
-    expect(result).toBeNull();
+    await expect(getLatestQuizAttempt("topic-1")).rejects.toThrow(
+      "schema cache",
+    );
   });
 });

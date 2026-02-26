@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/supabase/server";
+import type { FlashcardUpdate, QuestionUpdate } from "@/lib/types/database";
 
 type AdminTable = "proposed_questions" | "topic_proposals";
 
@@ -144,10 +145,7 @@ export async function getQuestionsList(filters?: {
   return data || [];
 }
 
-export async function updateQuestion(
-  id: string,
-  updates: Record<string, unknown>,
-) {
+export async function updateQuestion(id: string, updates: QuestionUpdate) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
     .from("questions")
@@ -242,10 +240,7 @@ export async function getFlashcardById(id: string) {
   return data;
 }
 
-export async function updateFlashcard(
-  id: string,
-  updates: Record<string, unknown>,
-) {
+export async function updateFlashcard(id: string, updates: FlashcardUpdate) {
   const { supabase } = await requireAdmin();
   const { error } = await supabase
     .from("flashcards")

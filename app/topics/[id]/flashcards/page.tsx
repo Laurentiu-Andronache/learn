@@ -31,7 +31,7 @@ export default async function FlashcardsPage({
   if (!user) return <AutoGuestLogin />;
 
   const [isAdmin, topic, fsrsSettings] = await Promise.all([
-    checkIsAdmin(supabase, user.email!),
+    checkIsAdmin(supabase, user.email),
     resolveTopicSelect<{
       id: string;
       title_en: string;

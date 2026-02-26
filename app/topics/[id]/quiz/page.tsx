@@ -26,7 +26,7 @@ export default async function QuizPage({
   } = await supabase.auth.getUser();
   if (!user) return <AutoGuestLogin />;
 
-  const isAdmin = await checkIsAdmin(supabase, user.email!);
+  const isAdmin = await checkIsAdmin(supabase, user.email);
 
   const topic = await resolveTopicSelect<{
     id: string;

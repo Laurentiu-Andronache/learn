@@ -19,7 +19,7 @@ export default async function ReadingPage({ params }: ReadingPageProps) {
   } = await supabase.auth.getUser();
   if (!user) return <AutoGuestLogin />;
 
-  const isAdmin = await checkIsAdmin(supabase, user.email!);
+  const isAdmin = await checkIsAdmin(supabase, user.email);
 
   const topic = await resolveTopicSelect<{
     id: string;

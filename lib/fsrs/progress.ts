@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { buildStateMap, buildSuspendedSet } from "./card-data-helpers";
 
 /** Shape returned by Supabase when joining flashcards -> categories */
 interface FlashcardWithCategory {
@@ -190,9 +191,7 @@ export async function getTopicProgress(
     .eq("user_id", userId)
     .in("flashcard_id", flashcardIds);
 
-  const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
-  );
+  const stateMap = buildStateMap(cardStates);
 
   // Get suspended flashcards to exclude
   const { data: suspended } = await supabase
@@ -200,7 +199,7 @@ export async function getTopicProgress(
     .select("flashcard_id")
     .eq("user_id", userId)
     .in("flashcard_id", flashcardIds);
-  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
+  const suspendedSet = buildSuspendedSet(suspended);
 
   return computeTopicProgress(topicId, flashcards, stateMap, suspendedSet, now);
 }
@@ -247,10 +246,8 @@ export async function getAllTopicsProgress(
   ]);
 
   // 3. Index data for in-memory processing
-  const stateMap = new Map(
-    (allCardStates ?? []).map((cs) => [cs.flashcard_id, cs]),
-  );
-  const suspendedSet = new Set((allSuspended ?? []).map((s) => s.flashcard_id));
+  const stateMap = buildStateMap(allCardStates ?? null);
+  const suspendedSet = buildSuspendedSet(allSuspended ?? null);
 
   // Group flashcards by topic_id
   const flashcardsByTopic = new Map<string, FlashcardWithCategory[]>();
@@ -323,10 +320,8 @@ export async function getCategoryProgress(
       .in("flashcard_id", flashcardIds),
   ]);
 
-  const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
-  );
-  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
+  const stateMap = buildStateMap(cardStates);
+  const suspendedSet = buildSuspendedSet(suspended);
 
   const activeFlashcards = flashcards.filter((f) => !suspendedSet.has(f.id));
 

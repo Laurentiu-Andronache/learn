@@ -28,6 +28,7 @@ import {
   getFlashcardsList,
   updateFlashcard,
 } from "@/lib/services/admin-reviews";
+import type { FlashcardUpdate } from "@/lib/types/database";
 
 interface Topic {
   id: string;
@@ -182,12 +183,12 @@ export function FlashcardsClient({
     }
   }, [editParam, flashcards, startEditing]);
 
-  const handleSave = async (updates: Record<string, unknown>) => {
+  const handleSave = async (updates: FlashcardUpdate) => {
     if (!editingId) return;
     interceptSave(updates, async (finalUpdates) => {
       setSaving(true);
       try {
-        await updateFlashcard(editingId, finalUpdates);
+        await updateFlashcard(editingId, finalUpdates as FlashcardUpdate);
         setEditingId(null);
         fetchFlashcards();
       } finally {

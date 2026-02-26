@@ -10,21 +10,12 @@ import {
 import { getAllTopicsProgress } from "@/lib/fsrs/progress";
 import { createUserScheduler, Rating } from "@/lib/fsrs/scheduler";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, requireUserId } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
 // --- Shared types & helpers for snapshot-based undo/reset ---
 
 type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>;
-
-async function requireUserId() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return { supabase, userId: user.id };
-}
 
 interface BeforeSnapshot {
   stability_before: number | null;

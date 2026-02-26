@@ -18,6 +18,8 @@ export interface Topic {
   creator_id: string | null;
   intro_text_en: string | null;
   intro_text_es: string | null;
+  slug: string | null;
+  visibility: "public" | "private" | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -82,6 +84,11 @@ export interface Profile {
   max_review_interval: number | null;
   new_cards_per_day: number | null;
   show_review_time: boolean | null;
+  new_cards_ramp_up: boolean | null;
+  read_questions_aloud: boolean | null;
+  base_font_size: number | null;
+  fsrs_weights: number[] | null;
+  fsrs_weights_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }

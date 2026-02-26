@@ -1,15 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-
-async function requireUserId() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return { supabase, userId: user.id };
-}
+import { requireUserId } from "@/lib/supabase/server";
 
 export interface QuizAttemptData {
   score: number;
@@ -35,13 +26,7 @@ export async function saveQuizAttempt(topicId: string, data: QuizAttemptData) {
     })
     .select("id")
     .single();
-  // Gracefully handle missing table (quiz_attempts may not be migrated yet)
-  if (error) {
-    if (error.message.includes("schema cache") || error.code === "PGRST204") {
-      return null;
-    }
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return attempt;
 }
 
@@ -54,13 +39,7 @@ export async function getQuizAttempts(topicId: string, limit = 10) {
     .eq("topic_id", topicId)
     .order("completed_at", { ascending: false })
     .limit(limit);
-  // Gracefully handle missing table (quiz_attempts may not be migrated yet)
-  if (error) {
-    if (error.message.includes("schema cache") || error.code === "PGRST204") {
-      return [];
-    }
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return data || [];
 }
 
@@ -74,13 +53,7 @@ export async function getLatestQuizAttempt(topicId: string) {
     .order("completed_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  // Gracefully handle missing table (quiz_attempts may not be migrated yet)
-  if (error) {
-    if (error.message.includes("schema cache") || error.code === "PGRST204") {
-      return null;
-    }
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
   return data;
 }
 

@@ -1,23 +1,13 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
 import { Button } from "@/components/ui/button";
-import {
-  buryFlashcard,
-  scheduleFlashcardReview,
-  undoLastReview,
-} from "@/lib/fsrs/actions";
-import type { UserSchedulerSettings } from "@/lib/fsrs/interval-preview";
-import { getIntervalPreviews } from "@/lib/fsrs/interval-preview";
-import { deleteFlashcard } from "@/lib/services/admin-reviews";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
-import { suspendFlashcard } from "@/lib/services/user-preferences";
 import type { UserCardState } from "@/lib/types/database";
 import { FlashcardResults } from "./flashcard-results";
 import { FlashcardStack } from "./flashcard-stack";
+import { useFlashcardSession } from "./use-flashcard-session";
 
 interface FlashcardItemData {
   id: string;
@@ -51,131 +41,31 @@ export function FlashcardSession({
   fsrsSettings = null,
 }: FlashcardSessionProps) {
   const locale = useLocale();
-  const tq = useTranslations("quiz");
   const tf = useTranslations("flashcard");
-  const ts = useTranslations("session");
-  const [sessionKey, setSessionKey] = useState(0);
-  const [, setIsFlipped] = useState(false);
-  const [rateSignal, setRateSignal] = useState({
-    count: 0,
-    rating: 3 as 1 | 2 | 3 | 4,
-  });
-  const [flashcards, setFlashcards] = useState(initialFlashcards);
-  const [results, setResults] = useState<Map<string, 1 | 2 | 3 | 4> | null>(
-    null,
-  );
-  const startTime = useRef(Date.now());
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const [skipSignal, setSkipSignal] = useState(0);
-  const [undoSignal, setUndoSignal] = useState(0);
 
-  // Compute interval previews for all flashcards (client-side, no server call)
-  const userSchedulerSettings: UserSchedulerSettings | undefined = useMemo(
-    () =>
-      fsrsSettings
-        ? {
-            desired_retention: fsrsSettings.desired_retention,
-            max_review_interval: fsrsSettings.max_review_interval,
-          }
-        : undefined,
-    [fsrsSettings],
-  );
-  const showIntervalPreviews = fsrsSettings?.show_review_time !== false;
-  const intervalPreviews = useMemo(() => {
-    const map = new Map<string, Record<1 | 2 | 3 | 4, string>>();
-    for (const fc of flashcards) {
-      map.set(fc.id, getIntervalPreviews(fc.cardState, userSchedulerSettings));
-    }
-    return map;
-  }, [flashcards, userSchedulerSettings]);
-
-  const handleGrade = useCallback(
-    (flashcardId: string, rating: 1 | 2 | 3 | 4) => {
-      const timeMs = Date.now() - startTime.current;
-      scheduleFlashcardReview(flashcardId, rating, timeMs).catch(() =>
-        toast.error(
-          "Failed to save progress. Your answer was recorded locally but may not persist.",
-        ),
-      );
-      startTime.current = Date.now();
-    },
-    [],
-  );
-
-  const handleSuspend = useCallback(
-    (flashcardId: string) => {
-      suspendFlashcard(flashcardId, "Suspended from flashcard session").catch(
-        () => toast.error("Failed to suspend flashcard."),
-      );
-      toast.success(tq("questionSuspended"), { duration: 3000 });
-    },
-    [tq],
-  );
-
-  const handleComplete = useCallback(
-    (finalResults: Map<string, 1 | 2 | 3 | 4>) => {
-      setResults(finalResults);
-    },
-    [],
-  );
-
-  const [hasRevealed, setHasRevealed] = useState(false);
-  const handleFlipChange = useCallback((flipped: boolean) => {
-    setIsFlipped(flipped);
-    if (flipped) setHasRevealed(true);
-  }, []);
-  const handleRate = useCallback((rating: 1 | 2 | 3 | 4) => {
-    setRateSignal((prev) => ({ count: prev.count + 1, rating }));
-  }, []);
-
-  const handleReviewAgain = useCallback(() => {
-    if (!results) return;
-    const againIds = new Set(
-      [...results.entries()].filter(([, r]) => r === 1).map(([id]) => id),
-    );
-    const againCards = flashcards.filter((fc) => againIds.has(fc.id));
-    setFlashcards(againCards);
-    setResults(null);
-    setSessionKey((k) => k + 1);
-    setCurrentIdx(0);
-    setIsFlipped(false);
-    setHasRevealed(false);
-  }, [results, flashcards]);
-
-  const handleIndexChange = useCallback((index: number) => {
-    setCurrentIdx(index);
-    setHasRevealed(false);
-  }, []);
-
-  const handleBury = useCallback(() => {
-    const fc = flashcards[currentIdx];
-    if (!fc) return;
-    buryFlashcard(fc.id).catch(() => {});
-    toast.success(ts("cardBuried"), { duration: 3000 });
-    setSkipSignal((s) => s + 1);
-  }, [flashcards, currentIdx, ts]);
-
-  const handleUndo = useCallback(() => {
-    if (currentIdx === 0) return;
-    const prevFc = flashcards[currentIdx - 1];
-    undoLastReview(prevFc.id).catch(() => {});
-    toast.success(ts("undone"), { duration: 3000 });
-    setUndoSignal((s) => s + 1);
-  }, [flashcards, currentIdx, ts]);
-
-  const handleDeleteQuestion = useCallback(() => {
-    const fc = flashcards[currentIdx];
-    if (!fc) return;
-    deleteFlashcard(fc.id).catch(() => {});
-    toast.success(ts("questionDeleted"), { duration: 3000 });
-
-    const remaining = flashcards.filter((_, i) => i !== currentIdx);
-    setFlashcards(remaining);
-    if (remaining.length === 0 || currentIdx >= remaining.length) {
-      setResults(new Map());
-    }
-    setSessionKey((k) => k + 1);
-  }, [flashcards, currentIdx, ts]);
+  const {
+    sessionKey,
+    flashcards,
+    results,
+    currentIdx,
+    currentFc,
+    currentPreviews,
+    skipSignal,
+    undoSignal,
+    rateSignal,
+    hasRevealed,
+    showIntervalPreviews,
+    handleGrade,
+    handleSuspend,
+    handleComplete,
+    handleFlipChange,
+    handleRate,
+    handleReviewAgain,
+    handleIndexChange,
+    handleBury,
+    handleUndo,
+    handleDeleteQuestion,
+  } = useFlashcardSession({ initialFlashcards, fsrsSettings });
 
   if (results) {
     const categoryMap = new Map<
@@ -217,11 +107,6 @@ export function FlashcardSession({
       />
     );
   }
-
-  const currentFc = flashcards[currentIdx];
-  const currentPreviews = currentFc
-    ? (intervalPreviews.get(currentFc.id) ?? { 1: "", 2: "", 3: "", 4: "" })
-    : { 1: "", 2: "", 3: "", 4: "" };
 
   return (
     <div className="w-full max-w-2xl mx-auto px-4 py-4 flex-1 flex flex-col gap-4 bg-[radial-gradient(ellipse_at_top,hsl(var(--flashcard-accent)/0.04)_0%,transparent_50%)]">

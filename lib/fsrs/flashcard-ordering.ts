@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import type { Flashcard, UserCardState } from "@/lib/types/database";
+import { buildStateMap, buildSuspendedSet } from "./card-data-helpers";
 
 /** Flashcard row with joined category (PostgREST returns single object for FK) */
 type FlashcardWithCategoryJoin = Flashcard & {
@@ -44,15 +45,20 @@ export interface EmptyStateContext {
   effectiveLimit: number;
 }
 
+interface NewCardLimitOptions {
+  supabase: Awaited<ReturnType<typeof createClient>>;
+  userId: string;
+  flashcardIds: string[];
+  baseLimit: number;
+  rampUp: boolean;
+  now: Date;
+}
+
 /** Calculate effective new-cards-per-day limit, applying optional ramp-up. */
 async function calculateEffectiveNewCardLimit(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  flashcardIds: string[],
-  baseLimit: number,
-  rampUp: boolean,
-  now: Date,
+  opts: NewCardLimitOptions,
 ): Promise<number> {
+  const { supabase, userId, flashcardIds, baseLimit, rampUp, now } = opts;
   if (!rampUp) return baseLimit;
 
   const { data: earliestLog } = await supabase
@@ -114,10 +120,8 @@ export async function getEmptyStateContext(
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
   ]);
-  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
-  const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
-  );
+  const suspendedSet = buildSuspendedSet(suspended);
+  const stateMap = buildStateMap(cardStates);
 
   const activeIds = flashcardIds.filter((id) => !suspendedSet.has(id));
 
@@ -137,14 +141,14 @@ export async function getEmptyStateContext(
   }
 
   // Calculate effective daily limit
-  const effectiveLimit = await calculateEffectiveNewCardLimit(
+  const effectiveLimit = await calculateEffectiveNewCardLimit({
     supabase,
     userId,
     flashcardIds,
-    options.newCardsPerDay ?? 10,
-    options.newCardsRampUp ?? false,
+    baseLimit: options.newCardsPerDay ?? 10,
+    rampUp: options.newCardsRampUp ?? false,
     now,
-  );
+  });
 
   return { remainingNewCards: totalNewCards, nextDueAt, effectiveLimit };
 }
@@ -189,10 +193,8 @@ export async function getOrderedFlashcards(
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
   ]);
-  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
-  const stateMap = new Map(
-    (cardStates || []).map((cs) => [cs.flashcard_id, cs]),
-  );
+  const suspendedSet = buildSuspendedSet(suspended);
+  const stateMap = buildStateMap(cardStates);
 
   // 4. Build ordered list
   let orderedFlashcards: OrderedFlashcard[] = flashcards
@@ -298,14 +300,14 @@ export async function getOrderedFlashcards(
     ).size;
 
     // Calculate effective limit with optional ramp-up
-    const effectiveLimit = await calculateEffectiveNewCardLimit(
+    const effectiveLimit = await calculateEffectiveNewCardLimit({
       supabase,
       userId,
       flashcardIds,
-      options.newCardsPerDay,
-      options.newCardsRampUp ?? false,
+      baseLimit: options.newCardsPerDay,
+      rampUp: options.newCardsRampUp ?? false,
       now,
-    );
+    });
 
     const remaining = Math.max(0, effectiveLimit - newCardsToday);
 
@@ -360,7 +362,7 @@ export async function getSubModeCounts(userId: string, topicId: string) {
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
   ]);
-  const suspendedSet = new Set((suspended || []).map((s) => s.flashcard_id));
+  const suspendedSet = buildSuspendedSet(suspended);
   const activeIds = flashcardIds.filter((id) => !suspendedSet.has(id));
 
   const activeCardStates = (cardStates || []).filter(

@@ -1,17 +1,8 @@
 "use server";
 
 import { DEFAULT_BASE_FONT_SIZE } from "@/lib/constants";
-import { createClient } from "@/lib/supabase/server";
+import { requireUserId } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
-
-async function requireUserId() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("Not authenticated");
-  return { supabase, userId: user.id };
-}
 
 // ============ SUSPENDED FLASHCARDS ============
 

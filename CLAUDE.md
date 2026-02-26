@@ -81,8 +81,11 @@ All SEO features are implemented following Next.js App Router best practices:
 - **API routes**: `createApiClient()` from `@/lib/supabase/server` (read-only, no cookie writes)
 - **Admin checks**: `checkIsAdmin(supabase, email)` from `@/lib/supabase/server` — never inline admin_users queries
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
-- **Server actions**: All `"use server"` functions in `user-preferences.ts`, `quiz-attempts.ts`, and `fsrs/actions.ts` derive userId internally via `supabase.auth.getUser()`. No userId parameter — no userId prop drilling through components.
-- **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings.
+- **Auth helpers**: `requireUserId()` and `requireAdmin()` from `@/lib/supabase/server` — shared auth extraction (no local copies)
+- **Server actions**: All `"use server"` functions in `user-preferences.ts`, `quiz-attempts.ts`, and `fsrs/actions.ts` derive userId internally via `requireUserId()`. No userId parameter — no userId prop drilling through components.
+- **Env vars (server)**: Use `env.SUPABASE_URL` / `env.SUPABASE_KEY` from `@/lib/env` (lazy validation) — never `process.env.X!` for required server vars
+- **Env vars (client)**: `lib/supabase/client.ts` must use static `process.env.NEXT_PUBLIC_X` — Next.js inlines these at build time; dynamic `process.env[name]` returns undefined on client
+- **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings. Use `localizedField()` from `@/lib/i18n/localized-field` for DB field locale selection.
 
 ## Infrastructure Resilience
 
@@ -171,7 +174,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
 - `lib/topics/topic-url.ts` — `topicUrl(topic, sub?)`
 - `components/topics/topic-card.tsx`, `topic-grid.tsx`
-- `components/flashcards/` — flashcard session, stack (4-point grading), progress, results
+- `components/flashcards/` — flashcard session (`use-flashcard-session.ts` hook), stack (`flashcard-front.tsx`, `flashcard-back.tsx`, `use-flashcard-navigation.ts`), progress, results
 - `components/quiz/` — quiz session, card, progress, results
 - `components/admin/flashcard-edit-form.tsx` — flashcard editing form
 - `components/admin/question-edit-form.tsx` — quiz question editing form
@@ -183,7 +186,8 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based), shared `computeTopicProgress` helper
 - `lib/shuffle.ts` — `shuffleArray<T>()` (Fisher-Yates, used by quiz-card, quiz page, question-ordering)
 - `lib/rate-limit.ts` — `createRateLimiter(max, windowMs)` factory (used by TTS + Anki import API routes)
-- `lib/supabase/server.ts` — `createClient`, `createApiClient` (read-only, for API routes), `checkIsAdmin`, `requireAdmin`
+- `lib/env.ts` — Lazy env validation via getters (throws on first access, not import — safe for tests). `env.SUPABASE_URL`, `env.SUPABASE_KEY`
+- `lib/supabase/server.ts` — `createClient`, `createApiClient` (read-only, for API routes), `checkIsAdmin`, `requireAdmin`, `requireUserId`
 - `lib/services/quiz-attempts.ts` — `saveQuizAttempt`, `getLatestQuizAttempt`
 - `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, `getFsrsSettings`, `updateFsrsSettings`, etc.
 - `components/settings/fsrs-settings.tsx` — Study settings card (retention slider, max interval, ramp-up toggle, new cards/day, show intervals)
@@ -194,6 +198,9 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `components/admin/topic-visibility-toggle.tsx` — Public/Private switch for admin topics list
 - `lib/services/admin-topics.ts` — `toggleTopicVisibility` server action
 - `lib/flashcards/strip-front-from-answer.ts` — `stripFrontFromAnswer` (Anki `{{FrontSide}}` dedup), `isExtraDuplicate` (audio URL + word overlap detection)
+- `lib/fsrs/card-data-helpers.ts` — `buildSuspendedSet()`, `buildStateMap()` (shared helpers for flashcard-ordering + progress)
+- `lib/i18n/localized-field.ts` — `localizedField(item, field, locale)` (replaces inline `locale === "es" ? x_es : x_en` ternaries)
+- `app/import/` — Import client decomposed: `use-import-state.ts` (hook), `import-preview.tsx`, `import-result.tsx`
 
 ## Admin Editing (shared components)
 
@@ -278,8 +285,15 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `lib/flashcards/__tests__/strip-front-from-answer.test.ts` | 11 | Anki answer dedup, extra duplicate detection |
 | `lib/__tests__/shuffle.test.ts` | 4 | shuffleArray: same elements, no mutation, empty, single |
 | `lib/__tests__/rate-limit.test.ts` | 5 | createRateLimiter: within/exceed limit, independent users, window expiry |
+| `lib/import/__tests__/anki-parser.test.ts` | 8 | .apkg parsing, media extraction, model validation, limits |
+| `lib/import/__tests__/crowdanki-parser.test.ts` | 9 | CrowdAnki JSON parsing, child decks, categories, limits |
+| `lib/import/__tests__/anki-db-insert.test.ts` | 7 | DB insert flow, language, error handling, cache revalidation |
+| `lib/import/__tests__/import-orchestrator.test.ts` | 9 | Format detection, routing, media processing, validation |
+| `lib/import/__tests__/anki-templates.test.ts` | 38 | Template rendering, cloze, HTML-to-markdown |
+| `app/api/tts/__tests__/route.test.ts` | 8 | Auth, rate limit, validation, cache hit/miss, ElevenLabs errors |
+| `app/api/import/anki/__tests__/route.test.ts` | 9 | Auth, validation, format/size/language checks, visibility enforcement |
 
-**Total: 343 tests across 26 test files.**
+**Total: 393 tests across 32 test files.**
 
 ## Anki Import Cleanup
 

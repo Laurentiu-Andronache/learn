@@ -6,6 +6,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { MarkdownContent } from "@/components/shared/markdown-content";
 import { Button } from "@/components/ui/button";
 import { useTTS } from "@/hooks/use-tts";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { topicUrl } from "@/lib/topics/topic-url";
 import { ReadingProgressBar } from "./reading-progress";
 
@@ -31,11 +32,10 @@ export function ReadingView({ topic, progress, isAdmin }: ReadingViewProps) {
   const locale = useLocale();
   const { playingEl, paused, handleBlockClick } = useTTS();
 
-  const title = locale === "es" ? topic.title_es : topic.title_en;
+  const t = topic as unknown as Record<string, unknown>;
+  const title = localizedField(t, "title", locale as "en" | "es");
   const rawContent =
-    locale === "es"
-      ? topic.intro_text_es || topic.intro_text_en
-      : topic.intro_text_en || topic.intro_text_es;
+    localizedField(t, "intro_text", locale as "en" | "es") || null;
 
   const totalProgress =
     progress.length > 0

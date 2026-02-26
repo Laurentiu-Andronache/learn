@@ -19,10 +19,14 @@ const SILENCE_MP3 = Buffer.from(
   "base64",
 );
 
-const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 // LEARN_SERVICE_ROLE_KEY avoids collision with ~/.bashrc SUPABASE_SERVICE_ROLE_KEY (Launcher project)
 const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ??
   process.env.SUPABASE_SERVICE_ROLE_KEY)!;
+
+const elevenlabs = new ElevenLabsClient({
+  apiKey: process.env.ELEVENLABS_API_KEY,
+});
 
 /** Prepend ~200ms silence to prevent ElevenLabs first-word clipping */
 function withSilencePrefix(audio: Buffer): ArrayBuffer {
@@ -95,10 +99,6 @@ export async function POST(request: Request) {
   }
 
   // ElevenLabs TTS
-  const elevenlabs = new ElevenLabsClient({
-    apiKey: process.env.ELEVENLABS_API_KEY,
-  });
-
   try {
     const audioStream = await elevenlabs.textToSpeech.convert(VOICE_ID, {
       text,

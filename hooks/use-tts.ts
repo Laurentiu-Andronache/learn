@@ -44,6 +44,21 @@ async function fetchAndCacheAudio(
   return response;
 }
 
+async function handlePauseResume(
+  audioRef: { current: HTMLAudioElement | null },
+  pausedRef: { current: boolean },
+  setPaused: (v: boolean) => void,
+): Promise<void> {
+  if (!audioRef.current) return;
+  if (pausedRef.current) {
+    await audioRef.current.play();
+    setPaused(false);
+  } else {
+    audioRef.current.pause();
+    setPaused(true);
+  }
+}
+
 async function playAudioBlob(
   response: Response,
   audioRef: { current: HTMLAudioElement | null },
@@ -107,13 +122,7 @@ export function useTTS() {
 
       debounceRef.current = setTimeout(async () => {
         if (playingElRef.current === el && audioRef.current) {
-          if (pausedRef.current) {
-            await audioRef.current.play();
-            setPaused(false);
-          } else {
-            audioRef.current.pause();
-            setPaused(true);
-          }
+          await handlePauseResume(audioRef, pausedRef, setPaused);
           return;
         }
 

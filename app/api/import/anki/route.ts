@@ -25,7 +25,7 @@ export async function POST(request: Request) {
     return Response.json({ error: "Rate limited" }, { status: 429 });
   }
 
-  const isAdmin = await checkIsAdmin(supabase, user.email!);
+  const isAdmin = await checkIsAdmin(supabase, user.email);
 
   let formData: FormData;
   try {

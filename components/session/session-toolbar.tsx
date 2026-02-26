@@ -42,6 +42,7 @@ import {
   updateFlashcard,
   updateQuestion,
 } from "@/lib/services/admin-reviews";
+import type { FlashcardUpdate, QuestionUpdate } from "@/lib/types/database";
 
 interface SessionToolbarProps {
   topicId: string;
@@ -106,14 +107,14 @@ export function SessionToolbar({
     }
   };
 
-  const handleEditSave = async (updates: Record<string, unknown>) => {
+  const handleEditSave = async (updates: FlashcardUpdate | QuestionUpdate) => {
     if (!currentItemId) return;
     setSaving(true);
     try {
       if (mode === "flashcard") {
-        await updateFlashcard(currentItemId, updates);
+        await updateFlashcard(currentItemId, updates as FlashcardUpdate);
       } else {
-        await updateQuestion(currentItemId, updates);
+        await updateQuestion(currentItemId, updates as QuestionUpdate);
       }
       toast.success(t("questionUpdated"));
       setEditOpen(false);

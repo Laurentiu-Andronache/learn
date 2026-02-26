@@ -12,7 +12,7 @@ export async function NavBar() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const isAdmin = user ? await checkIsAdmin(supabase, user.email!) : false;
+  const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
   const t = await getTranslations("nav");
 
   return (

@@ -1,5 +1,3 @@
-import confetti from "canvas-confetti";
-
 const COLORS = {
   flashcard: ["#a855f7", "#c084fc", "#e879f9", "#d8b4fe"], // violet
   quiz: ["#f59e0b", "#fbbf24", "#fcd34d", "#f97316"], // amber/gold
@@ -16,22 +14,29 @@ export function triggerCelebration(mode: Mode, scorePercent: number) {
   const particleCount = scorePercent === 100 ? 6 : scorePercent >= 90 ? 4 : 3;
 
   let rafId: number | null = null;
-  const end = Date.now() + duration;
+  let cancelled = false;
 
-  const frame = () => {
-    confetti({
-      particleCount,
-      angle: 60 + Math.random() * 60,
-      spread: 55,
-      origin: { x: Math.random(), y: Math.random() * 0.4 },
-      colors: [...colors],
-    });
-    if (Date.now() < end) rafId = requestAnimationFrame(frame);
-  };
-  frame();
+  import("canvas-confetti").then(({ default: confetti }) => {
+    if (cancelled) return;
+
+    const end = Date.now() + duration;
+
+    const frame = () => {
+      confetti({
+        particleCount,
+        angle: 60 + Math.random() * 60,
+        spread: 55,
+        origin: { x: Math.random(), y: Math.random() * 0.4 },
+        colors: [...colors],
+      });
+      if (Date.now() < end) rafId = requestAnimationFrame(frame);
+    };
+    frame();
+  });
 
   return () => {
+    cancelled = true;
     if (rafId !== null) cancelAnimationFrame(rafId);
-    confetti.reset();
+    import("canvas-confetti").then(({ default: confetti }) => confetti.reset());
   };
 }

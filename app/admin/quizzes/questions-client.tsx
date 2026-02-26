@@ -28,6 +28,7 @@ import {
   getQuestionsList,
   updateQuestion,
 } from "@/lib/services/admin-reviews";
+import type { QuestionUpdate } from "@/lib/types/database";
 
 interface Topic {
   id: string;
@@ -197,12 +198,12 @@ export function QuestionsClient({
     }
   }, [editParam, questions, startEditing]);
 
-  const handleSave = async (updates: Record<string, unknown>) => {
+  const handleSave = async (updates: QuestionUpdate) => {
     if (!editingId) return;
     interceptSave(updates, async (finalUpdates) => {
       setSaving(true);
       try {
-        await updateQuestion(editingId, finalUpdates);
+        await updateQuestion(editingId, finalUpdates as QuestionUpdate);
         setEditingId(null);
         fetchQuestions();
       } finally {

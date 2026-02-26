@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { QuestionUpdate } from "@/lib/types/database";
 
 export interface QuestionEditFormData {
   id: string;
@@ -31,7 +32,7 @@ export interface QuestionEditFormData {
 
 interface QuestionEditFormProps {
   question: QuestionEditFormData;
-  onSave: (updates: Record<string, unknown>) => void;
+  onSave: (updates: QuestionUpdate) => void;
   onCancel: () => void;
   onDelete?: () => void;
   saving?: boolean;
@@ -80,7 +81,7 @@ export function QuestionEditForm({
     ]) {
       if (updates[key] === "") updates[key] = null;
     }
-    onSave(updates);
+    onSave(updates as QuestionUpdate);
   };
 
   return (

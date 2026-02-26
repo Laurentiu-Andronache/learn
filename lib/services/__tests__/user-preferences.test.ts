@@ -10,6 +10,9 @@ const mockSupabase = {
 
 vi.mock("@/lib/supabase/server", () => ({
   createClient: vi.fn(() => Promise.resolve(mockSupabase)),
+  requireUserId: vi.fn(() =>
+    Promise.resolve({ supabase: mockSupabase, userId: "user-1" }),
+  ),
 }));
 
 import {

@@ -25,7 +25,7 @@ export default async function AdminLayout({
   } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
 
-  if (!(await checkIsAdmin(supabase, user.email!))) redirect("/topics");
+  if (!(await checkIsAdmin(supabase, user.email))) redirect("/topics");
 
   return (
     <div className="flex min-h-[calc(100vh-8rem)]">

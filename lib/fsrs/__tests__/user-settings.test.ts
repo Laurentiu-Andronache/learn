@@ -4,28 +4,31 @@ let mockSelectResult: { data: unknown; error: unknown };
 let mockUpdateResult: { error: unknown };
 let lastUpdateArgs: unknown;
 
-vi.mock("@/lib/supabase/server", () => ({
-  createClient: () =>
-    Promise.resolve({
-      auth: {
-        getUser: () => Promise.resolve({ data: { user: { id: "user-1" } } }),
-      },
-      from: (_table: string) => {
-        const chain = {
-          select: () => chain,
-          eq: () => chain,
-          update: (args: unknown) => {
-            lastUpdateArgs = args;
-            return chain;
-          },
-          single: () => Promise.resolve(mockSelectResult),
-          // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock for await support
-          then: (resolve: (v: unknown) => void) =>
-            Promise.resolve(mockUpdateResult ?? mockSelectResult).then(resolve),
-        };
+const mockInlineSupabase = {
+  auth: {
+    getUser: () => Promise.resolve({ data: { user: { id: "user-1" } } }),
+  },
+  from: (_table: string) => {
+    const chain = {
+      select: () => chain,
+      eq: () => chain,
+      update: (args: unknown) => {
+        lastUpdateArgs = args;
         return chain;
       },
-    }),
+      single: () => Promise.resolve(mockSelectResult),
+      // biome-ignore lint/suspicious/noThenProperty: intentional thenable mock for await support
+      then: (resolve: (v: unknown) => void) =>
+        Promise.resolve(mockUpdateResult ?? mockSelectResult).then(resolve),
+    };
+    return chain;
+  },
+};
+
+vi.mock("@/lib/supabase/server", () => ({
+  createClient: () => Promise.resolve(mockInlineSupabase),
+  requireUserId: () =>
+    Promise.resolve({ supabase: mockInlineSupabase, userId: "user-1" }),
 }));
 
 const { getFsrsSettings, updateFsrsSettings } = await import(

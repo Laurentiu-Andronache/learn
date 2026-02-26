@@ -4,6 +4,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { deleteQuestion } from "@/lib/services/admin-reviews";
 import { saveQuizAttempt } from "@/lib/services/quiz-attempts";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
@@ -61,8 +62,11 @@ export function QuizSession({
 
       const answer: QuizAnswer = {
         questionId: q.question.id,
-        questionText:
-          locale === "es" ? q.question.question_es : q.question.question_en,
+        questionText: localizedField(
+          q.question as unknown as Record<string, unknown>,
+          "question",
+          locale,
+        ),
         selectedIndex:
           wasCorrect === null
             ? null

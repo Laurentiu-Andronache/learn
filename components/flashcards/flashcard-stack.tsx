@@ -1,20 +1,17 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
-import { useTranslations } from "next-intl";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { QuestionReportForm } from "@/components/feedback/question-report-form";
-import { MarkdownContent } from "@/components/shared/markdown-content";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useTTS } from "@/hooks/use-tts";
+import { useCallback } from "react";
 import {
   isExtraDuplicate,
   stripFrontFromAnswer,
 } from "@/lib/flashcards/strip-front-from-answer";
+import { localizedField } from "@/lib/i18n/localized-field";
 import type { UserCardState } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
+import { FlashcardBack } from "./flashcard-back";
+import { FlashcardFront } from "./flashcard-front";
 import { FlashcardProgress } from "./flashcard-progress";
+import { useFlashcardNavigation } from "./use-flashcard-navigation";
 
 interface FlashcardData {
   id: string;
@@ -54,246 +51,53 @@ export function FlashcardStack({
   rateSignal,
   readQuestionsAloud = false,
 }: FlashcardStackProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isFlipped, setIsFlipped] = useState(false);
-  const [hasBeenRevealed, setHasBeenRevealed] = useState(false);
-  const [ratings, setRatings] = useState<Map<string, 1 | 2 | 3 | 4>>(new Map());
-  const [reportOpen, setReportOpen] = useState(false);
-  const t = useTranslations("feedback");
-  const tf = useTranslations("flashcard");
-  const tq = useTranslations("quiz");
-  const { playingEl, paused, handleBlockClick, stop: stopTTS } = useTTS();
-  const questionRef = useRef<HTMLParagraphElement>(null);
-  const backCardRef = useRef<HTMLDivElement>(null);
-  const stopAutoPlayRef = useRef(false);
-  const prevSkipSignal = useRef(skipSignal ?? 0);
-  const prevUndoSignal = useRef(undoSignal ?? 0);
-  const prevRateSignal = useRef(rateSignal?.count ?? 0);
+  const getFlashcardId = useCallback(
+    (index: number) => flashcards[index]?.id,
+    [flashcards],
+  );
 
-  // Skip signal — advance without grading
-  useEffect(() => {
-    if (skipSignal !== undefined && skipSignal > prevSkipSignal.current) {
-      prevSkipSignal.current = skipSignal;
-      if (currentIndex + 1 >= flashcards.length) {
-        onComplete(ratings);
-      } else {
-        const next = currentIndex + 1;
-        setCurrentIndex(next);
-        setIsFlipped(false);
-        setHasBeenRevealed(false);
-        onFlipChange?.(false);
-        onIndexChange?.(next);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
-  }, [
-    skipSignal,
+  const {
     currentIndex,
-    flashcards.length,
-    ratings,
+    isFlipped,
+    hasBeenRevealed,
+    reportOpen,
+    setReportOpen,
+    playingEl,
+    paused,
+    questionRef,
+    backCardRef,
+    handleFlip,
+    handleTTSClick,
+    handleSuspendAdvance,
+    againCount,
+    hardCount,
+    goodCount,
+    easyCount,
+  } = useFlashcardNavigation({
+    totalCards: flashcards.length,
+    skipSignal,
+    undoSignal,
+    rateSignal,
+    readQuestionsAloud,
+    onGrade,
     onComplete,
     onIndexChange,
     onFlipChange,
-  ]);
-
-  // Undo signal — go back to previous card
-  useEffect(() => {
-    if (undoSignal !== undefined && undoSignal > prevUndoSignal.current) {
-      prevUndoSignal.current = undoSignal;
-      if (currentIndex > 0) {
-        const prev = currentIndex - 1;
-        const prevCard = flashcards[prev];
-        setRatings((r) => {
-          const next = new Map(r);
-          next.delete(prevCard.id);
-          return next;
-        });
-        setCurrentIndex(prev);
-        setIsFlipped(false);
-        setHasBeenRevealed(false);
-        onFlipChange?.(false);
-        onIndexChange?.(prev);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    }
-  }, [undoSignal, currentIndex, flashcards, onIndexChange, onFlipChange]);
-
-  const advance = useCallback(
-    (rating: 1 | 2 | 3 | 4) => {
-      const current = flashcards[currentIndex];
-      if (!current) return;
-      onGrade(current.id, rating);
-
-      const newRatings = new Map(ratings);
-      newRatings.set(current.id, rating);
-      setRatings(newRatings);
-
-      if (currentIndex + 1 >= flashcards.length) {
-        onComplete(newRatings);
-      } else {
-        const nextIndex = currentIndex + 1;
-        setCurrentIndex(nextIndex);
-        setIsFlipped(false);
-        setHasBeenRevealed(false);
-        onFlipChange?.(false);
-        onIndexChange?.(nextIndex);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }
-    },
-    [
-      currentIndex,
-      flashcards,
-      ratings,
-      onGrade,
-      onComplete,
-      onIndexChange,
-      onFlipChange,
-    ],
-  );
-
-  // Rate signal — grade from parent
-  useEffect(() => {
-    if (rateSignal && rateSignal.count > prevRateSignal.current) {
-      prevRateSignal.current = rateSignal.count;
-      advance(rateSignal.rating);
-    }
-  }, [rateSignal, advance]);
-
-  // Keyboard hotkeys: 1=Again, 2=Hard, 3/Space=Good, 4=Easy (only after first reveal)
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (!hasBeenRevealed) return;
-      if (reportOpen) return;
-      // Don't capture if user is typing in an input
-      if (
-        e.target instanceof HTMLInputElement ||
-        e.target instanceof HTMLTextAreaElement
-      )
-        return;
-
-      switch (e.key) {
-        case "1":
-          e.preventDefault();
-          advance(1);
-          break;
-        case "2":
-          e.preventDefault();
-          advance(2);
-          break;
-        case "3":
-        case " ":
-          e.preventDefault();
-          advance(3);
-          break;
-        case "4":
-          e.preventDefault();
-          advance(4);
-          break;
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [hasBeenRevealed, advance, reportOpen]);
-
-  const stopAutoPlay = useCallback(() => {
-    stopAutoPlayRef.current = true;
-    const container = backCardRef.current;
-    if (container) {
-      for (const audio of container.querySelectorAll<HTMLAudioElement>(
-        "audio[data-inline-audio]",
-      )) {
-        audio.pause();
-        audio.currentTime = 0;
-      }
-    }
-  }, []);
-
-  // Stop TTS + auto-play on card change, then auto-read question if enabled
-  useEffect(() => {
-    stopTTS();
-    stopAutoPlay();
-    if (readQuestionsAloud && questionRef.current) {
-      handleBlockClick(questionRef.current);
-    }
-  }, [currentIndex]);
-
-  // Auto-play inline audio when card flips to back
-  useEffect(() => {
-    if (!isFlipped) {
-      stopAutoPlay();
-      return;
-    }
-    const container = backCardRef.current;
-    if (!container) return;
-
-    // Small delay for flip animation to finish
-    const timeout = setTimeout(() => {
-      // Only auto-play audio NOT inside collapsed <details> (avoids duplicates in "Learn More")
-      const audios = Array.from(
-        container.querySelectorAll<HTMLAudioElement>(
-          "audio[data-inline-audio]",
-        ),
-      ).filter((a) => !a.closest("details:not([open])"));
-      if (audios.length === 0) return;
-
-      stopTTS();
-      stopAutoPlayRef.current = false;
-
-      let idx = 0;
-      const playNext = () => {
-        if (stopAutoPlayRef.current || idx >= audios.length) return;
-        const audio = audios[idx];
-        idx++;
-        const onEnded = () => {
-          audio.removeEventListener("ended", onEnded);
-          playNext();
-        };
-        audio.addEventListener("ended", onEnded);
-        audio.play().catch(() => {});
-      };
-      playNext();
-    }, 350);
-
-    return () => clearTimeout(timeout);
-  }, [isFlipped, currentIndex]);
+    getFlashcardId,
+  });
 
   const current = flashcards[currentIndex];
   if (!current) return null;
 
-  const questionText =
-    locale === "es" ? current.question_es : current.question_en;
-  const rawAnswer = locale === "es" ? current.answer_es : current.answer_en;
+  const fc = current as unknown as Record<string, unknown>;
+  const questionText = localizedField(fc, "question", locale);
+  const rawAnswer = localizedField(fc, "answer", locale);
   const answer = rawAnswer
     ? stripFrontFromAnswer(rawAnswer, questionText)
     : rawAnswer;
-  const rawExtra = locale === "es" ? current.extra_es : current.extra_en;
+  const rawExtra = localizedField(fc, "extra", locale) || null;
   const extra =
     rawExtra && answer && isExtraDuplicate(answer, rawExtra) ? null : rawExtra;
-
-  const handleFlip = () => {
-    stopTTS();
-    stopAutoPlay();
-    if (!hasBeenRevealed) {
-      setIsFlipped(true);
-      setHasBeenRevealed(true);
-      onFlipChange?.(true);
-    } else {
-      const next = !isFlipped;
-      setIsFlipped(next);
-      onFlipChange?.(next);
-    }
-  };
-
-  const handleTTSClick = (el: HTMLElement) => {
-    stopAutoPlay();
-    handleBlockClick(el);
-  };
-
-  // Count ratings by type
-  const againCount = [...ratings.values()].filter((r) => r === 1).length;
-  const hardCount = [...ratings.values()].filter((r) => r === 2).length;
-  const goodCount = [...ratings.values()].filter((r) => r === 3).length;
-  const easyCount = [...ratings.values()].filter((r) => r === 4).length;
 
   return (
     <div className="w-full flex-1 flex flex-col min-h-0 gap-3">
@@ -324,111 +128,28 @@ export function FlashcardStack({
             isFlipped && "[transform:rotateY(180deg)]",
           )}
         >
-          {/* Front */}
-          <Card className="absolute inset-0 [backface-visibility:hidden] flex flex-col items-center justify-center p-6 text-center border-[hsl(var(--flashcard-accent)/0.2)]">
-            <div
-              ref={questionRef}
-              className={cn(
-                "text-lg font-semibold mb-4 transition-colors duration-200",
-                playingEl === questionRef.current &&
-                  "bg-[hsl(var(--primary)/0.10)] rounded-md px-2 -mx-2",
-              )}
-            >
-              <MarkdownContent
-                text={questionText}
-                className="text-lg font-semibold"
-              />
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {hasBeenRevealed ? tf("tapToSeeAnswer") : tf("tapToReveal")}
-            </p>
-          </Card>
+          <FlashcardFront
+            questionText={questionText}
+            hasBeenRevealed={hasBeenRevealed}
+            questionRef={questionRef}
+            playingEl={playingEl}
+          />
 
-          {/* Back */}
-          <Card
-            ref={backCardRef}
-            className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col p-6 overflow-y-auto border-[hsl(var(--flashcard-accent)/0.2)]"
-          >
-            <div className="flex-1 space-y-3">
-              {answer && (
-                <div>
-                  <p className="text-sm font-medium mb-1">{tf("answer")}</p>
-                  <MarkdownContent
-                    text={answer}
-                    className="text-sm text-muted-foreground"
-                    onBlockClick={handleTTSClick}
-                    playingEl={playingEl}
-                    ttsPaused={paused}
-                  />
-                </div>
-              )}
-              {extra && (
-                <details
-                  key={current.id}
-                  className="group rounded-lg bg-[hsl(var(--flashcard-accent)/0.1)]"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <summary className="pl-1 py-2 cursor-pointer text-sm font-medium text-[hsl(var(--flashcard-accent))] list-none flex items-center gap-1">
-                    <ChevronRight className="size-4 transition-transform group-open:rotate-90" />
-                    {tq("learnMore")}
-                  </summary>
-                  <div className="pl-1 pb-3">
-                    <MarkdownContent
-                      text={extra}
-                      className="text-sm text-muted-foreground"
-                      onBlockClick={handleTTSClick}
-                      playingEl={playingEl}
-                      ttsPaused={paused}
-                    />
-                  </div>
-                </details>
-              )}
-            </div>
-            <div className="mt-2 flex justify-between">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setReportOpen(true);
-                }}
-              >
-                &#9873; {t("reportQuestion")}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSuspend(current.id);
-                  if (currentIndex + 1 >= flashcards.length) {
-                    onComplete(ratings);
-                  } else {
-                    setCurrentIndex(currentIndex + 1);
-                    setIsFlipped(false);
-                    setHasBeenRevealed(false);
-                  }
-                }}
-              >
-                &#8856; {tq("suspend")}
-              </Button>
-            </div>
-          </Card>
+          <FlashcardBack
+            flashcardId={current.id}
+            questionText={questionText}
+            answer={answer || null}
+            extra={extra}
+            backCardRef={backCardRef}
+            playingEl={playingEl}
+            paused={paused}
+            reportOpen={reportOpen}
+            onReportOpenChange={setReportOpen}
+            onTTSClick={handleTTSClick}
+            onSuspend={() => handleSuspendAdvance(current.id, onSuspend)}
+          />
         </div>
       </div>
-
-      <QuestionReportForm
-        flashcardId={current.id}
-        questionText={
-          locale === "es" && current.question_es
-            ? current.question_es
-            : current.question_en
-        }
-        open={reportOpen}
-        onOpenChange={setReportOpen}
-      />
     </div>
   );
 }

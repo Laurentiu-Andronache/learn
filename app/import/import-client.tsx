@@ -1,19 +1,9 @@
 "use client";
 
-import { AlertTriangle, Check, FileUp, Loader2, Upload } from "lucide-react";
-import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
-import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
+import { AlertTriangle, FileUp, Loader2, Upload } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
@@ -23,165 +13,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IMPORT_LIMITS } from "@/lib/import/anki-types";
-
-type ImportState = "upload" | "preview" | "importing" | "result";
-
-interface PreviewData {
-  deckName: string;
-  cardCount: number;
-  mediaCount: number;
-  categoryCount: number;
-}
-
-interface ImportResult {
-  topicId: string;
-  flashcardsImported: number;
-  mediaUploaded: number;
-  warnings: string[];
-}
+import { ImportPreview } from "./import-preview";
+import { ImportResult } from "./import-result";
+import { useImportState } from "./use-import-state";
 
 export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
   const t = useTranslations("import");
-  const locale = useLocale();
 
-  const [state, setState] = useState<ImportState>("upload");
-  const [file, setFile] = useState<File | null>(null);
-  const [language, setLanguage] = useState<"en" | "es">(
-    locale === "es" ? "es" : "en",
-  );
-  const [makePublic, setMakePublic] = useState(false);
-  const [autoTranslate, setAutoTranslate] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [importStep, setImportStep] = useState("");
-  const [result, setResult] = useState<ImportResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PreviewData | null>(null);
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const targetLang = language === "en" ? "Spanish" : "English";
-  const targetLangEs = language === "en" ? "español" : "inglés";
-
-  const validateFile = useCallback(
-    (f: File): string | null => {
-      if (f.size > IMPORT_LIMITS.maxFileSize) {
-        return t("fileTooLarge");
-      }
-      const ext = f.name.toLowerCase();
-      if (!ext.endsWith(".apkg") && !ext.endsWith(".zip")) {
-        return t("invalidFormat");
-      }
-      return null;
-    },
-    [t],
-  );
-
-  const handleFile = useCallback(
-    (f: File) => {
-      const err = validateFile(f);
-      if (err) {
-        toast.error(err);
-        return;
-      }
-      setFile(f);
-      setError(null);
-      setResult(null);
-    },
-    [validateFile],
-  );
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragOver(false);
-  }, []);
-
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      setDragOver(false);
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile) {
-        handleFile(droppedFile);
-      }
-    },
-    [handleFile],
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selected = e.target.files?.[0];
-      if (selected) {
-        handleFile(selected);
-      }
-    },
-    [handleFile],
-  );
-
-  const startImport = useCallback(async () => {
-    if (!file) return;
-
-    setState("importing");
-    setError(null);
-    setImportStep(t("processing"));
-
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("language", language);
-      formData.append("visibility", makePublic ? "public" : "private");
-      formData.append("autoTranslate", String(autoTranslate));
-
-      const response = await fetch("/api/import/anki", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        const errorMsg = data.error || t("error");
-        if (response.status === 429) {
-          setError(t("rateLimited"));
-        } else {
-          setError(errorMsg);
-        }
-        setState("upload");
-        return;
-      }
-
-      setResult({
-        topicId: data.topicId,
-        flashcardsImported: data.flashcardsImported,
-        mediaUploaded: data.mediaUploaded,
-        warnings: data.warnings || [],
-      });
-      setState("result");
-    } catch {
-      setError(t("error"));
-      setState("upload");
-    }
-  }, [file, language, makePublic, autoTranslate, t]);
-
-  const resetForm = useCallback(() => {
-    setState("upload");
-    setFile(null);
-    setError(null);
-    setResult(null);
-    setPreview(null);
-    setImportStep("");
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
-  }, []);
+  const {
+    state,
+    file,
+    language,
+    makePublic,
+    autoTranslate,
+    dragOver,
+    importStep,
+    result,
+    error,
+    preview,
+    locale,
+    targetLang,
+    targetLangEs,
+    fileInputRef,
+    setLanguage,
+    setMakePublic,
+    setAutoTranslate,
+    handleDragOver,
+    handleDragLeave,
+    handleDrop,
+    handleFileInput,
+    startImport,
+    resetForm,
+  } = useImportState();
 
   return (
     <div className="container max-w-2xl py-8 px-4">
@@ -338,43 +201,11 @@ export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Preview State */}
       {state === "preview" && preview && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t("preview")}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">{t("deckName")}</span>
-                <span className="font-medium">{preview.deckName}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("cardCount", { count: preview.cardCount })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("mediaCount", { count: preview.mediaCount })}
-                </span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">
-                  {t("categoryCount", { count: preview.categoryCount })}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={resetForm} className="flex-1">
-              {t("importAnother")}
-            </Button>
-            <Button onClick={startImport} className="flex-1">
-              {t("confirm")}
-            </Button>
-          </div>
-        </div>
+        <ImportPreview
+          preview={preview}
+          onReset={resetForm}
+          onConfirm={startImport}
+        />
       )}
 
       {/* Importing State */}
@@ -396,69 +227,7 @@ export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
 
       {/* Result State */}
       {state === "result" && result && (
-        <div className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <div className="rounded-full bg-green-100 p-2 dark:bg-green-900/30">
-                  <Check className="h-5 w-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <CardTitle>{t("success")}</CardTitle>
-                  <CardDescription>
-                    {t("flashcardsImported", {
-                      count: result.flashcardsImported,
-                    })}
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex flex-wrap gap-2">
-                <Badge variant="secondary">
-                  {t("flashcardsImported", {
-                    count: result.flashcardsImported,
-                  })}
-                </Badge>
-                {result.mediaUploaded > 0 && (
-                  <Badge variant="secondary">
-                    {t("mediaUploaded", { count: result.mediaUploaded })}
-                  </Badge>
-                )}
-              </div>
-
-              {result.warnings.length > 0 && (
-                <div className="rounded-lg border border-yellow-500/30 bg-yellow-50/50 p-3 dark:bg-yellow-900/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                      {t("warnings")}
-                    </p>
-                  </div>
-                  <ul className="space-y-1">
-                    {result.warnings.map((warning) => (
-                      <li
-                        key={warning}
-                        className="text-xs text-yellow-700 dark:text-yellow-400"
-                      >
-                        {warning}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          <div className="flex gap-3">
-            <Button variant="outline" onClick={resetForm} className="flex-1">
-              {t("importAnother")}
-            </Button>
-            <Button asChild className="flex-1">
-              <Link href={`/topics/${result.topicId}`}>{t("viewTopic")}</Link>
-            </Button>
-          </div>
-        </div>
+        <ImportResult result={result} onReset={resetForm} />
       )}
     </div>
   );
