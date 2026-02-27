@@ -12,4 +12,14 @@ export const env = {
   get SUPABASE_KEY() {
     return requiredEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
   },
+  get SERVICE_ROLE_KEY() {
+    const key =
+      process.env.LEARN_SERVICE_ROLE_KEY ??
+      process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!key)
+      throw new Error(
+        "Missing required env var: LEARN_SERVICE_ROLE_KEY or SUPABASE_SERVICE_ROLE_KEY",
+      );
+    return key;
+  },
 };

@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { ElevenLabsClient } from "@elevenlabs/elevenlabs-js";
 import { after } from "next/server";
 import { ONE_YEAR_SECONDS } from "@/lib/constants";
+import { env } from "@/lib/env";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { createApiClient } from "@/lib/supabase/server";
 
@@ -20,9 +21,6 @@ const SILENCE_MP3 = Buffer.from(
 );
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-// LEARN_SERVICE_ROLE_KEY avoids collision with ~/.bashrc SUPABASE_SERVICE_ROLE_KEY (Launcher project)
-const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ??
-  process.env.SUPABASE_SERVICE_ROLE_KEY)!;
 
 const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY,
@@ -82,7 +80,7 @@ export async function POST(request: Request) {
     const cacheRes = await fetch(
       `${STORAGE_URL}/storage/v1/object/${BUCKET}/${storagePath}`,
       {
-        headers: { Authorization: `Bearer ${SERVICE_KEY}` },
+        headers: { Authorization: `Bearer ${env.SERVICE_ROLE_KEY}` },
         cache: "no-store",
       },
     );
@@ -134,7 +132,7 @@ export async function POST(request: Request) {
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${SERVICE_KEY}`,
+              Authorization: `Bearer ${env.SERVICE_ROLE_KEY}`,
               "Content-Type": "audio/mpeg",
               "x-upsert": "true",
             },

@@ -3,39 +3,10 @@
  * Called in after() context for admin imports.
  */
 
+import { callAnthropicAPI, stripCodeFences } from "@/lib/services/anthropic";
 import { createClient } from "@/lib/supabase/server";
 
 const BATCH_SIZE = 10; // flashcards per translation request
-
-interface AnthropicCallOptions {
-  apiKey: string;
-  model: string;
-  system: string;
-  userContent: string;
-  maxTokens: number;
-}
-
-async function callAnthropicAPI(opts: AnthropicCallOptions): Promise<string> {
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": opts.apiKey,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: opts.model,
-      max_tokens: opts.maxTokens,
-      system: opts.system,
-      messages: [{ role: "user", content: opts.userContent }],
-    }),
-  });
-
-  if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
-
-  const data = await res.json();
-  return (data.content?.[0]?.text ?? "").trim();
-}
 
 /**
  * Translate all flashcard content in a topic from sourceLang to the other language.
@@ -101,9 +72,7 @@ Return ONLY a valid JSON array matching the input structure.`,
         maxTokens: 8192,
       });
 
-      const jsonStr = text
-        .replace(/^```(?:json)?\s*/, "")
-        .replace(/\s*```$/, "");
+      const jsonStr = stripCodeFences(text);
       const translated = JSON.parse(jsonStr) as {
         id: string;
         question: string;
@@ -155,9 +124,7 @@ Return ONLY a valid JSON array matching the input structure.`,
         maxTokens: 1024,
       });
 
-      const jsonStr = text
-        .replace(/^```(?:json)?\s*/, "")
-        .replace(/\s*```$/, "");
+      const jsonStr = stripCodeFences(text);
       const translated = JSON.parse(jsonStr);
 
       await supabase

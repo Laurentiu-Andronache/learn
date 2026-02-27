@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { DEFAULT_DIFFICULTY } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 
 export interface ImportQuestion {
@@ -162,7 +163,7 @@ async function insertCategoryWithContent(
       explanation_es: q.explanation_es || null,
       extra_en: q.extra_en || null,
       extra_es: q.extra_es || null,
-      difficulty: q.difficulty ?? 5,
+      difficulty: q.difficulty ?? DEFAULT_DIFFICULTY,
     }));
 
     const { error: qErr } = await supabase.from("questions").insert(rows);
@@ -183,7 +184,7 @@ async function insertCategoryWithContent(
       answer_es: f.answer_es,
       extra_en: f.extra_en || null,
       extra_es: f.extra_es || null,
-      difficulty: f.difficulty ?? 5,
+      difficulty: f.difficulty ?? DEFAULT_DIFFICULTY,
     }));
 
     const { error: fErr } = await supabase.from("flashcards").insert(fRows);

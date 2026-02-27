@@ -10,7 +10,7 @@ NextJS 16 App Router + TypeScript + Tailwind + Supabase | PostgreSQL (17 tables 
 learn-app/
 ├── app/           # NextJS pages + API routes
 ├── components/    # React components
-├── hooks/         # Custom React hooks (use-tts, use-auto-translate)
+├── hooks/         # Custom React hooks (use-tts, use-auto-translate, use-admin-list)
 ├── lib/           # Utilities, services, types
 ├── types/         # Ambient type declarations (lamejs)
 ├── supabase/      # Database migrations
@@ -170,7 +170,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 
 ## Component/Service Naming
 
-- `lib/constants.ts` — `DEFAULT_BASE_FONT_SIZE`, `ONE_YEAR_SECONDS`, `MIN_REVIEWS_FOR_OPTIMIZATION`
+- `lib/constants.ts` — `DEFAULT_BASE_FONT_SIZE`, `ONE_YEAR_SECONDS`, `MIN_REVIEWS_FOR_OPTIMIZATION`, `FSRS_DEFAULT_RETENTION`, `FSRS_DEFAULT_MAX_INTERVAL`, `FSRS_DEFAULT_NEW_CARDS_PER_DAY`, `QUICK_REVIEW_LIMIT`, `RAMP_UP_DURATION_DAYS`, `RAMP_UP_BASE_OFFSET`, `MS_PER_DAY`, `CELEBRATION_SCORE_THRESHOLD`, `DEFAULT_DIFFICULTY`
 - `components/shared/segmented-bar.tsx` — `SegmentedBar` (reusable progress/rating bar with colored segments)
 - `lib/topics/resolve-topic.ts` — `resolveTopic`, `resolveTopicSelect`, `isUuidParam`
 - `lib/topics/topic-url.ts` — `topicUrl(topic, sub?)`
@@ -189,13 +189,14 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based), shared `computeTopicProgress` helper
 - `lib/shuffle.ts` — `shuffleArray<T>()` (Fisher-Yates, used by quiz-card, quiz page, question-ordering)
 - `lib/rate-limit.ts` — `createRateLimiter(max, windowMs)` factory (used by TTS + Anki import API routes)
-- `lib/env.ts` — Lazy env validation via getters (throws on first access, not import — safe for tests). `env.SUPABASE_URL`, `env.SUPABASE_KEY`
+- `lib/env.ts` — Lazy env validation via getters (throws on first access, not import — safe for tests). `env.SUPABASE_URL`, `env.SUPABASE_KEY`, `env.SERVICE_ROLE_KEY`
 - `lib/supabase/server.ts` — `createClient`, `createApiClient` (read-only, for API routes), `checkIsAdmin`, `requireAdmin`, `requireUserId`
 - `lib/services/quiz-attempts.ts` — `saveQuizAttempt`, `getLatestQuizAttempt`
 - `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, `getFsrsSettings`, `updateFsrsSettings`, etc.
 - `components/settings/fsrs-settings.tsx` — Study settings card (retention slider, max interval, ramp-up toggle, new cards/day, show intervals)
 - `components/topics/study-tips-dialog.tsx` — First-visit study tips popup (localStorage-gated)
 - `hooks/use-tts.ts` — TTS click-to-read hook (browser cache, Audio playback, pause/resume)
+- `hooks/use-admin-list.ts` — `useAdminList<T>()` generic hook for admin CRUD pages (filters, debounced search, deep-link, auto-translate, editing state). Used by `questions-client.tsx` and `flashcards-client.tsx`
 - `app/api/tts/route.ts` — TTS API route (auth, rate limit, Supabase Storage cache, ElevenLabs)
 - `lib/fsrs/optimizer.ts` — `optimizeUserParameters()`, `transformReviewLogs()`
 - `components/admin/topic-visibility-toggle.tsx` — Public/Private switch for admin topics list
@@ -206,7 +207,14 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `app/import/` — Import client decomposed: `use-import-state.ts` (hook), `import-preview.tsx`, `import-result.tsx`
 - `components/session/help-dialog.tsx` — Keyboard shortcuts/help dialog (extracted from session-toolbar)
 - `components/session/edit-dialog.tsx` — Admin edit dialog for flashcards/questions (extracted from session-toolbar)
-- `lib/import/anki-translate.ts` — `callAnthropicAPI(opts: AnthropicCallOptions)` helper for Anthropic API calls
+- `lib/services/anthropic.ts` — `callAnthropicAPI(opts)`, `stripCodeFences(text)` (shared Anthropic API helpers, used by `anki-translate.ts` and `admin-translate.ts`)
+- `lib/topics/get-topic-page-data.ts` — `getTopicPageData(topicId, userId)` (topic detail page data fetching)
+- `components/settings/use-fsrs-settings-form.ts` — `useFsrsSettingsForm(settings, reviewCount)` (FSRS settings form state hook)
+- `components/settings/optimizer-section.tsx` — `OptimizerSection` (FSRS optimizer UI sub-component)
+- `components/flashcards/hooks/use-card-navigation.ts` — core card navigation state and handlers
+- `components/flashcards/hooks/use-card-signals.ts` — skip/undo/rate signal effects
+- `components/flashcards/hooks/use-card-audio.ts` — TTS + inline audio playback
+- `components/flashcards/hooks/use-card-hotkeys.ts` — keyboard 1/2/3/Space/4 handler
 - `types/lamejs.d.ts` — Type declarations for lamejs Mp3Encoder
 - `mcp-server/src/tools/analytics/` — Split analytics tools (7 handlers + barrel)
 - `mcp-server/src/tools/translation/` — Split translation tools (4 files + barrel)
@@ -302,8 +310,13 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `lib/import/__tests__/anki-templates.test.ts` | 38 | Template rendering, cloze, HTML-to-markdown |
 | `app/api/tts/__tests__/route.test.ts` | 8 | Auth, rate limit, validation, cache hit/miss, ElevenLabs errors |
 | `app/api/import/anki/__tests__/route.test.ts` | 9 | Auth, validation, format/size/language checks, visibility enforcement |
+| `lib/import/__tests__/anki-media.test.ts` | 36 | Media detection, URL rewriting, pipeline processing |
+| `lib/services/__tests__/admin-translate.test.ts` | 8 | Auth, API errors, code-fence stripping, array validation |
+| `lib/services/__tests__/admin-topics.test.ts` | 13 | CRUD for all 8 server actions, auth, revalidation |
+| `lib/services/__tests__/admin-import.test.ts` | 8 | validateImportJson, importTopicJson, error handling |
+| `lib/import/__tests__/anki-translate.test.ts` | 6 | Batch translation, topic metadata, error recovery |
 
-**Total: 393 tests across 32 test files.**
+**Total: 464 tests across 37 test files.**
 
 ## Anki Import Cleanup
 

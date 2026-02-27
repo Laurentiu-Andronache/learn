@@ -3,6 +3,7 @@
 import Script from "next/script";
 import {
   generateEducationalApplicationSchema,
+  generateWebPageSchema,
   generateWebSiteSchema,
 } from "@/lib/seo/structured-data";
 
@@ -51,7 +52,6 @@ export function PageStructuredData({
   description,
   locale,
 }: PageStructuredDataProps) {
-  const { generateWebPageSchema } = require("@/lib/seo/structured-data");
   const pageSchema = generateWebPageSchema(
     baseUrl,
     path,

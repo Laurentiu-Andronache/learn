@@ -1,16 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback, useState } from "react";
 import { QuestionEditForm } from "@/components/admin/question-edit-form";
 import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAutoTranslate } from "@/hooks/use-auto-translate";
+import { type AdminFetchParams, useAdminList } from "@/hooks/use-admin-list";
 import {
   deleteQuestion,
   getQuestionsList,
@@ -70,157 +61,88 @@ interface QuestionsClientProps {
   categories: Category[];
 }
 
+const getId = (q: QuestionItem) => q.id;
+const getOriginals = (q: QuestionItem) => ({
+  question_en: q.question_en,
+  question_es: q.question_es,
+  options_en: q.options_en,
+  options_es: q.options_es,
+  explanation_en: q.explanation_en,
+  explanation_es: q.explanation_es,
+  extra_en: q.extra_en,
+  extra_es: q.extra_es,
+});
+
 export function QuestionsClient({
   initialQuestions,
   topics,
   categories,
 }: QuestionsClientProps) {
-  const _router = useRouter();
-  const searchParams = useSearchParams();
   const t = useTranslations();
-  const [isPending, startTransition] = useTransition();
 
-  const editParam = searchParams.get("edit");
-  const topicParam = searchParams.get("topic");
-
-  // Filters
-  const [topicId, setTopicId] = useState<string>(topicParam || "all");
-  const [categoryId, setCategoryId] = useState<string>("all");
+  // Question-specific type filter
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchAnswers, setSearchAnswers] = useState(false);
-  const [searchExtra, setSearchExtra] = useState(false);
 
-  // Questions list
-  const [questions, setQuestions] = useState<QuestionItem[]>(initialQuestions);
+  const fetchFn = useCallback(
+    async (params: AdminFetchParams) => {
+      const filters: {
+        topicId?: string;
+        categoryId?: string;
+        type?: string;
+        search?: string;
+        searchAnswers?: boolean;
+        searchExtra?: boolean;
+      } = { ...params };
+      if (typeFilter !== "all") filters.type = typeFilter;
+      return (await getQuestionsList(filters)) as QuestionItem[];
+    },
+    [typeFilter],
+  );
 
-  // Editing
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
+  const updateFn = useCallback(
+    async (id: string, data: Partial<QuestionItem>) => {
+      await updateQuestion(id, data as QuestionUpdate);
+    },
+    [],
+  );
 
-  // Auto-translate: compute original bilingual values for the currently-editing question
-  const editingOriginals = useMemo(() => {
-    if (!editingId) return {};
-    const q = questions.find((q) => q.id === editingId);
-    if (!q) return {};
-    return {
-      question_en: q.question_en,
-      question_es: q.question_es,
-      options_en: q.options_en,
-      options_es: q.options_es,
-      explanation_en: q.explanation_en,
-      explanation_es: q.explanation_es,
-      extra_en: q.extra_en,
-      extra_es: q.extra_es,
-    };
-  }, [editingId, questions]);
-
-  const { interceptSave, dialogProps } = useAutoTranslate({
-    originalValues: editingOriginals,
-    errorMessage: t("admin.translate.error"),
-  });
-
-  // Deep-link tracking
-  const deepLinked = useRef(false);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  // Filter categories by selected topic
-  const filteredCategories = useMemo(() => {
-    if (topicId === "all") return categories;
-    return categories.filter((c) => c.topic_id === topicId);
-  }, [topicId, categories]);
-
-  // Reset category when topic changes
-  useEffect(() => {
-    setCategoryId("all");
-  }, [topicId]);
-
-  // Fetch filtered questions
-  const fetchQuestions = useCallback(() => {
-    startTransition(async () => {
-      try {
-        const filters: {
-          topicId?: string;
-          categoryId?: string;
-          type?: string;
-          search?: string;
-          searchAnswers?: boolean;
-          searchExtra?: boolean;
-        } = {};
-        if (topicId !== "all") filters.topicId = topicId;
-        if (categoryId !== "all") filters.categoryId = categoryId;
-        if (typeFilter !== "all") filters.type = typeFilter;
-        if (debouncedSearch) {
-          filters.search = debouncedSearch;
-          filters.searchAnswers = searchAnswers;
-          filters.searchExtra = searchExtra;
-        }
-        const data = await getQuestionsList(filters);
-        setQuestions(data as QuestionItem[]);
-      } catch {
-        // Auth error from requireAdmin() — layout already handles access control
-      }
-    });
-  }, [
-    topicId,
-    categoryId,
-    typeFilter,
-    debouncedSearch,
-    searchAnswers,
-    searchExtra,
-  ]);
-
-  useEffect(() => {
-    fetchQuestions();
-  }, [fetchQuestions]);
-
-  const startEditing = useCallback((q: QuestionItem) => {
-    setEditingId(q.id);
+  const deleteFn = useCallback(async (id: string) => {
+    await deleteQuestion(id);
   }, []);
 
-  // Deep-link: auto-expand question from ?edit= param
-  useEffect(() => {
-    if (!editParam || deepLinked.current) return;
-    const target = questions.find((q) => q.id === editParam);
-    if (target) {
-      deepLinked.current = true;
-      startEditing(target);
-      setTimeout(() => {
-        document
-          .getElementById(`question-${editParam}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-    }
-  }, [editParam, questions, startEditing]);
-
-  const handleSave = async (updates: QuestionUpdate) => {
-    if (!editingId) return;
-    interceptSave(updates, async (finalUpdates) => {
-      setSaving(true);
-      try {
-        await updateQuestion(editingId, finalUpdates as QuestionUpdate);
-        setEditingId(null);
-        fetchQuestions();
-      } finally {
-        setSaving(false);
-      }
-    });
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteQuestion(id);
-      fetchQuestions();
-    } catch {
-      toast.error(t("admin.deleteFailed"));
-    }
-  };
+  const {
+    topicId,
+    setTopicId,
+    categoryId,
+    setCategoryId,
+    search,
+    setSearch,
+    searchAnswers,
+    setSearchAnswers,
+    searchExtra,
+    setSearchExtra,
+    items: questions,
+    loading,
+    editingId,
+    setEditingId,
+    startEditing,
+    saving,
+    handleSave,
+    handleDelete,
+    dialogProps,
+    filteredCategories,
+  } = useAdminList<QuestionItem>(
+    {
+      elementPrefix: "question",
+      fetchFn,
+      updateFn,
+      deleteFn,
+      getId,
+      getOriginals,
+    },
+    initialQuestions,
+    categories,
+  );
 
   return (
     <div className="space-y-4">
@@ -287,7 +209,7 @@ export function QuestionsClient({
         />
       </div>
 
-      {isPending && (
+      {loading && (
         <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       )}
 
@@ -334,7 +256,7 @@ export function QuestionsClient({
             )}
           </div>
         ))}
-        {questions.length === 0 && !isPending && (
+        {questions.length === 0 && !loading && (
           <p className="text-center text-muted-foreground py-8">
             {t("admin.noItems")}
           </p>

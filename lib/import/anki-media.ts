@@ -4,6 +4,7 @@
  * SVG passthrough, and Supabase Storage uploads.
  */
 
+import { env } from "@/lib/env";
 import type {
   MediaProcessingResult,
   MediaType,
@@ -14,8 +15,6 @@ import { IMPORT_LIMITS } from "./anki-types";
 // ── Supabase Storage config ──
 
 const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SERVICE_KEY = (process.env.LEARN_SERVICE_ROLE_KEY ??
-  process.env.SUPABASE_SERVICE_ROLE_KEY)!;
 const BUCKET = "anki-media";
 
 /** Sanitize a filename for Supabase Storage (ASCII-safe, no special chars). */
@@ -293,7 +292,7 @@ async function uploadToStorage(
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${SERVICE_KEY}`,
+        Authorization: `Bearer ${env.SERVICE_ROLE_KEY}`,
         "Content-Type": contentType,
         "x-upsert": "true",
       },

@@ -10,10 +10,9 @@ import { StudyTipsDialog } from "@/components/topics/study-tips-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getTopicProgress } from "@/lib/fsrs/progress";
 import { getBaseUrl } from "@/lib/seo/metadata-utils";
-import { getQuizSummary } from "@/lib/services/quiz-attempts";
 import { createClient } from "@/lib/supabase/server";
+import { getTopicPageData } from "@/lib/topics/get-topic-page-data";
 import { isUuidParam, resolveTopic } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
 
@@ -91,18 +90,10 @@ export default async function TopicDetailPage({ params }: Props) {
     redirect(topicUrl(topic));
   }
 
-  const [progress, { count: quizQuestionCount }, quizSummary] =
-    await Promise.all([
-      getTopicProgress(user.id, topic.id),
-      supabase
-        .from("questions")
-        .select("id, categories!inner(topic_id)", {
-          count: "exact",
-          head: true,
-        })
-        .eq("categories.topic_id", topic.id),
-      getQuizSummary(topic.id),
-    ]);
+  const { progress, quizQuestionCount, quizSummary } = await getTopicPageData(
+    topic.id,
+    user.id,
+  );
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;

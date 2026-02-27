@@ -1,32 +1,16 @@
 "use client";
 
-import { Brain, Sparkles } from "lucide-react";
+import { Brain } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useCallback, useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { MIN_REVIEWS_FOR_OPTIMIZATION } from "@/lib/constants";
-import {
-  optimizeFsrsParameters,
-  resetFsrsWeights,
-} from "@/lib/fsrs/auto-optimizer";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
-import { updateFsrsSettings } from "@/lib/services/user-preferences";
-
-const DEFAULTS: Omit<FsrsSettings, "fsrs_weights" | "fsrs_weights_updated_at"> =
-  {
-    desired_retention: 0.9,
-    max_review_interval: 36500,
-    new_cards_per_day: 10,
-    new_cards_ramp_up: true,
-    show_review_time: true,
-    read_questions_aloud: false,
-  };
+import { OptimizerSection } from "./optimizer-section";
+import { useFsrsSettingsForm } from "./use-fsrs-settings-form";
 
 interface FsrsSettingsCardProps {
   settings: FsrsSettings;
@@ -39,86 +23,19 @@ export function FsrsSettingsCard({
 }: FsrsSettingsCardProps) {
   const t = useTranslations("settings");
   const tc = useTranslations("common");
-  const [formState, setFormState] = useState({
-    retention: settings.desired_retention,
-    maxInterval: settings.max_review_interval,
-    newCardsPerDay: settings.new_cards_per_day,
-    rampUp: settings.new_cards_ramp_up,
-    showIntervals: settings.show_review_time,
-    readQuestionsAloud: settings.read_questions_aloud,
-  });
-  const [saving, setSaving] = useState(false);
 
-  const [weightsUpdatedAt, setWeightsUpdatedAt] = useState(
-    settings.fsrs_weights_updated_at,
-  );
-  const [optimizing, setOptimizing] = useState(false);
-
-  const handleSave = useCallback(async () => {
-    setSaving(true);
-    try {
-      await updateFsrsSettings({
-        desired_retention: formState.retention,
-        max_review_interval: formState.maxInterval,
-        new_cards_per_day: formState.newCardsPerDay,
-        new_cards_ramp_up: formState.rampUp,
-        show_review_time: formState.showIntervals,
-        read_questions_aloud: formState.readQuestionsAloud,
-      });
-      toast.success(t("saved"));
-    } catch {
-      toast.error(tc("error"));
-    } finally {
-      setSaving(false);
-    }
-  }, [formState, t, tc]);
-
-  const handleReset = useCallback(() => {
-    setFormState({
-      retention: DEFAULTS.desired_retention,
-      maxInterval: DEFAULTS.max_review_interval,
-      newCardsPerDay: DEFAULTS.new_cards_per_day,
-      rampUp: DEFAULTS.new_cards_ramp_up,
-      showIntervals: DEFAULTS.show_review_time,
-      readQuestionsAloud: DEFAULTS.read_questions_aloud,
-    });
-  }, []);
-
-  const handleOptimize = useCallback(async () => {
-    setOptimizing(true);
-    try {
-      const result = await optimizeFsrsParameters();
-      if (result.success) {
-        setWeightsUpdatedAt(new Date().toISOString());
-        toast.success(t("optimizer.optimized"));
-      } else if (result.error === "not_enough_reviews") {
-        toast.error(
-          t("optimizer.needMoreReviews", {
-            count: reviewCount,
-            threshold: MIN_REVIEWS_FOR_OPTIMIZATION,
-          }),
-        );
-      } else {
-        toast.error(tc("error"));
-      }
-    } catch {
-      toast.error(tc("error"));
-    } finally {
-      setOptimizing(false);
-    }
-  }, [reviewCount, t, tc]);
-
-  const handleResetWeights = useCallback(async () => {
-    try {
-      await resetFsrsWeights();
-      setWeightsUpdatedAt(null);
-      toast.success(t("optimizer.resetDone"));
-    } catch {
-      toast.error(tc("error"));
-    }
-  }, [t, tc]);
-
-  const canOptimize = reviewCount >= MIN_REVIEWS_FOR_OPTIMIZATION;
+  const {
+    formState,
+    setFormState,
+    saving,
+    optimizing,
+    weightsUpdatedAt,
+    canOptimize,
+    handleSave,
+    handleReset,
+    handleOptimize,
+    handleResetWeights,
+  } = useFsrsSettingsForm(settings, reviewCount);
 
   return (
     <Card>
@@ -130,56 +47,14 @@ export function FsrsSettingsCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-5">
         {/* Parameter Optimization */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <Sparkles size={16} className="text-primary" />
-            <Label>{t("optimizer.title")}</Label>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            {t("optimizer.description")}
-          </p>
-          <div className="flex items-center gap-3 mt-1">
-            {weightsUpdatedAt ? (
-              <p className="text-xs text-muted-foreground">
-                {t("optimizer.optimizedOn", {
-                  date: new Date(weightsUpdatedAt).toLocaleDateString(),
-                })}
-              </p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {t("optimizer.usingDefaults")}
-              </p>
-            )}
-          </div>
-          <div className="flex items-center gap-2 mt-1">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleOptimize}
-              disabled={!canOptimize || optimizing}
-            >
-              {optimizing ? tc("loading") : t("optimizer.optimizeNow")}
-            </Button>
-            {weightsUpdatedAt && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleResetWeights}
-                className="text-muted-foreground"
-              >
-                {t("optimizer.resetWeights")}
-              </Button>
-            )}
-          </div>
-          {!canOptimize && (
-            <p className="text-xs text-muted-foreground">
-              {t("optimizer.needMoreReviews", {
-                count: reviewCount,
-                threshold: MIN_REVIEWS_FOR_OPTIMIZATION,
-              })}
-            </p>
-          )}
-        </div>
+        <OptimizerSection
+          weightsUpdatedAt={weightsUpdatedAt}
+          canOptimize={canOptimize}
+          optimizing={optimizing}
+          reviewCount={reviewCount}
+          onOptimize={handleOptimize}
+          onResetWeights={handleResetWeights}
+        />
 
         <Separator />
 

@@ -7,6 +7,7 @@ import { AnimatedScore } from "@/components/shared/animated-score";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { triggerCelebration } from "@/lib/confetti";
+import { CELEBRATION_SCORE_THRESHOLD } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export interface QuizAnswer {
@@ -75,7 +76,9 @@ export function QuizResults({
       {/* Score card */}
       <Card>
         <CardContent className="pt-6 text-center space-y-2">
-          {percent >= 80 && <p className="text-2xl">{t("congratulations")}</p>}
+          {percent >= CELEBRATION_SCORE_THRESHOLD && (
+            <p className="text-2xl">{t("congratulations")}</p>
+          )}
           <AnimatedScore value={percent} showRing />
           <p className="text-muted-foreground">
             {t("score")}: {correct}/{total}

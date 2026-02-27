@@ -1,6 +1,11 @@
 "use server";
 
-import { DEFAULT_BASE_FONT_SIZE } from "@/lib/constants";
+import {
+  DEFAULT_BASE_FONT_SIZE,
+  FSRS_DEFAULT_MAX_INTERVAL,
+  FSRS_DEFAULT_NEW_CARDS_PER_DAY,
+  FSRS_DEFAULT_RETENTION,
+} from "@/lib/constants";
 import { requireUserId } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
@@ -204,9 +209,9 @@ export interface FsrsSettings {
 }
 
 const FSRS_DEFAULTS: FsrsSettings = {
-  desired_retention: 0.9,
-  max_review_interval: 36500,
-  new_cards_per_day: 10,
+  desired_retention: FSRS_DEFAULT_RETENTION,
+  max_review_interval: FSRS_DEFAULT_MAX_INTERVAL,
+  new_cards_per_day: FSRS_DEFAULT_NEW_CARDS_PER_DAY,
   new_cards_ramp_up: true,
   show_review_time: true,
   read_questions_aloud: false,

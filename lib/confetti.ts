@@ -1,3 +1,5 @@
+import { CELEBRATION_SCORE_THRESHOLD } from "@/lib/constants";
+
 const COLORS = {
   flashcard: ["#a855f7", "#c084fc", "#e879f9", "#d8b4fe"], // violet
   quiz: ["#f59e0b", "#fbbf24", "#fcd34d", "#f97316"], // amber/gold
@@ -6,7 +8,7 @@ const COLORS = {
 type Mode = keyof typeof COLORS;
 
 export function triggerCelebration(mode: Mode, scorePercent: number) {
-  if (scorePercent < 80) return;
+  if (scorePercent < CELEBRATION_SCORE_THRESHOLD) return;
 
   const colors = COLORS[mode];
   const duration =

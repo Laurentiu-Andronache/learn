@@ -1,7 +1,7 @@
 "use client";
 
 import { useLocale, useTranslations } from "next-intl";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useReducer, useRef } from "react";
 import { toast } from "sonner";
 import { IMPORT_LIMITS } from "@/lib/import/anki-types";
 
@@ -21,27 +21,87 @@ export interface ImportResultData {
   warnings: string[];
 }
 
+interface State {
+  file: File | null;
+  dragOver: boolean;
+  language: "en" | "es";
+  makePublic: boolean;
+  autoTranslate: boolean;
+  state: ImportState;
+  importStep: string;
+  result: ImportResultData | null;
+  error: string | null;
+  preview: PreviewData | null;
+}
+
+type Action =
+  | { type: "SET_FILE"; file: File }
+  | { type: "SET_DRAG_OVER"; dragOver: boolean }
+  | { type: "SET_LANGUAGE"; language: "en" | "es" }
+  | { type: "SET_MAKE_PUBLIC"; makePublic: boolean }
+  | { type: "SET_AUTO_TRANSLATE"; autoTranslate: boolean }
+  | { type: "START_IMPORT"; importStep: string }
+  | { type: "IMPORT_SUCCESS"; result: ImportResultData }
+  | { type: "IMPORT_ERROR"; error: string }
+  | { type: "RESET" };
+
+function reducer(s: State, a: Action): State {
+  switch (a.type) {
+    case "SET_FILE":
+      return { ...s, file: a.file, error: null, result: null };
+    case "SET_DRAG_OVER":
+      return { ...s, dragOver: a.dragOver };
+    case "SET_LANGUAGE":
+      return { ...s, language: a.language };
+    case "SET_MAKE_PUBLIC":
+      return { ...s, makePublic: a.makePublic };
+    case "SET_AUTO_TRANSLATE":
+      return { ...s, autoTranslate: a.autoTranslate };
+    case "START_IMPORT":
+      return {
+        ...s,
+        state: "importing",
+        error: null,
+        importStep: a.importStep,
+      };
+    case "IMPORT_SUCCESS":
+      return { ...s, state: "result", result: a.result };
+    case "IMPORT_ERROR":
+      return { ...s, state: "upload", error: a.error };
+    case "RESET":
+      return {
+        ...s,
+        state: "upload",
+        file: null,
+        error: null,
+        result: null,
+        preview: null,
+        importStep: "",
+      };
+  }
+}
+
 export function useImportState() {
   const t = useTranslations("import");
   const locale = useLocale();
 
-  const [state, setState] = useState<ImportState>("upload");
-  const [file, setFile] = useState<File | null>(null);
-  const [language, setLanguage] = useState<"en" | "es">(
-    locale === "es" ? "es" : "en",
-  );
-  const [makePublic, setMakePublic] = useState(false);
-  const [autoTranslate, setAutoTranslate] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [importStep, setImportStep] = useState("");
-  const [result, setResult] = useState<ImportResultData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PreviewData | null>(null);
+  const [s, dispatch] = useReducer(reducer, {
+    file: null,
+    dragOver: false,
+    language: locale === "es" ? "es" : "en",
+    makePublic: false,
+    autoTranslate: false,
+    state: "upload",
+    importStep: "",
+    result: null,
+    error: null,
+    preview: null,
+  } satisfies State);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const targetLang = language === "en" ? "Spanish" : "English";
-  const targetLangEs = language === "en" ? "español" : "inglés";
+  const targetLang = s.language === "en" ? "Spanish" : "English";
+  const targetLangEs = s.language === "en" ? "español" : "inglés";
 
   const validateFile = useCallback(
     (f: File): string | null => {
@@ -64,9 +124,7 @@ export function useImportState() {
         toast.error(err);
         return;
       }
-      setFile(f);
-      setError(null);
-      setResult(null);
+      dispatch({ type: "SET_FILE", file: f });
     },
     [validateFile],
   );
@@ -74,20 +132,20 @@ export function useImportState() {
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragOver(true);
+    dispatch({ type: "SET_DRAG_OVER", dragOver: true });
   }, []);
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setDragOver(false);
+    dispatch({ type: "SET_DRAG_OVER", dragOver: false });
   }, []);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
       e.stopPropagation();
-      setDragOver(false);
+      dispatch({ type: "SET_DRAG_OVER", dragOver: false });
       const droppedFile = e.dataTransfer.files[0];
       if (droppedFile) {
         handleFile(droppedFile);
@@ -107,18 +165,16 @@ export function useImportState() {
   );
 
   const startImport = useCallback(async () => {
-    if (!file) return;
+    if (!s.file) return;
 
-    setState("importing");
-    setError(null);
-    setImportStep(t("processing"));
+    dispatch({ type: "START_IMPORT", importStep: t("processing") });
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("language", language);
-      formData.append("visibility", makePublic ? "public" : "private");
-      formData.append("autoTranslate", String(autoTranslate));
+      formData.append("file", s.file);
+      formData.append("language", s.language);
+      formData.append("visibility", s.makePublic ? "public" : "private");
+      formData.append("autoTranslate", String(s.autoTranslate));
 
       const response = await fetch("/api/import/anki", {
         method: "POST",
@@ -129,35 +185,29 @@ export function useImportState() {
 
       if (!response.ok) {
         const errorMsg = data.error || t("error");
-        if (response.status === 429) {
-          setError(t("rateLimited"));
-        } else {
-          setError(errorMsg);
-        }
-        setState("upload");
+        dispatch({
+          type: "IMPORT_ERROR",
+          error: response.status === 429 ? t("rateLimited") : errorMsg,
+        });
         return;
       }
 
-      setResult({
-        topicId: data.topicId,
-        flashcardsImported: data.flashcardsImported,
-        mediaUploaded: data.mediaUploaded,
-        warnings: data.warnings || [],
+      dispatch({
+        type: "IMPORT_SUCCESS",
+        result: {
+          topicId: data.topicId,
+          flashcardsImported: data.flashcardsImported,
+          mediaUploaded: data.mediaUploaded,
+          warnings: data.warnings || [],
+        },
       });
-      setState("result");
     } catch {
-      setError(t("error"));
-      setState("upload");
+      dispatch({ type: "IMPORT_ERROR", error: t("error") });
     }
-  }, [file, language, makePublic, autoTranslate, t]);
+  }, [s.file, s.language, s.makePublic, s.autoTranslate, t]);
 
   const resetForm = useCallback(() => {
-    setState("upload");
-    setFile(null);
-    setError(null);
-    setResult(null);
-    setPreview(null);
-    setImportStep("");
+    dispatch({ type: "RESET" });
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -165,24 +215,27 @@ export function useImportState() {
 
   return {
     // State
-    state,
-    file,
-    language,
-    makePublic,
-    autoTranslate,
-    dragOver,
-    importStep,
-    result,
-    error,
-    preview,
+    state: s.state,
+    file: s.file,
+    language: s.language,
+    makePublic: s.makePublic,
+    autoTranslate: s.autoTranslate,
+    dragOver: s.dragOver,
+    importStep: s.importStep,
+    result: s.result,
+    error: s.error,
+    preview: s.preview,
     locale,
     targetLang,
     targetLangEs,
     fileInputRef,
     // Setters
-    setLanguage,
-    setMakePublic,
-    setAutoTranslate,
+    setLanguage: (language: "en" | "es") =>
+      dispatch({ type: "SET_LANGUAGE", language }),
+    setMakePublic: (makePublic: boolean) =>
+      dispatch({ type: "SET_MAKE_PUBLIC", makePublic }),
+    setAutoTranslate: (autoTranslate: boolean) =>
+      dispatch({ type: "SET_AUTO_TRANSLATE", autoTranslate }),
     // Handlers
     handleDragOver,
     handleDragLeave,

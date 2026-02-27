@@ -1,3 +1,10 @@
+import {
+  FSRS_DEFAULT_NEW_CARDS_PER_DAY,
+  MS_PER_DAY,
+  QUICK_REVIEW_LIMIT,
+  RAMP_UP_BASE_OFFSET,
+  RAMP_UP_DURATION_DAYS,
+} from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
 import type { Flashcard, UserCardState } from "@/lib/types/database";
 import { buildStateMap, buildSuspendedSet } from "./card-data-helpers";
@@ -73,15 +80,15 @@ async function calculateEffectiveNewCardLimit(
     const dayNumber =
       Math.floor(
         (now.getTime() - new Date(earliestLog[0].reviewed_at).getTime()) /
-          86400000,
+          MS_PER_DAY,
       ) + 1;
-    if (dayNumber <= 5) {
-      return Math.min(baseLimit, 5 + dayNumber);
+    if (dayNumber <= RAMP_UP_DURATION_DAYS) {
+      return Math.min(baseLimit, RAMP_UP_BASE_OFFSET + dayNumber);
     }
     return baseLimit;
   }
-  // No reviews yet — day 1: cap at 6
-  return Math.min(baseLimit, 6);
+  // No reviews yet — day 1: cap at RAMP_UP_BASE_OFFSET + 1
+  return Math.min(baseLimit, RAMP_UP_BASE_OFFSET + 1);
 }
 
 export async function getEmptyStateContext(
@@ -145,7 +152,7 @@ export async function getEmptyStateContext(
     supabase,
     userId,
     flashcardIds,
-    baseLimit: options.newCardsPerDay ?? 10,
+    baseLimit: options.newCardsPerDay ?? FSRS_DEFAULT_NEW_CARDS_PER_DAY,
     rampUp: options.newCardsRampUp ?? false,
     now,
   });
@@ -327,7 +334,7 @@ export async function getOrderedFlashcards(
 
   // Quick review default limit
   if (options.subMode === "quick_review" && !options.limit) {
-    orderedFlashcards = orderedFlashcards.slice(0, 20);
+    orderedFlashcards = orderedFlashcards.slice(0, QUICK_REVIEW_LIMIT);
   }
 
   return orderedFlashcards;
@@ -386,7 +393,7 @@ export async function getSubModeCounts(userId: string, topicId: string) {
 
   return {
     full: fullCount,
-    quickReview: Math.min(seen, 20),
+    quickReview: Math.min(seen, QUICK_REVIEW_LIMIT),
     spacedRepetition: dueNow,
   };
 }

@@ -1,16 +1,7 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  useTransition,
-} from "react";
-import { toast } from "sonner";
+import { useCallback } from "react";
 import { FlashcardEditForm } from "@/components/admin/flashcard-edit-form";
 import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useAutoTranslate } from "@/hooks/use-auto-translate";
+import { type AdminFetchParams, useAdminList } from "@/hooks/use-admin-list";
 import {
   deleteFlashcard,
   getFlashcardsList,
@@ -66,146 +57,71 @@ interface FlashcardsClientProps {
   categories: Category[];
 }
 
+const getId = (f: FlashcardItem) => f.id;
+const getOriginals = (f: FlashcardItem) => ({
+  question_en: f.question_en,
+  question_es: f.question_es,
+  answer_en: f.answer_en,
+  answer_es: f.answer_es,
+  extra_en: f.extra_en,
+  extra_es: f.extra_es,
+});
+
+const fetchFn = async (params: AdminFetchParams) => {
+  return (await getFlashcardsList(params)) as FlashcardItem[];
+};
+
+const deleteFn = async (id: string) => {
+  await deleteFlashcard(id);
+};
+
 export function FlashcardsClient({
   initialFlashcards,
   topics,
   categories,
 }: FlashcardsClientProps) {
-  const _router = useRouter();
-  const searchParams = useSearchParams();
   const t = useTranslations();
-  const [isPending, startTransition] = useTransition();
 
-  const editParam = searchParams.get("edit");
-  const topicParam = searchParams.get("topic");
+  const updateFn = useCallback(
+    async (id: string, data: Partial<FlashcardItem>) => {
+      await updateFlashcard(id, data as FlashcardUpdate);
+    },
+    [],
+  );
 
-  // Filters
-  const [topicId, setTopicId] = useState<string>(topicParam || "all");
-  const [categoryId, setCategoryId] = useState<string>("all");
-  const [search, setSearch] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [searchAnswers, setSearchAnswers] = useState(false);
-  const [searchExtra, setSearchExtra] = useState(false);
-
-  // Flashcards list
-  const [flashcards, setFlashcards] =
-    useState<FlashcardItem[]>(initialFlashcards);
-
-  // Editing
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  // Auto-translate: compute original bilingual values for the currently-editing flashcard
-  const editingOriginals = useMemo(() => {
-    if (!editingId) return {};
-    const f = flashcards.find((f) => f.id === editingId);
-    if (!f) return {};
-    return {
-      question_en: f.question_en,
-      question_es: f.question_es,
-      answer_en: f.answer_en,
-      answer_es: f.answer_es,
-      extra_en: f.extra_en,
-      extra_es: f.extra_es,
-    };
-  }, [editingId, flashcards]);
-
-  const { interceptSave, dialogProps } = useAutoTranslate({
-    originalValues: editingOriginals,
-    errorMessage: t("admin.translate.error"),
-  });
-
-  // Deep-link tracking
-  const deepLinked = useRef(false);
-
-  // Debounce search
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(search), 300);
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  // Filter categories by selected topic
-  const filteredCategories = useMemo(() => {
-    if (topicId === "all") return categories;
-    return categories.filter((c) => c.topic_id === topicId);
-  }, [topicId, categories]);
-
-  // Reset category when topic changes
-  useEffect(() => {
-    setCategoryId("all");
-  }, [topicId]);
-
-  // Fetch filtered flashcards
-  const fetchFlashcards = useCallback(() => {
-    startTransition(async () => {
-      try {
-        const filters: {
-          topicId?: string;
-          categoryId?: string;
-          search?: string;
-          searchAnswers?: boolean;
-          searchExtra?: boolean;
-        } = {};
-        if (topicId !== "all") filters.topicId = topicId;
-        if (categoryId !== "all") filters.categoryId = categoryId;
-        if (debouncedSearch) {
-          filters.search = debouncedSearch;
-          filters.searchAnswers = searchAnswers;
-          filters.searchExtra = searchExtra;
-        }
-        const data = await getFlashcardsList(filters);
-        setFlashcards(data as FlashcardItem[]);
-      } catch {
-        // Auth error from requireAdmin() — layout already handles access control
-      }
-    });
-  }, [topicId, categoryId, debouncedSearch, searchAnswers, searchExtra]);
-
-  useEffect(() => {
-    fetchFlashcards();
-  }, [fetchFlashcards]);
-
-  const startEditing = useCallback((f: FlashcardItem) => {
-    setEditingId(f.id);
-  }, []);
-
-  // Deep-link: auto-expand flashcard from ?edit= param
-  useEffect(() => {
-    if (!editParam || deepLinked.current) return;
-    const target = flashcards.find((f) => f.id === editParam);
-    if (target) {
-      deepLinked.current = true;
-      startEditing(target);
-      setTimeout(() => {
-        document
-          .getElementById(`flashcard-${editParam}`)
-          ?.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 100);
-    }
-  }, [editParam, flashcards, startEditing]);
-
-  const handleSave = async (updates: FlashcardUpdate) => {
-    if (!editingId) return;
-    interceptSave(updates, async (finalUpdates) => {
-      setSaving(true);
-      try {
-        await updateFlashcard(editingId, finalUpdates as FlashcardUpdate);
-        setEditingId(null);
-        fetchFlashcards();
-      } finally {
-        setSaving(false);
-      }
-    });
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteFlashcard(id);
-      fetchFlashcards();
-    } catch {
-      toast.error(t("admin.deleteFailed"));
-    }
-  };
+  const {
+    topicId,
+    setTopicId,
+    categoryId,
+    setCategoryId,
+    search,
+    setSearch,
+    searchAnswers,
+    setSearchAnswers,
+    searchExtra,
+    setSearchExtra,
+    items: flashcards,
+    loading,
+    editingId,
+    setEditingId,
+    startEditing,
+    saving,
+    handleSave,
+    handleDelete,
+    dialogProps,
+    filteredCategories,
+  } = useAdminList<FlashcardItem>(
+    {
+      elementPrefix: "flashcard",
+      fetchFn,
+      updateFn,
+      deleteFn,
+      getId,
+      getOriginals,
+    },
+    initialFlashcards,
+    categories,
+  );
 
   return (
     <div className="space-y-4">
@@ -261,7 +177,7 @@ export function FlashcardsClient({
         />
       </div>
 
-      {isPending && (
+      {loading && (
         <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       )}
 
@@ -308,7 +224,7 @@ export function FlashcardsClient({
             )}
           </div>
         ))}
-        {flashcards.length === 0 && !isPending && (
+        {flashcards.length === 0 && !loading && (
           <p className="text-center text-muted-foreground py-8">
             {t("admin.noItems")}
           </p>
