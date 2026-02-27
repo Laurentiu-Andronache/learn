@@ -12,6 +12,7 @@ learn-app/
 ├── components/    # React components
 ├── hooks/         # Custom React hooks (use-tts, use-auto-translate)
 ├── lib/           # Utilities, services, types
+├── types/         # Ambient type declarations (lamejs)
 ├── supabase/      # Database migrations
 ├── mcp-server/    # MCP content management server
 ├── .githooks/     # Git hooks (pre-commit: lint+test+build)
@@ -82,7 +83,7 @@ All SEO features are implemented following Next.js App Router best practices:
 - **Admin checks**: `checkIsAdmin(supabase, email)` from `@/lib/supabase/server` — never inline admin_users queries
 - **Client**: `createBrowserClient()` from `@supabase/ssr`
 - **Auth helpers**: `requireUserId()` and `requireAdmin()` from `@/lib/supabase/server` — shared auth extraction (no local copies)
-- **Server actions**: All `"use server"` functions in `user-preferences.ts`, `quiz-attempts.ts`, and `fsrs/actions.ts` derive userId internally via `requireUserId()`. No userId parameter — no userId prop drilling through components.
+- **Server actions**: All `"use server"` functions in `user-preferences.ts`, `quiz-attempts.ts`, `fsrs/actions.ts`, and `fsrs/auto-optimizer.ts` derive userId internally via `requireUserId()`. No userId parameter — no userId prop drilling through components.
 - **Env vars (server)**: Use `env.SUPABASE_URL` / `env.SUPABASE_KEY` from `@/lib/env` (lazy validation) — never `process.env.X!` for required server vars
 - **Env vars (client)**: `lib/supabase/client.ts` must use static `process.env.NEXT_PUBLIC_X` — Next.js inlines these at build time; dynamic `process.env[name]` returns undefined on client
 - **i18n**: Any user-facing text change must have corresponding keys in both `messages/en.json` and `messages/es.json`. Use `useTranslations()` (client) or `getTranslations()` (server) — never hardcode English strings. Use `localizedField()` from `@/lib/i18n/localized-field` for DB field locale selection.

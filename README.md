@@ -57,18 +57,23 @@ learn-app/
 │   ├── quiz/              # QuizSession, QuizCard, QuizResults
 │   ├── admin/             # TopicForm, FlashcardEditForm, QuestionEditForm
 │   ├── reading/           # ReadingProgress
-│   ├── settings/          # HiddenTopicsList, SuspendedFlashcardsList
+│   ├── settings/          # HiddenTopicsList, SuspendedFlashcardsList, FsrsSettings
 │   ├── feedback/          # FeedbackModal, QuestionReportForm
-│   ├── session/           # SessionToolbar (edit/delete during study)
+│   ├── session/           # SessionToolbar, HelpDialog, EditDialog
 │   └── seo/               # StructuredData components
 ├── lib/
 │   ├── supabase/          # Supabase client utilities
 │   ├── services/          # Server actions (admin-topics, quiz-attempts, user-preferences)
-│   ├── fsrs/              # FSRS spaced repetition (ordering, actions, progress, interval-preview)
+│   ├── fsrs/              # FSRS spaced repetition (actions, snapshot, auto-optimizer, ordering, progress)
+│   ├── import/            # Anki import (parsers, templates, media, translate)
 │   ├── seo/               # Metadata helpers, structured data generators
 │   └── types/             # TypeScript interfaces
+├── types/                 # Ambient type declarations (lamejs)
 ├── messages/              # i18n translations (en.json, es.json)
 ├── mcp-server/            # MCP content management server (41 tools)
+│   └── src/tools/
+│       ├── analytics/     # 7 analytics handlers (topic-stats, question-quality, etc.)
+│       └── translation/   # 4 translation handlers (check, compare, find, update)
 ├── supabase/
 │   └── migrations/        # Database migrations
 └── .env.local             # Local environment variables (not in git)
@@ -202,7 +207,7 @@ Environment variables are configured in Vercel. Code pushed to `main` auto-deplo
 
 ## MCP Server
 
-The `mcp-server/` directory contains a Model Context Protocol server with 41 tools for programmatic content management: CRUD for topics, categories, questions, flashcards; import/export; translation management; analytics; and admin operations.
+The `mcp-server/` directory contains a Model Context Protocol server with 41 tools for programmatic content management: CRUD for topics, categories, questions, flashcards; import/export; translation management; analytics; and admin operations. Tool handlers are organized into modular directories (`analytics/` with 7 handlers, `translation/` with 4 handlers) for maintainability.
 
 ## Contributing
 
