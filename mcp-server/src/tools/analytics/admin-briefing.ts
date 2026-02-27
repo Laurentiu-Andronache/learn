@@ -1,6 +1,8 @@
 import type { TypedClient } from "../../supabase.js";
 import { type McpResult, ok, err } from "../../utils.js";
 
+type CountResult = { count: number | null };
+
 export async function handleAdminBriefing(
   supabase: TypedClient,
 ): Promise<McpResult> {
@@ -303,14 +305,14 @@ export async function handleAdminBriefing(
     content_snapshot: {
       active_topics: topics.length,
       categories: categories.length,
-      questions: (questionsRes as any).count ?? 0,
+      questions: (questionsRes as CountResult).count ?? 0,
       flashcards: flashcardRows.length,
     },
     moderation_queue: {
-      pending_feedback: (feedbackRes as any).count ?? 0,
-      pending_question_reports: (reportsRes as any).count ?? 0,
-      pending_proposed_questions: (proposedQRes as any).count ?? 0,
-      pending_topic_proposals: (topicProposalsRes as any).count ?? 0,
+      pending_feedback: (feedbackRes as CountResult).count ?? 0,
+      pending_question_reports: (reportsRes as CountResult).count ?? 0,
+      pending_proposed_questions: (proposedQRes as CountResult).count ?? 0,
+      pending_topic_proposals: (topicProposalsRes as CountResult).count ?? 0,
     },
   });
 }

@@ -1,5 +1,6 @@
 export function localizedField(
-  item: Record<string, unknown>,
+  // biome-ignore lint/suspicious/noExplicitAny: accepts any object with locale-suffixed fields
+  item: Record<string, any>,
   field: string,
   locale: "en" | "es",
 ): string {

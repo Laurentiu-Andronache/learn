@@ -8,6 +8,16 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { FlashcardUpdate } from "@/lib/types/database";
 
+interface FlashcardFormState {
+  question_en: string;
+  question_es: string;
+  answer_en: string;
+  answer_es: string;
+  extra_en: string;
+  extra_es: string;
+  difficulty: number;
+}
+
 export interface FlashcardEditFormData {
   id: string;
   question_en: string;
@@ -38,7 +48,7 @@ export function FlashcardEditForm({
   const tc = useTranslations("common");
 
   const [editTab, setEditTab] = useState<"en" | "es">("en");
-  const [editData, setEditData] = useState<Record<string, unknown>>({
+  const [editData, setEditData] = useState<FlashcardFormState>({
     question_en: flashcard.question_en,
     question_es: flashcard.question_es ?? "",
     answer_en: flashcard.answer_en,
@@ -47,6 +57,9 @@ export function FlashcardEditForm({
     extra_es: flashcard.extra_es ?? "",
     difficulty: flashcard.difficulty,
   });
+
+  const field = (base: string) =>
+    editData[`${base}_${editTab}` as keyof FlashcardFormState] as string;
 
   const handleSave = () => {
     const updates: Record<string, unknown> = { ...editData };
@@ -81,7 +94,7 @@ export function FlashcardEditForm({
         <Label>{editTab === "en" ? "Question (EN)" : "Question (ES)"}</Label>
         <Textarea
           className="[field-sizing:content]"
-          value={(editData[`question_${editTab}`] as string) ?? ""}
+          value={field("question") ?? ""}
           onChange={(e) =>
             setEditData({
               ...editData,
@@ -97,7 +110,7 @@ export function FlashcardEditForm({
         <Label>{editTab === "en" ? "Answer (EN)" : "Answer (ES)"}</Label>
         <Textarea
           className="[field-sizing:content]"
-          value={(editData[`answer_${editTab}`] as string) ?? ""}
+          value={field("answer") ?? ""}
           onChange={(e) =>
             setEditData({ ...editData, [`answer_${editTab}`]: e.target.value })
           }
@@ -110,7 +123,7 @@ export function FlashcardEditForm({
         <Label>Extra / Learn More ({editTab.toUpperCase()})</Label>
         <Textarea
           className="[field-sizing:content]"
-          value={(editData[`extra_${editTab}`] as string) ?? ""}
+          value={field("extra") ?? ""}
           onChange={(e) =>
             setEditData({ ...editData, [`extra_${editTab}`]: e.target.value })
           }
@@ -125,7 +138,7 @@ export function FlashcardEditForm({
           type="number"
           min={1}
           max={10}
-          value={editData.difficulty as number}
+          value={editData.difficulty}
           onChange={(e) =>
             setEditData({
               ...editData,

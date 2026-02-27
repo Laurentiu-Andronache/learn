@@ -74,12 +74,11 @@ export function QuizCard({
     }
   }, [question.id]);
 
-  const q = question as unknown as Record<string, unknown>;
-  const questionText = localizedField(q, "question", locale);
+  const questionText = localizedField(question, "question", locale);
   const rawOptions =
     (locale === "es" ? question.options_es : question.options_en) ?? [];
-  const explanation = localizedField(q, "explanation", locale);
-  const extra = localizedField(q, "extra", locale) || null;
+  const explanation = localizedField(question, "explanation", locale);
+  const extra = localizedField(question, "extra", locale) || null;
   const correctIdx = question.correct_index ?? 0;
 
   // Shuffle once per question (not true/false)
@@ -281,7 +280,7 @@ export function QuizCard({
             </div>
             <QuestionReportForm
               questionId={question.id}
-              questionText={localizedField(q, "question", locale)}
+              questionText={localizedField(question, "question", locale)}
               open={reportOpen}
               onOpenChange={setReportOpen}
             />

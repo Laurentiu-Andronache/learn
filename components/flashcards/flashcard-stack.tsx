@@ -89,13 +89,12 @@ export function FlashcardStack({
   const current = flashcards[currentIndex];
   if (!current) return null;
 
-  const fc = current as unknown as Record<string, unknown>;
-  const questionText = localizedField(fc, "question", locale);
-  const rawAnswer = localizedField(fc, "answer", locale);
+  const questionText = localizedField(current, "question", locale);
+  const rawAnswer = localizedField(current, "answer", locale);
   const answer = rawAnswer
     ? stripFrontFromAnswer(rawAnswer, questionText)
     : rawAnswer;
-  const rawExtra = localizedField(fc, "extra", locale) || null;
+  const rawExtra = localizedField(current, "extra", locale) || null;
   const extra =
     rawExtra && answer && isExtraDuplicate(answer, rawExtra) ? null : rawExtra;
 

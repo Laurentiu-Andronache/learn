@@ -32,10 +32,9 @@ export function ReadingView({ topic, progress, isAdmin }: ReadingViewProps) {
   const locale = useLocale();
   const { playingEl, paused, handleBlockClick } = useTTS();
 
-  const t = topic as unknown as Record<string, unknown>;
-  const title = localizedField(t, "title", locale as "en" | "es");
+  const title = localizedField(topic, "title", locale as "en" | "es");
   const rawContent =
-    localizedField(t, "intro_text", locale as "en" | "es") || null;
+    localizedField(topic, "intro_text", locale as "en" | "es") || null;
 
   const totalProgress =
     progress.length > 0
