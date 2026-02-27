@@ -38,6 +38,30 @@ interface QuestionEditFormProps {
   saving?: boolean;
 }
 
+interface QuestionFormState {
+  question_en: string;
+  question_es: string;
+  options_en: string[];
+  options_es: string[];
+  correct_index: number;
+  explanation_en: string;
+  explanation_es: string;
+  extra_en: string;
+  extra_es: string;
+  difficulty: number;
+  type: string;
+}
+
+/** Type-safe accessor for locale-switched fields. */
+function localeField<K extends string>(
+  state: QuestionFormState,
+  base: K,
+  lang: "en" | "es",
+): K extends "options" ? string[] : string {
+  const key = `${base}_${lang}` as keyof QuestionFormState;
+  return state[key] as K extends "options" ? string[] : string;
+}
+
 export function QuestionEditForm({
   question,
   onSave,
@@ -49,7 +73,7 @@ export function QuestionEditForm({
   const tc = useTranslations("common");
 
   const [editTab, setEditTab] = useState<"en" | "es">("en");
-  const [editData, setEditData] = useState<Record<string, unknown>>({
+  const [editData, setEditData] = useState<QuestionFormState>({
     question_en: question.question_en,
     question_es: question.question_es ?? "",
     options_en: question.options_en ?? [],
@@ -65,7 +89,7 @@ export function QuestionEditForm({
 
   const updateOption = (lang: "en" | "es", index: number, value: string) => {
     const key = lang === "en" ? "options_en" : "options_es";
-    const options = [...((editData[key] as string[]) || [])];
+    const options = [...localeField(editData, "options", lang)];
     options[index] = value;
     setEditData({ ...editData, [key]: options });
   };
@@ -109,7 +133,7 @@ export function QuestionEditForm({
         <Label>{editTab === "en" ? "Question (EN)" : "Question (ES)"}</Label>
         <Textarea
           className="[field-sizing:content]"
-          value={(editData[`question_${editTab}`] as string) ?? ""}
+          value={localeField(editData, "question", editTab)}
           onChange={(e) =>
             setEditData({
               ...editData,
@@ -123,7 +147,7 @@ export function QuestionEditForm({
       {/* Options */}
       <div className="space-y-2">
         <Label>Options ({editTab.toUpperCase()})</Label>
-        {((editData[`options_${editTab}`] as string[]) || []).map((opt, i) => (
+        {localeField(editData, "options", editTab).map((opt, i) => (
           <div key={`${editTab}-${i}`} className="flex gap-2 items-center">
             <span className="text-xs font-mono w-5">
               {String.fromCharCode(65 + i)}
@@ -132,7 +156,7 @@ export function QuestionEditForm({
               value={opt}
               onChange={(e) => updateOption(editTab, i, e.target.value)}
             />
-            {i === (editData.correct_index as number) && (
+            {i === editData.correct_index && (
               <span className="text-green-600 text-sm font-bold shrink-0">
                 ✓
               </span>
@@ -147,8 +171,8 @@ export function QuestionEditForm({
         <Input
           type="number"
           min={0}
-          max={((editData.options_en as string[]) || []).length - 1}
-          value={editData.correct_index as number}
+          max={editData.options_en.length - 1}
+          value={editData.correct_index}
           onChange={(e) =>
             setEditData({
               ...editData,
@@ -164,7 +188,7 @@ export function QuestionEditForm({
         <Label>Explanation ({editTab.toUpperCase()})</Label>
         <Textarea
           className="[field-sizing:content]"
-          value={(editData[`explanation_${editTab}`] as string) ?? ""}
+          value={localeField(editData, "explanation", editTab)}
           onChange={(e) =>
             setEditData({
               ...editData,
@@ -180,7 +204,7 @@ export function QuestionEditForm({
         <Label>Extra / Learn More ({editTab.toUpperCase()})</Label>
         <Textarea
           className="[field-sizing:content]"
-          value={(editData[`extra_${editTab}`] as string) ?? ""}
+          value={localeField(editData, "extra", editTab)}
           onChange={(e) =>
             setEditData({ ...editData, [`extra_${editTab}`]: e.target.value })
           }
@@ -196,7 +220,7 @@ export function QuestionEditForm({
             type="number"
             min={1}
             max={10}
-            value={editData.difficulty as number}
+            value={editData.difficulty}
             onChange={(e) =>
               setEditData({
                 ...editData,
@@ -208,7 +232,7 @@ export function QuestionEditForm({
         <div className="space-y-2">
           <Label>Type</Label>
           <Select
-            value={editData.type as string}
+            value={editData.type}
             onValueChange={(v) => setEditData({ ...editData, type: v })}
           >
             <SelectTrigger>

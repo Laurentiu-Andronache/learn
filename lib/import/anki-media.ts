@@ -202,7 +202,6 @@ async function encodeWavToMp3(
   const pcm = extractPcm16(wavBuffer, header);
   const { channels, sampleRate } = header;
 
-  // @ts-expect-error lamejs has no type definitions
   const lamejs = await import("lamejs");
   const Mp3Encoder = lamejs.default?.Mp3Encoder ?? lamejs.Mp3Encoder;
   const encoder = new Mp3Encoder(channels, sampleRate, 64);
