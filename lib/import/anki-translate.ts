@@ -7,6 +7,34 @@ import { createClient } from "@/lib/supabase/server";
 
 const BATCH_SIZE = 10; // flashcards per translation request
 
+async function callAnthropicAPI(
+  apiKey: string,
+  model: string,
+  system: string,
+  userContent: string,
+  maxTokens: number,
+): Promise<string> {
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01",
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: maxTokens,
+      system,
+      messages: [{ role: "user", content: userContent }],
+    }),
+  });
+
+  if (!res.ok) throw new Error(`Anthropic API ${res.status}`);
+
+  const data = await res.json();
+  return (data.content?.[0]?.text ?? "").trim();
+}
+
 /**
  * Translate all flashcard content in a topic from sourceLang to the other language.
  */
@@ -61,32 +89,16 @@ export async function translateTopicContent(
     }));
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: 8192,
-          system: `Translate educational flashcard content from ${langNames[sourceLang]} to ${langNames[targetLang]}.
+      const text = await callAnthropicAPI(
+        apiKey,
+        model,
+        `Translate educational flashcard content from ${langNames[sourceLang]} to ${langNames[targetLang]}.
 Preserve all markdown formatting, image references, and audio links.
 Return ONLY a valid JSON array matching the input structure.`,
-          messages: [
-            {
-              role: "user",
-              content: `Translate these flashcards:\n\n${JSON.stringify(toTranslate, null, 2)}`,
-            },
-          ],
-        }),
-      });
+        `Translate these flashcards:\n\n${JSON.stringify(toTranslate, null, 2)}`,
+        8192,
+      );
 
-      if (!res.ok) continue;
-
-      const data = await res.json();
-      const text: string = data.content?.[0]?.text ?? "";
       const jsonStr = text
         .replace(/^```(?:json)?\s*/, "")
         .replace(/\s*```$/, "");
@@ -133,42 +145,26 @@ Return ONLY a valid JSON array matching the input structure.`,
         sourceLang === "en" ? topic.description_en : topic.description_es
       ) as string | null;
 
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-          "anthropic-version": "2023-06-01",
-        },
-        body: JSON.stringify({
-          model,
-          max_tokens: 1024,
-          system: `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY valid JSON with keys "title" and "description".`,
-          messages: [
-            {
-              role: "user",
-              content: JSON.stringify({ title, description: desc }),
-            },
-          ],
-        }),
-      });
+      const text = await callAnthropicAPI(
+        apiKey,
+        model,
+        `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY valid JSON with keys "title" and "description".`,
+        JSON.stringify({ title, description: desc }),
+        1024,
+      );
 
-      if (res.ok) {
-        const data = await res.json();
-        const text: string = data.content?.[0]?.text ?? "";
-        const jsonStr = text
-          .replace(/^```(?:json)?\s*/, "")
-          .replace(/\s*```$/, "");
-        const translated = JSON.parse(jsonStr);
+      const jsonStr = text
+        .replace(/^```(?:json)?\s*/, "")
+        .replace(/\s*```$/, "");
+      const translated = JSON.parse(jsonStr);
 
-        await supabase
-          .from("topics")
-          .update({
-            [`title_${targetLang}`]: translated.title,
-            [`description_${targetLang}`]: translated.description || null,
-          })
-          .eq("id", topicId);
-      }
+      await supabase
+        .from("topics")
+        .update({
+          [`title_${targetLang}`]: translated.title,
+          [`description_${targetLang}`]: translated.description || null,
+        })
+        .eq("id", topicId);
     }
   } catch (err) {
     console.error("Auto-translate topic metadata failed:", err);
@@ -186,30 +182,19 @@ Return ONLY a valid JSON array matching the input structure.`,
         const name = (
           sourceLang === "en" ? cat.name_en : cat.name_es
         ) as string;
-        const res = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-api-key": apiKey,
-            "anthropic-version": "2023-06-01",
-          },
-          body: JSON.stringify({
-            model,
-            max_tokens: 256,
-            system: `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY the translated text, nothing else.`,
-            messages: [{ role: "user", content: name }],
-          }),
-        });
+        const translated = await callAnthropicAPI(
+          apiKey,
+          model,
+          `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY the translated text, nothing else.`,
+          name,
+          256,
+        );
 
-        if (res.ok) {
-          const data = await res.json();
-          const translated = (data.content?.[0]?.text ?? "").trim();
-          if (translated) {
-            await supabase
-              .from("categories")
-              .update({ [`name_${targetLang}`]: translated })
-              .eq("id", cat.id);
-          }
+        if (translated) {
+          await supabase
+            .from("categories")
+            .update({ [`name_${targetLang}`]: translated })
+            .eq("id", cat.id);
         }
       }
     }

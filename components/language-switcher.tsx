@@ -43,9 +43,11 @@ const LanguageSwitcher = () => {
             updated_at: new Date().toISOString(),
           })
           .eq("id", user.id)
-          .then(() => {});
+          .then(({ error }) => {
+            if (error) console.error("Locale update failed:", error.message);
+          });
       }
-    });
+    }).catch(err => console.error("Locale auth check failed:", err));
 
     startTransition(() => {
       router.refresh();
