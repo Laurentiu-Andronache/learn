@@ -140,6 +140,7 @@
     "anonymous": "Anónimo",
     "private": "Privado",
     "imported": "Importado",
+    "actionFailed": "La acción falló. Por favor, inténtalo de nuevo.",
     "tips": {
       "readFirst": "¿Nuevo en este tema? Empieza con Lectura, luego pasa a Tarjetas. Después de unos días de práctica, prueba el Quiz.",
       "speakAnswer": "Antes de revelar una respuesta, intenta siempre responder en tu mente — o mejor aún, en voz alta — usando una oración completa.",
@@ -276,6 +277,8 @@
     },
     "resetDefaults": "Restablecer Valores Predeterminados",
     "saved": "Ajustes guardados.",
+    "unhideFailed": "No se pudo desocultar el tema.",
+    "unsuspendFailed": "No se pudo reactivar la tarjeta.",
     "appearance": "Apariencia",
     "fontSize": "Tamaño de Texto",
     "fontSizeDescription": "Ajusta el tamaño base del texto en modos de estudio y menús.",
@@ -342,6 +345,8 @@
     "slug": "Slug de URL",
     "generateSlug": "Generar",
     "slugHelp": "Opcional. Solo letras minúsculas, números y guiones. Se usa para URLs amigables como /topics/vacunas.",
+    "deleteFailed": "La eliminación falló. Por favor, inténtalo de nuevo.",
+    "visibilityChangeFailed": "El cambio de visibilidad falló.",
     "translate": {
       "title": "Auto-Traducir",
       "description": "¿Traducir automáticamente tus cambios al {targetLang}?",
@@ -397,6 +402,7 @@
     "questionDeleted": "Elemento eliminado.",
     "questionUpdated": "Elemento actualizado.",
     "help": "Ayuda",
+    "deleteFailed": "La eliminación falló. Por favor, inténtalo de nuevo.",
     "helpTitle": "Guía de la Barra",
     "helpStop": "Detener la sesión y volver a la página del tema",
     "helpNextTopic": "Saltar al siguiente tema con tarjetas pendientes",

@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  ArrowDownToLine,
-  SkipForward,
-  Square,
-  Undo2,
-} from "lucide-react";
+import { ArrowDownToLine, SkipForward, Square, Undo2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import {
   Dialog,

@@ -10,6 +10,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { toast } from "sonner";
 import { QuestionEditForm } from "@/components/admin/question-edit-form";
 import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -138,7 +139,7 @@ export function QuestionsClient({
   // Reset category when topic changes
   useEffect(() => {
     setCategoryId("all");
-  }, []);
+  }, [topicId]);
 
   // Fetch filtered questions
   const fetchQuestions = useCallback(() => {
@@ -213,8 +214,12 @@ export function QuestionsClient({
   };
 
   const handleDelete = async (id: string) => {
-    await deleteQuestion(id);
-    fetchQuestions();
+    try {
+      await deleteQuestion(id);
+      fetchQuestions();
+    } catch {
+      toast.error(t("admin.deleteFailed"));
+    }
   };
 
   return (

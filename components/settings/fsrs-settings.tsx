@@ -11,7 +11,10 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { MIN_REVIEWS_FOR_OPTIMIZATION } from "@/lib/constants";
-import { optimizeFsrsParameters, resetFsrsWeights } from "@/lib/fsrs/actions";
+import {
+  optimizeFsrsParameters,
+  resetFsrsWeights,
+} from "@/lib/fsrs/auto-optimizer";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
 import { updateFsrsSettings } from "@/lib/services/user-preferences";
 
@@ -195,7 +198,9 @@ export function FsrsSettingsCard({
             max={0.97}
             step={0.01}
             value={formState.retention}
-            onChange={(e) => setFormState(s => ({ ...s, retention: Number(e.target.value) }))}
+            onChange={(e) =>
+              setFormState((s) => ({ ...s, retention: Number(e.target.value) }))
+            }
             className="w-full accent-primary"
           />
           <p className="text-xs text-muted-foreground">
@@ -216,7 +221,8 @@ export function FsrsSettingsCard({
             value={formState.maxInterval}
             onChange={(e) => {
               const v = Number(e.target.value);
-              if (v >= 1 && v <= 36500) setFormState(s => ({ ...s, maxInterval: v }));
+              if (v >= 1 && v <= 36500)
+                setFormState((s) => ({ ...s, maxInterval: v }));
             }}
             className="w-32"
           />
@@ -235,7 +241,11 @@ export function FsrsSettingsCard({
               {t("rampUpDescription")}
             </p>
           </div>
-          <Switch id="rampUp" checked={formState.rampUp} onCheckedChange={(v) => setFormState(s => ({ ...s, rampUp: v }))} />
+          <Switch
+            id="rampUp"
+            checked={formState.rampUp}
+            onCheckedChange={(v) => setFormState((s) => ({ ...s, rampUp: v }))}
+          />
         </div>
 
         {/* New Cards Per Day */}
@@ -251,7 +261,8 @@ export function FsrsSettingsCard({
             value={formState.newCardsPerDay}
             onChange={(e) => {
               const v = Number(e.target.value);
-              if (v >= 1 && v <= 999) setFormState(s => ({ ...s, newCardsPerDay: v }));
+              if (v >= 1 && v <= 999)
+                setFormState((s) => ({ ...s, newCardsPerDay: v }));
             }}
             className="w-32"
           />
@@ -273,7 +284,9 @@ export function FsrsSettingsCard({
           <Switch
             id="showIntervals"
             checked={formState.showIntervals}
-            onCheckedChange={(v) => setFormState(s => ({ ...s, showIntervals: v }))}
+            onCheckedChange={(v) =>
+              setFormState((s) => ({ ...s, showIntervals: v }))
+            }
           />
         </div>
 
@@ -290,7 +303,9 @@ export function FsrsSettingsCard({
           <Switch
             id="readAloud"
             checked={formState.readQuestionsAloud}
-            onCheckedChange={(v) => setFormState(s => ({ ...s, readQuestionsAloud: v }))}
+            onCheckedChange={(v) =>
+              setFormState((s) => ({ ...s, readQuestionsAloud: v }))
+            }
           />
         </div>
 

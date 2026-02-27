@@ -71,8 +71,12 @@ export function TopicCard({ topic, progress, locale }: TopicCardProps) {
   const total = progress?.total ?? 0;
 
   const handleHide = async () => {
-    await hideTopic(topic.id);
-    router.refresh();
+    try {
+      await hideTopic(topic.id);
+      router.refresh();
+    } catch {
+      toast.error(t("actionFailed"));
+    }
   };
 
   const handleShareLink = async () => {
@@ -82,34 +86,46 @@ export function TopicCard({ topic, progress, locale }: TopicCardProps) {
   };
 
   const handleUnsuspendAll = async () => {
-    const count = await unsuspendAllFlashcardsForTopic(topic.id);
-    if (count > 0) {
-      toast.success(t("unsuspendAllSuccess", { count }));
-      router.refresh();
-    } else {
-      toast.info(t("noSuspendedQuestions"));
+    try {
+      const count = await unsuspendAllFlashcardsForTopic(topic.id);
+      if (count > 0) {
+        toast.success(t("unsuspendAllSuccess", { count }));
+        router.refresh();
+      } else {
+        toast.info(t("noSuspendedQuestions"));
+      }
+    } catch {
+      toast.error(t("actionFailed"));
     }
   };
 
   const handleResetToday = async () => {
-    const count = await resetTodayProgress(topic.id);
-    if (count > 0) {
-      toast.success(t("resetTodaySuccess", { count }));
-      router.refresh();
-    } else {
-      toast.info(t("noReviewsToday"));
+    try {
+      const count = await resetTodayProgress(topic.id);
+      if (count > 0) {
+        toast.success(t("resetTodaySuccess", { count }));
+        router.refresh();
+      } else {
+        toast.info(t("noReviewsToday"));
+      }
+    } catch {
+      toast.error(t("actionFailed"));
     }
     setConfirmAction(null);
   };
 
   const handleResetAll = async () => {
-    const result = await resetAllProgress(topic.id);
-    const total = result.reviewLogs + result.cardStates + result.suspended;
-    if (total > 0) {
-      toast.success(t("resetAllSuccess"));
-      router.refresh();
-    } else {
-      toast.info(t("noProgressToReset"));
+    try {
+      const result = await resetAllProgress(topic.id);
+      const total = result.reviewLogs + result.cardStates + result.suspended;
+      if (total > 0) {
+        toast.success(t("resetAllSuccess"));
+        router.refresh();
+      } else {
+        toast.info(t("noProgressToReset"));
+      }
+    } catch {
+      toast.error(t("actionFailed"));
     }
     setConfirmAction(null);
   };

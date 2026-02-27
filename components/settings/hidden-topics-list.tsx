@@ -3,6 +3,7 @@
 import { Eye, Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { unhideTopic } from "@/lib/services/user-preferences";
 
@@ -35,12 +36,16 @@ export function HiddenTopicsList({
   const handleUnhide = (topicId: string) => {
     setPending(topicId);
     startTransition(async () => {
-      await unhideTopic(topicId);
-      setItems((prev) => {
-        const next = prev.filter((i) => i.topic?.id !== topicId);
-        onCountChange?.(next.length);
-        return next;
-      });
+      try {
+        await unhideTopic(topicId);
+        setItems((prev) => {
+          const next = prev.filter((i) => i.topic?.id !== topicId);
+          onCountChange?.(next.length);
+          return next;
+        });
+      } catch {
+        toast.error(t("unhideFailed"));
+      }
       setPending(null);
     });
   };

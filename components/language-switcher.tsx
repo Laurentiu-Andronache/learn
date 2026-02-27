@@ -34,20 +34,23 @@ const LanguageSwitcher = () => {
 
     // Persist to profile for authenticated users (fire-and-forget)
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user && !user.is_anonymous) {
-        supabase
-          .from("profiles")
-          .update({
-            preferred_language: newLocale,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", user.id)
-          .then(({ error }) => {
-            if (error) console.error("Locale update failed:", error.message);
-          });
-      }
-    }).catch(err => console.error("Locale auth check failed:", err));
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (user && !user.is_anonymous) {
+          supabase
+            .from("profiles")
+            .update({
+              preferred_language: newLocale,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", user.id)
+            .then(({ error }) => {
+              if (error) console.error("Locale update failed:", error.message);
+            });
+        }
+      })
+      .catch((err) => console.error("Locale auth check failed:", err));
 
     startTransition(() => {
       router.refresh();

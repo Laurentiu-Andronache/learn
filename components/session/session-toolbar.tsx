@@ -115,13 +115,17 @@ export function SessionToolbar({
   const handleDeleteConfirm = async () => {
     if (!currentItemId) return;
     if (!confirm(t("deleteConfirm"))) return;
-    if (mode === "flashcard") {
-      await deleteFlashcard(currentItemId);
-    } else {
-      await deleteQuestion(currentItemId);
+    try {
+      if (mode === "flashcard") {
+        await deleteFlashcard(currentItemId);
+      } else {
+        await deleteQuestion(currentItemId);
+      }
+      toast.success(t("questionDeleted"));
+      onDeleteQuestion();
+    } catch {
+      toast.error(t("deleteFailed"));
     }
-    toast.success(t("questionDeleted"));
-    onDeleteQuestion();
   };
 
   const glowColor =

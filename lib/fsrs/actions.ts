@@ -7,17 +7,14 @@ import { createNewCard, fromCard, toCard } from "@/lib/fsrs/card-mapper";
 import { getAllTopicsProgress } from "@/lib/fsrs/progress";
 import { createUserScheduler, Rating } from "@/lib/fsrs/scheduler";
 import {
-  SNAPSHOT_SELECT,
   captureSnapshot,
   insertReviewLog,
   restoreFromSnapshot,
+  SNAPSHOT_SELECT,
 } from "@/lib/fsrs/snapshot";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { requireUserId } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
-
-// Re-export for backward compatibility
-export { optimizeFsrsParameters, resetFsrsWeights } from "@/lib/fsrs/auto-optimizer";
 
 export async function scheduleFlashcardReview(
   flashcardId: string,

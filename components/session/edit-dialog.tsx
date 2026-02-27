@@ -43,9 +43,7 @@ export function EditDialog({
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{t("edit")}</DialogTitle>
-          <DialogDescription className="sr-only">
-            Edit form
-          </DialogDescription>
+          <DialogDescription className="sr-only">Edit form</DialogDescription>
         </DialogHeader>
         {mode === "flashcard" && currentFlashcard ? (
           <FlashcardEditForm

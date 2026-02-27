@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useTransition } from "react";
+import { toast } from "sonner";
 import { Switch } from "@/components/ui/switch";
 import { toggleTopicVisibility } from "@/lib/services/admin-topics";
 
@@ -27,11 +28,15 @@ export function TopicVisibilityToggle({
         disabled={isPending}
         onCheckedChange={(checked) => {
           startTransition(async () => {
-            await toggleTopicVisibility(
-              topicId,
-              checked ? "public" : "private",
-            );
-            router.refresh();
+            try {
+              await toggleTopicVisibility(
+                topicId,
+                checked ? "public" : "private",
+              );
+              router.refresh();
+            } catch {
+              toast.error(t("visibilityChangeFailed"));
+            }
           });
         }}
       />

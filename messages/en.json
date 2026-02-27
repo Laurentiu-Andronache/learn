@@ -140,6 +140,7 @@
     "anonymous": "Anonymous",
     "private": "Private",
     "imported": "Imported",
+    "actionFailed": "Action failed. Please try again.",
     "tips": {
       "readFirst": "New to this topic? Start with Reading, then move to Flashcards. After a few days of practice, try the Quiz.",
       "speakAnswer": "Before revealing an answer, always try to respond in your mind — or better yet, out loud — using a complete sentence.",
@@ -276,6 +277,8 @@
     },
     "resetDefaults": "Reset to Defaults",
     "saved": "Settings saved.",
+    "unhideFailed": "Failed to unhide topic.",
+    "unsuspendFailed": "Failed to unsuspend flashcard.",
     "appearance": "Appearance",
     "fontSize": "Text Size",
     "fontSizeDescription": "Adjust the base text size across study modes and menus.",
@@ -342,6 +345,8 @@
     "slug": "URL Slug",
     "generateSlug": "Generate",
     "slugHelp": "Optional. Lowercase letters, numbers, and hyphens only. Used for friendly URLs like /topics/vaccines.",
+    "deleteFailed": "Delete failed. Please try again.",
+    "visibilityChangeFailed": "Visibility change failed.",
     "translate": {
       "title": "Auto-Translate",
       "description": "Auto-translate your changes to {targetLang}?",
@@ -397,6 +402,7 @@
     "questionDeleted": "Item deleted.",
     "questionUpdated": "Item updated.",
     "help": "Help",
+    "deleteFailed": "Delete failed. Please try again.",
     "helpTitle": "Toolbar Guide",
     "helpStop": "Stop session and return to topic page",
     "helpNextTopic": "Jump to the next topic with cards due today",

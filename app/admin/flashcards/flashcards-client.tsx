@@ -10,6 +10,7 @@ import {
   useState,
   useTransition,
 } from "react";
+import { toast } from "sonner";
 import { FlashcardEditForm } from "@/components/admin/flashcard-edit-form";
 import { TranslateDialog } from "@/components/admin/translate-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -132,7 +133,7 @@ export function FlashcardsClient({
   // Reset category when topic changes
   useEffect(() => {
     setCategoryId("all");
-  }, []);
+  }, [topicId]);
 
   // Fetch filtered flashcards
   const fetchFlashcards = useCallback(() => {
@@ -198,8 +199,12 @@ export function FlashcardsClient({
   };
 
   const handleDelete = async (id: string) => {
-    await deleteFlashcard(id);
-    fetchFlashcards();
+    try {
+      await deleteFlashcard(id);
+      fetchFlashcards();
+    } catch {
+      toast.error(t("admin.deleteFailed"));
+    }
   };
 
   return (

@@ -3,6 +3,7 @@
 import { Loader2, RotateCcw } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { unsuspendFlashcard } from "@/lib/services/user-preferences";
 
@@ -34,12 +35,16 @@ export function SuspendedFlashcardsList({
   const handleUnsuspend = (flashcardId: string) => {
     setPending(flashcardId);
     startTransition(async () => {
-      await unsuspendFlashcard(flashcardId);
-      setItems((prev) => {
-        const next = prev.filter((i) => i.flashcard?.id !== flashcardId);
-        onCountChange?.(next.length);
-        return next;
-      });
+      try {
+        await unsuspendFlashcard(flashcardId);
+        setItems((prev) => {
+          const next = prev.filter((i) => i.flashcard?.id !== flashcardId);
+          onCountChange?.(next.length);
+          return next;
+        });
+      } catch {
+        toast.error(t("unsuspendFailed"));
+      }
       setPending(null);
     });
   };
