@@ -202,11 +202,11 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/services/admin-topics.ts` — `toggleTopicVisibility` server action
 - `lib/flashcards/strip-front-from-answer.ts` — `stripFrontFromAnswer` (Anki `{{FrontSide}}` dedup), `isExtraDuplicate` (audio URL + word overlap detection)
 - `lib/fsrs/card-data-helpers.ts` — `buildSuspendedSet()`, `buildStateMap()` (shared helpers for flashcard-ordering + progress)
-- `lib/i18n/localized-field.ts` — `localizedField(item, field, locale)` (replaces inline `locale === "es" ? x_es : x_en` ternaries)
+- `lib/i18n/localized-field.ts` — `localizedField(item, field, locale)` accepts any typed object directly (Topic, Question, Flashcard, etc.) — no casting needed
 - `app/import/` — Import client decomposed: `use-import-state.ts` (hook), `import-preview.tsx`, `import-result.tsx`
 - `components/session/help-dialog.tsx` — Keyboard shortcuts/help dialog (extracted from session-toolbar)
 - `components/session/edit-dialog.tsx` — Admin edit dialog for flashcards/questions (extracted from session-toolbar)
-- `lib/import/anki-translate.ts` — `callAnthropicAPI()` helper for Anthropic API calls
+- `lib/import/anki-translate.ts` — `callAnthropicAPI(opts: AnthropicCallOptions)` helper for Anthropic API calls
 - `types/lamejs.d.ts` — Type declarations for lamejs Mp3Encoder
 - `mcp-server/src/tools/analytics/` — Split analytics tools (7 handlers + barrel)
 - `mcp-server/src/tools/translation/` — Split translation tools (4 files + barrel)
@@ -325,7 +325,7 @@ Anki templates often produce duplicate content in imported flashcards:
 
 ## Patterns & Pitfalls
 
-**Server actions in client `useEffect`**: Always wrap in try/catch. `requireAdmin()` throws on auth failure — unhandled throws in `startTransition` cause silent redirects. The admin layout handles access control; client-side fetches just need to swallow auth errors gracefully. All user-facing server action calls should have try/catch + `toast.error()`.
+**Server actions in client code**: Always wrap in try/catch + `toast.error(t("key"))`. Applies to `startTransition`, `.catch()` handlers, and `useEffect`. `requireAdmin()` throws on auth failure — unhandled throws in `startTransition` cause silent redirects. Never `.catch(() => {})` on meaningful DB/network ops — always show user feedback.
 
 **Turbopack `"use server"` re-exports**: `export { X } from "./other-server-file"` in a `"use server"` file fails with Turbopack. Instead, update import sites to reference the source module directly.
 
