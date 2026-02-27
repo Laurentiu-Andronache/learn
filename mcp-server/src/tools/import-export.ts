@@ -302,7 +302,12 @@ export async function handleDuplicateTopic(
   const exportResult = await handleExportTopic(supabase, { topic_id: params.topic_id });
   if (exportResult.isError) return exportResult;
 
-  const source = JSON.parse(exportResult.content[0].text);
+  let source;
+  try {
+    source = JSON.parse(exportResult.content[0].text);
+  } catch {
+    return err("Failed to parse exported topic data");
+  }
 
   // Override titles
   source.title_en = params.new_title_en ?? `${source.title_en} (Copy)`;
@@ -312,7 +317,12 @@ export async function handleDuplicateTopic(
   const importResult = await handleImportTopic(supabase, { data: source });
   if (importResult.isError) return importResult;
 
-  const imported = JSON.parse(importResult.content[0].text);
+  let imported;
+  try {
+    imported = JSON.parse(importResult.content[0].text);
+  } catch {
+    return err("Failed to parse import result");
+  }
 
   console.error(`[audit] duplicated topic ${params.topic_id} → ${imported.topic_id}`);
   return ok({

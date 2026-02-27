@@ -7,25 +7,27 @@ import { createClient } from "@/lib/supabase/server";
 
 const BATCH_SIZE = 10; // flashcards per translation request
 
-async function callAnthropicAPI(
-  apiKey: string,
-  model: string,
-  system: string,
-  userContent: string,
-  maxTokens: number,
-): Promise<string> {
+interface AnthropicCallOptions {
+  apiKey: string;
+  model: string;
+  system: string;
+  userContent: string;
+  maxTokens: number;
+}
+
+async function callAnthropicAPI(opts: AnthropicCallOptions): Promise<string> {
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": apiKey,
+      "x-api-key": opts.apiKey,
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model,
-      max_tokens: maxTokens,
-      system,
-      messages: [{ role: "user", content: userContent }],
+      model: opts.model,
+      max_tokens: opts.maxTokens,
+      system: opts.system,
+      messages: [{ role: "user", content: opts.userContent }],
     }),
   });
 
@@ -89,15 +91,15 @@ export async function translateTopicContent(
     }));
 
     try {
-      const text = await callAnthropicAPI(
+      const text = await callAnthropicAPI({
         apiKey,
         model,
-        `Translate educational flashcard content from ${langNames[sourceLang]} to ${langNames[targetLang]}.
+        system: `Translate educational flashcard content from ${langNames[sourceLang]} to ${langNames[targetLang]}.
 Preserve all markdown formatting, image references, and audio links.
 Return ONLY a valid JSON array matching the input structure.`,
-        `Translate these flashcards:\n\n${JSON.stringify(toTranslate, null, 2)}`,
-        8192,
-      );
+        userContent: `Translate these flashcards:\n\n${JSON.stringify(toTranslate, null, 2)}`,
+        maxTokens: 8192,
+      });
 
       const jsonStr = text
         .replace(/^```(?:json)?\s*/, "")
@@ -145,13 +147,13 @@ Return ONLY a valid JSON array matching the input structure.`,
         sourceLang === "en" ? topic.description_en : topic.description_es
       ) as string | null;
 
-      const text = await callAnthropicAPI(
+      const text = await callAnthropicAPI({
         apiKey,
         model,
-        `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY valid JSON with keys "title" and "description".`,
-        JSON.stringify({ title, description: desc }),
-        1024,
-      );
+        system: `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY valid JSON with keys "title" and "description".`,
+        userContent: JSON.stringify({ title, description: desc }),
+        maxTokens: 1024,
+      });
 
       const jsonStr = text
         .replace(/^```(?:json)?\s*/, "")
@@ -182,13 +184,13 @@ Return ONLY a valid JSON array matching the input structure.`,
         const name = (
           sourceLang === "en" ? cat.name_en : cat.name_es
         ) as string;
-        const translated = await callAnthropicAPI(
+        const translated = await callAnthropicAPI({
           apiKey,
           model,
-          `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY the translated text, nothing else.`,
-          name,
-          256,
-        );
+          system: `Translate from ${langNames[sourceLang]} to ${langNames[targetLang]}. Return ONLY the translated text, nothing else.`,
+          userContent: name,
+          maxTokens: 256,
+        });
 
         if (translated) {
           await supabase

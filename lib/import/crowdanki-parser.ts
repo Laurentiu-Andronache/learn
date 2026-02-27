@@ -86,6 +86,9 @@ export async function parseCrowdAnki(buffer: ArrayBuffer): Promise<ParsedDeck> {
   }
 
   const deck = JSON.parse(deckJsonContent) as CrowdAnkiDeck;
+  if (!deck || typeof deck !== "object" || !Array.isArray(deck.note_models)) {
+    throw new Error("Invalid CrowdAnki format: unexpected deck.json structure");
+  }
 
   // Build model map
   const models = new Map<string, AnkiModel>();
