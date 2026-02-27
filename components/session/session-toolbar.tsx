@@ -13,22 +13,11 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  FlashcardEditForm,
-  type FlashcardEditFormData,
-} from "@/components/admin/flashcard-edit-form";
-import {
-  QuestionEditForm,
-  type QuestionEditFormData,
-} from "@/components/admin/question-edit-form";
+import type { FlashcardEditFormData } from "@/components/admin/flashcard-edit-form";
+import type { QuestionEditFormData } from "@/components/admin/question-edit-form";
+import { EditDialog } from "@/components/session/edit-dialog";
+import { HelpDialog } from "@/components/session/help-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -239,98 +228,18 @@ export function SessionToolbar({
         </TooltipProvider>
       </div>
 
-      <Dialog open={helpOpen} onOpenChange={setHelpOpen}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{t("helpTitle")}</DialogTitle>
-            <DialogDescription className="sr-only">
-              Toolbar button descriptions
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 text-sm">
-            <div className="flex items-center gap-3">
-              <Square className="size-4 shrink-0" />
-              <span>{t("helpStop")}</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <SkipForward className="size-4 shrink-0" />
-              <span>{t("helpNextTopic")}</span>
-            </div>
-            {mode !== "quiz" && (
-              <>
-                <div className="flex items-center gap-3">
-                  <ArrowDownToLine className="size-4 shrink-0" />
-                  <span>{t("helpBury")}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Undo2 className="size-4 shrink-0" />
-                  <span>{t("helpUndo")}</span>
-                </div>
-                <div className="pt-2 border-t">
-                  <p className="font-medium mb-2">{t("helpShortcutsTitle")}</p>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
-                        1
-                      </kbd>
-                      <span>{t("helpShortcutAgain")}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
-                        2
-                      </kbd>
-                      <span>{t("helpShortcutHard")}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
-                        3
-                      </kbd>
-                      <span>/</span>
-                      <kbd className="inline-flex items-center justify-center h-6 px-1.5 rounded border bg-muted text-xs font-mono">
-                        Space
-                      </kbd>
-                      <span>{t("helpShortcutGood")}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <kbd className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded border bg-muted text-xs font-mono">
-                        4
-                      </kbd>
-                      <span>{t("helpShortcutEasy")}</span>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <HelpDialog open={helpOpen} onOpenChange={setHelpOpen} mode={mode} />
 
       {isAdmin && (
-        <Dialog open={editOpen} onOpenChange={setEditOpen}>
-          <DialogContent className="max-h-[85vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>{t("edit")}</DialogTitle>
-              <DialogDescription className="sr-only">
-                Edit form
-              </DialogDescription>
-            </DialogHeader>
-            {mode === "flashcard" && currentFlashcard ? (
-              <FlashcardEditForm
-                flashcard={currentFlashcard}
-                onSave={handleEditSave}
-                onCancel={() => setEditOpen(false)}
-                saving={saving}
-              />
-            ) : currentQuestion ? (
-              <QuestionEditForm
-                question={currentQuestion}
-                onSave={handleEditSave}
-                onCancel={() => setEditOpen(false)}
-                saving={saving}
-              />
-            ) : null}
-          </DialogContent>
-        </Dialog>
+        <EditDialog
+          open={editOpen}
+          onOpenChange={setEditOpen}
+          mode={mode}
+          currentFlashcard={currentFlashcard}
+          currentQuestion={currentQuestion}
+          onSave={handleEditSave}
+          saving={saving}
+        />
       )}
     </>
   );
