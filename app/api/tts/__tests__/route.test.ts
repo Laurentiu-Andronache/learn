@@ -88,7 +88,7 @@ describe("POST /api/tts", () => {
     const res = await POST(makeRequest({ text: "Hello" }));
 
     expect(res.status).toBe(401);
-    expect(await res.text()).toBe("Unauthorized");
+    expect((await res.json()).error).toBe("Unauthorized");
   });
 
   it("returns 429 when rate limited", async () => {
@@ -97,35 +97,35 @@ describe("POST /api/tts", () => {
     const res = await POST(makeRequest({ text: "Hello" }));
 
     expect(res.status).toBe(429);
-    expect(await res.text()).toBe("Rate limited");
+    expect((await res.json()).error).toBe("Rate limited");
   });
 
   it("returns 400 for invalid JSON body", async () => {
     const res = await POST(makeRequest());
 
     expect(res.status).toBe(400);
-    expect(await res.text()).toBe("Invalid JSON");
+    expect((await res.json()).error).toBe("Invalid JSON");
   });
 
   it("returns 400 when text is missing or empty", async () => {
     const resMissing = await POST(makeRequest({}));
     expect(resMissing.status).toBe(400);
-    expect(await resMissing.text()).toBe("Text is required");
+    expect((await resMissing.json()).error).toBe("Text is required");
 
     const resEmpty = await POST(makeRequest({ text: "   " }));
     expect(resEmpty.status).toBe(400);
-    expect(await resEmpty.text()).toBe("Text is required");
+    expect((await resEmpty.json()).error).toBe("Text is required");
 
     const resNonString = await POST(makeRequest({ text: 42 }));
     expect(resNonString.status).toBe(400);
-    expect(await resNonString.text()).toBe("Text is required");
+    expect((await resNonString.json()).error).toBe("Text is required");
   });
 
   it("returns 400 when text exceeds 5000 characters", async () => {
     const res = await POST(makeRequest({ text: "x".repeat(5001) }));
 
     expect(res.status).toBe(400);
-    expect(await res.text()).toBe("Text exceeds 5000 characters");
+    expect((await res.json()).error).toBe("Text exceeds 5000 characters");
   });
 
   it("returns cached audio on Supabase Storage cache hit", async () => {
@@ -165,6 +165,6 @@ describe("POST /api/tts", () => {
     const res = await POST(makeRequest({ text: "Hello" }));
 
     expect(res.status).toBe(502);
-    expect(await res.text()).toBe("TTS generation failed");
+    expect((await res.json()).error).toBe("TTS generation failed");
   });
 });

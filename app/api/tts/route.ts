@@ -44,12 +44,12 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return new Response("Unauthorized", { status: 401 });
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Rate limit
   if (isRateLimited(user.id)) {
-    return new Response("Rate limited", { status: 429 });
+    return Response.json({ error: "Rate limited" }, { status: 429 });
   }
 
   // Parse and validate body
@@ -60,16 +60,17 @@ export async function POST(request: Request) {
     text = body.text;
     locale = body.locale ?? "en";
   } catch {
-    return new Response("Invalid JSON", { status: 400 });
+    return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
   if (!text || typeof text !== "string" || text.trim().length === 0) {
-    return new Response("Text is required", { status: 400 });
+    return Response.json({ error: "Text is required" }, { status: 400 });
   }
   if (text.length > MAX_TEXT_LENGTH) {
-    return new Response(`Text exceeds ${MAX_TEXT_LENGTH} characters`, {
-      status: 400,
-    });
+    return Response.json(
+      { error: `Text exceeds ${MAX_TEXT_LENGTH} characters` },
+      { status: 400 },
+    );
   }
 
   // Cache key: SHA-256(voiceId:text)
@@ -160,6 +161,6 @@ export async function POST(request: Request) {
     });
   } catch (error) {
     console.error("ElevenLabs TTS error:", error);
-    return new Response("TTS generation failed", { status: 502 });
+    return Response.json({ error: "TTS generation failed" }, { status: 502 });
   }
 }

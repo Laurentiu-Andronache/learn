@@ -91,17 +91,18 @@ export default async function TopicDetailPage({ params }: Props) {
     redirect(topicUrl(topic));
   }
 
-  const [progress, { count: quizQuestionCount }] = await Promise.all([
-    getTopicProgress(user.id, topic.id),
-    supabase
-      .from("questions")
-      .select("id, categories!inner(topic_id)", {
-        count: "exact",
-        head: true,
-      })
-      .eq("categories.topic_id", topic.id),
-  ]);
-  const quizSummary = await getQuizSummary(topic.id);
+  const [progress, { count: quizQuestionCount }, quizSummary] =
+    await Promise.all([
+      getTopicProgress(user.id, topic.id),
+      supabase
+        .from("questions")
+        .select("id, categories!inner(topic_id)", {
+          count: "exact",
+          head: true,
+        })
+        .eq("categories.topic_id", topic.id),
+      getQuizSummary(topic.id),
+    ]);
 
   const title =
     locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
