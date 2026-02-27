@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { chainable, createMockSupabase, extractJson } from "../test-helpers.js";
-import { handleAdminBriefing } from "../tools/analytics.js";
+import { handleAdminBriefing } from "../tools/analytics/index.js";
 
 function mockSupabaseWithAuth(authUsers: any[] = []) {
   const mock = createMockSupabase() as any;

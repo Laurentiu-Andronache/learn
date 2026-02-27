@@ -3,9 +3,7 @@ import { z } from "zod";
 import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import type { TablesInsert } from "../database.types.js";
 import { type McpResult, ok, err } from "../utils.js";
-
-/* Types for aggregate/aliased query results */
-type CountByFK<K extends string> = { [P in K]: string } & { count: string };
+import { mapCountsByFK } from "../utils/count-by-fk.js";
 
 /* ── learn_list_categories ── */
 
@@ -30,8 +28,8 @@ export async function handleListCategories(
   if (error) return err(error.message);
 
   const catIds = (categories ?? []).map((c) => c.id);
-  const qCountMap: Record<string, number> = {};
-  const fcCountMap: Record<string, number> = {};
+  let qCountMap: Record<string, number> = {};
+  let fcCountMap: Record<string, number> = {};
 
   if (catIds.length > 0) {
     const { data: qCounts } = await supabase
@@ -39,18 +37,14 @@ export async function handleListCategories(
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of (qCounts ?? []) as unknown as CountByFK<"category_id">[]) {
-      qCountMap[row.category_id] = Number(row.count);
-    }
+    qCountMap = mapCountsByFK(qCounts as unknown as Record<string, unknown>[] ?? [], "category_id");
 
     const { data: fcCounts } = await supabase
       .from("flashcards")
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of (fcCounts ?? []) as unknown as CountByFK<"category_id">[]) {
-      fcCountMap[row.category_id] = Number(row.count);
-    }
+    fcCountMap = mapCountsByFK(fcCounts as unknown as Record<string, unknown>[] ?? [], "category_id");
   }
 
   const enriched = (categories ?? []).map((c) => ({

@@ -11,7 +11,7 @@ import {
   handleCompareTranslations,
   handleUpdateTranslation,
   handleBatchUpdateTranslations,
-} from "../tools/translation.js";
+} from "../tools/translation/index.js";
 
 function mockSupabase() {
   return createMockSupabase();

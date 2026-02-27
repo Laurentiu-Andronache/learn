@@ -3,9 +3,7 @@ import { z } from "zod";
 import { type TypedClient, getSupabaseClient } from "../supabase.js";
 import type { TablesInsert } from "../database.types.js";
 import { type McpResult, ok, err } from "../utils.js";
-
-/* Types for aggregate/aliased query results */
-type CountByFK<K extends string> = { [P in K]: string } & { count: string };
+import { mapCountsByFK } from "../utils/count-by-fk.js";
 
 /* ── learn_list_topics ── */
 
@@ -32,9 +30,9 @@ export async function handleListTopics(
   const ids = (topics ?? []).map((t) => t.id);
 
   // Category counts
-  const catCountMap: Record<string, number> = {};
-  const qCountMap: Record<string, number> = {};
-  const fcCountMap: Record<string, number> = {};
+  let catCountMap: Record<string, number> = {};
+  let qCountMap: Record<string, number> = {};
+  let fcCountMap: Record<string, number> = {};
 
   if (ids.length > 0) {
     const { data: catCounts } = await supabase
@@ -42,9 +40,7 @@ export async function handleListTopics(
       .select("topic_id, count:id")
       .in("topic_id", ids);
 
-    for (const row of (catCounts ?? []) as unknown as CountByFK<"topic_id">[]) {
-      catCountMap[row.topic_id] = Number(row.count);
-    }
+    catCountMap = mapCountsByFK(catCounts as unknown as Record<string, unknown>[] ?? [], "topic_id");
 
     // Question counts via categories
     const { data: qCounts } = await supabase
@@ -52,9 +48,7 @@ export async function handleListTopics(
       .select("category_id:categories!inner(topic_id), count:id")
       .in("categories.topic_id", ids);
 
-    for (const row of (qCounts ?? []) as unknown as CountByFK<"topic_id">[]) {
-      qCountMap[row.topic_id] = Number(row.count);
-    }
+    qCountMap = mapCountsByFK(qCounts as unknown as Record<string, unknown>[] ?? [], "topic_id");
 
     // Flashcard counts via categories
     const { data: fcCounts } = await supabase
@@ -62,9 +56,7 @@ export async function handleListTopics(
       .select("category_id:categories!inner(topic_id), count:id")
       .in("categories.topic_id", ids);
 
-    for (const row of (fcCounts ?? []) as unknown as CountByFK<"topic_id">[]) {
-      fcCountMap[row.topic_id] = Number(row.count);
-    }
+    fcCountMap = mapCountsByFK(fcCounts as unknown as Record<string, unknown>[] ?? [], "topic_id");
   }
 
   const enriched = (topics ?? []).map((t) => ({
@@ -98,8 +90,8 @@ export async function handleGetTopic(
     .order("created_at", { ascending: true });
 
   const catIds = (categories ?? []).map((c) => c.id);
-  const qCountMap: Record<string, number> = {};
-  const fcCountMap: Record<string, number> = {};
+  let qCountMap: Record<string, number> = {};
+  let fcCountMap: Record<string, number> = {};
 
   if (catIds.length > 0) {
     const { data: qCounts } = await supabase
@@ -107,18 +99,14 @@ export async function handleGetTopic(
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of (qCounts ?? []) as unknown as CountByFK<"category_id">[]) {
-      qCountMap[row.category_id] = Number(row.count);
-    }
+    qCountMap = mapCountsByFK(qCounts as unknown as Record<string, unknown>[] ?? [], "category_id");
 
     const { data: fcCounts } = await supabase
       .from("flashcards")
       .select("category_id, count:id")
       .in("category_id", catIds);
 
-    for (const row of (fcCounts ?? []) as unknown as CountByFK<"category_id">[]) {
-      fcCountMap[row.category_id] = Number(row.count);
-    }
+    fcCountMap = mapCountsByFK(fcCounts as unknown as Record<string, unknown>[] ?? [], "category_id");
   }
 
   const enrichedCats = (categories ?? []).map((c) => ({

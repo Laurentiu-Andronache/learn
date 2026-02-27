@@ -11,7 +11,7 @@ import {
   handleQuestionQualityReport,
   handleUserActivityStats,
   handleDifficultyAnalysis,
-} from "../tools/analytics.js";
+} from "../tools/analytics/index.js";
 
 function mockSupabase() {
   return createMockSupabase();
