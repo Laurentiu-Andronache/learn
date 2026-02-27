@@ -78,23 +78,21 @@ export function useFlashcardSession({
     (flashcardId: string, rating: 1 | 2 | 3 | 4) => {
       const timeMs = Date.now() - startTime.current;
       scheduleFlashcardReview(flashcardId, rating, timeMs).catch(() =>
-        toast.error(
-          "Failed to save progress. Your answer was recorded locally but may not persist.",
-        ),
+        toast.error(ts("gradeFailed")),
       );
       startTime.current = Date.now();
     },
-    [],
+    [ts],
   );
 
   const handleSuspend = useCallback(
     (flashcardId: string) => {
       suspendFlashcard(flashcardId, "Suspended from flashcard session").catch(
-        () => toast.error("Failed to suspend flashcard."),
+        () => toast.error(ts("suspendFailed")),
       );
       toast.success(tq("questionSuspended"), { duration: 3000 });
     },
-    [tq],
+    [tq, ts],
   );
 
   const handleComplete = useCallback(
@@ -135,7 +133,7 @@ export function useFlashcardSession({
   const handleBury = useCallback(() => {
     const fc = flashcards[currentIdx];
     if (!fc) return;
-    buryFlashcard(fc.id).catch(() => {});
+    buryFlashcard(fc.id).catch(() => toast.error(ts("buryFailed")));
     toast.success(ts("cardBuried"), { duration: 3000 });
     setSkipSignal((s) => s + 1);
   }, [flashcards, currentIdx, ts]);
@@ -143,7 +141,7 @@ export function useFlashcardSession({
   const handleUndo = useCallback(() => {
     if (currentIdx === 0) return;
     const prevFc = flashcards[currentIdx - 1];
-    undoLastReview(prevFc.id).catch(() => {});
+    undoLastReview(prevFc.id).catch(() => toast.error(ts("undoFailed")));
     toast.success(ts("undone"), { duration: 3000 });
     setUndoSignal((s) => s + 1);
   }, [flashcards, currentIdx, ts]);
@@ -151,7 +149,7 @@ export function useFlashcardSession({
   const handleDeleteQuestion = useCallback(() => {
     const fc = flashcards[currentIdx];
     if (!fc) return;
-    deleteFlashcard(fc.id).catch(() => {});
+    deleteFlashcard(fc.id).catch(() => toast.error(ts("deleteFailed")));
     toast.success(ts("questionDeleted"), { duration: 3000 });
 
     const remaining = flashcards.filter((_, i) => i !== currentIdx);

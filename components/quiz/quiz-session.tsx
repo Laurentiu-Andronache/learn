@@ -62,11 +62,7 @@ export function QuizSession({
 
       const answer: QuizAnswer = {
         questionId: q.question.id,
-        questionText: localizedField(
-          q.question as unknown as Record<string, unknown>,
-          "question",
-          locale,
-        ),
+        questionText: localizedField(q.question, "question", locale),
         selectedIndex:
           wasCorrect === null
             ? null
@@ -149,7 +145,7 @@ export function QuizSession({
   // Delete question (admin)
   const handleDeleteQuestion = useCallback(() => {
     const q = questions[currentIndex];
-    deleteQuestion(q.question.id).catch(() => {});
+    deleteQuestion(q.question.id).catch(() => toast.error(ts("deleteFailed")));
     toast.success(ts("questionDeleted"), { duration: 3000 });
 
     const remaining = questions.filter((_, i) => i !== currentIndex);

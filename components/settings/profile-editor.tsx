@@ -3,6 +3,7 @@
 import { Check, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,9 +23,13 @@ export function ProfileEditor({ displayName: initial }: ProfileEditorProps) {
   const handleSave = () => {
     setSaved(false);
     startTransition(async () => {
-      await updateProfile({ display_name: name || undefined });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
+      try {
+        await updateProfile({ display_name: name || undefined });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } catch {
+        toast.error(t("profileSaveFailed"));
+      }
     });
   };
 

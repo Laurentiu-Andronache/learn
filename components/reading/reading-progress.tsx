@@ -43,10 +43,14 @@ export function ReadingProgressBar({
 
   const handleMarkAsRead = useCallback(() => {
     startTransition(async () => {
-      await updateReadingProgress(topicId, null, 1, 100);
-      setCompleted(true);
-      toast.success(t("completed"));
-      setTimeout(() => router.push(`/topics/${topicId}`), 1500);
+      try {
+        await updateReadingProgress(topicId, null, 1, 100);
+        setCompleted(true);
+        toast.success(t("completed"));
+        setTimeout(() => router.push(`/topics/${topicId}`), 1500);
+      } catch {
+        toast.error(t("saveFailed"));
+      }
     });
   }, [topicId, t, router]);
 

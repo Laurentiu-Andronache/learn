@@ -231,7 +231,8 @@
   "reading": {
     "markAsRead": "Mark as Read",
     "completed": "Completed",
-    "continueReading": "Continue Reading"
+    "continueReading": "Continue Reading",
+    "saveFailed": "Failed to save progress. Please try again."
   },
   "settings": {
     "title": "Settings",
@@ -282,7 +283,8 @@
     "appearance": "Appearance",
     "fontSize": "Text Size",
     "fontSizeDescription": "Adjust the base text size across study modes and menus.",
-    "fontSizePx": "{size}px"
+    "fontSizePx": "{size}px",
+    "profileSaveFailed": "Failed to update profile. Please try again."
   },
   "admin": {
     "title": "Admin Panel",
@@ -403,6 +405,10 @@
     "questionUpdated": "Item updated.",
     "help": "Help",
     "deleteFailed": "Delete failed. Please try again.",
+    "buryFailed": "Failed to bury card. Please try again.",
+    "undoFailed": "Failed to undo. Please try again.",
+    "gradeFailed": "Failed to save progress. Your answer was recorded locally but may not persist.",
+    "suspendFailed": "Failed to suspend flashcard.",
     "helpTitle": "Toolbar Guide",
     "helpStop": "Stop session and return to topic page",
     "helpNextTopic": "Jump to the next topic with cards due today",

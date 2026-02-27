@@ -231,7 +231,8 @@
   "reading": {
     "markAsRead": "Marcar como Leído",
     "completed": "Completado",
-    "continueReading": "Continuar Leyendo"
+    "continueReading": "Continuar Leyendo",
+    "saveFailed": "Error al guardar el progreso. Por favor, inténtalo de nuevo."
   },
   "settings": {
     "title": "Configuración",
@@ -282,7 +283,8 @@
     "appearance": "Apariencia",
     "fontSize": "Tamaño de Texto",
     "fontSizeDescription": "Ajusta el tamaño base del texto en modos de estudio y menús.",
-    "fontSizePx": "{size}px"
+    "fontSizePx": "{size}px",
+    "profileSaveFailed": "Error al actualizar el perfil. Por favor, inténtalo de nuevo."
   },
   "admin": {
     "title": "Panel de Administración",
@@ -403,6 +405,10 @@
     "questionUpdated": "Elemento actualizado.",
     "help": "Ayuda",
     "deleteFailed": "La eliminación falló. Por favor, inténtalo de nuevo.",
+    "buryFailed": "Error al enterrar la tarjeta. Por favor, inténtalo de nuevo.",
+    "undoFailed": "Error al deshacer. Por favor, inténtalo de nuevo.",
+    "gradeFailed": "Error al guardar el progreso. Tu respuesta se registró localmente pero podría no persistir.",
+    "suspendFailed": "Error al suspender la tarjeta.",
     "helpTitle": "Guía de la Barra",
     "helpStop": "Detener la sesión y volver a la página del tema",
     "helpNextTopic": "Saltar al siguiente tema con tarjetas pendientes",
