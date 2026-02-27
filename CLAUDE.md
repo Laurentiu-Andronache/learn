@@ -179,7 +179,9 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `components/admin/flashcard-edit-form.tsx` — flashcard editing form
 - `components/admin/question-edit-form.tsx` — quiz question editing form
 - `lib/fsrs/flashcard-ordering.ts` — `getOrderedFlashcards`, `getSubModeCounts` (supports `newCardsPerDay` enforcement)
-- `lib/fsrs/actions.ts` — `scheduleFlashcardReview`, `buryFlashcard`, `undoLastReview`, `resetTodayProgress` (uses per-user scheduler + snapshot-based undo)
+- `lib/fsrs/actions.ts` — `scheduleFlashcardReview`, `buryFlashcard`, `undoLastReview`, `resetTodayProgress`, `resetAllProgress`, `findNextTopic`
+- `lib/fsrs/snapshot.ts` — `captureSnapshot`, `restoreFromSnapshot`, `insertReviewLog`, `BeforeSnapshot`, `SNAPSHOT_SELECT`
+- `lib/fsrs/auto-optimizer.ts` — `optimizeFsrsParameters`, `resetFsrsWeights`, `maybeAutoOptimize`
 - `lib/fsrs/scheduler.ts` — FSRS singleton + `createUserScheduler()` factory for per-user retention/interval settings
 - `lib/fsrs/interval-preview.ts` — `getIntervalPreviews()` (accepts optional user settings), `getRetrievability()`, `formatInterval()`
 - `lib/fsrs/daily-stats.ts` — `getDailyStats()` (reviews today, new cards, correct rate, due tomorrow)
@@ -201,6 +203,13 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/fsrs/card-data-helpers.ts` — `buildSuspendedSet()`, `buildStateMap()` (shared helpers for flashcard-ordering + progress)
 - `lib/i18n/localized-field.ts` — `localizedField(item, field, locale)` (replaces inline `locale === "es" ? x_es : x_en` ternaries)
 - `app/import/` — Import client decomposed: `use-import-state.ts` (hook), `import-preview.tsx`, `import-result.tsx`
+- `components/session/help-dialog.tsx` — Keyboard shortcuts/help dialog (extracted from session-toolbar)
+- `components/session/edit-dialog.tsx` — Admin edit dialog for flashcards/questions (extracted from session-toolbar)
+- `lib/import/anki-translate.ts` — `callAnthropicAPI()` helper for Anthropic API calls
+- `types/lamejs.d.ts` — Type declarations for lamejs Mp3Encoder
+- `mcp-server/src/tools/analytics/` — Split analytics tools (7 handlers + barrel)
+- `mcp-server/src/tools/translation/` — Split translation tools (4 files + barrel)
+- `mcp-server/src/utils/count-by-fk.ts` — `mapCountsByFK()` utility for Supabase count aggregation
 
 ## Admin Editing (shared components)
 
@@ -315,7 +324,9 @@ Anki templates often produce duplicate content in imported flashcards:
 
 ## Patterns & Pitfalls
 
-**Server actions in client `useEffect`**: Always wrap in try/catch. `requireAdmin()` throws on auth failure — unhandled throws in `startTransition` cause silent redirects. The admin layout handles access control; client-side fetches just need to swallow auth errors gracefully.
+**Server actions in client `useEffect`**: Always wrap in try/catch. `requireAdmin()` throws on auth failure — unhandled throws in `startTransition` cause silent redirects. The admin layout handles access control; client-side fetches just need to swallow auth errors gracefully. All user-facing server action calls should have try/catch + `toast.error()`.
+
+**Turbopack `"use server"` re-exports**: `export { X } from "./other-server-file"` in a `"use server"` file fails with Turbopack. Instead, update import sites to reference the source module directly.
 
 **Settings list components (hidden topics, suspended flashcards)**: Parent passes server-fetched data as initial prop + `onCountChange` callback. Child manages local state with `useState(initial)` and calls `onCountChange` on mutations so the parent's count/visibility stays in sync.
 
