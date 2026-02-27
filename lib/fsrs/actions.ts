@@ -2,132 +2,22 @@
 
 import { after } from "next/server";
 import type { Grade } from "ts-fsrs";
+import { maybeAutoOptimize } from "@/lib/fsrs/auto-optimizer";
 import { createNewCard, fromCard, toCard } from "@/lib/fsrs/card-mapper";
-import {
-  MIN_REVIEWS_FOR_OPTIMIZATION,
-  optimizeUserParameters,
-} from "@/lib/fsrs/optimizer";
 import { getAllTopicsProgress } from "@/lib/fsrs/progress";
 import { createUserScheduler, Rating } from "@/lib/fsrs/scheduler";
+import {
+  SNAPSHOT_SELECT,
+  captureSnapshot,
+  insertReviewLog,
+  restoreFromSnapshot,
+} from "@/lib/fsrs/snapshot";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
-import { createClient, requireUserId } from "@/lib/supabase/server";
+import { requireUserId } from "@/lib/supabase/server";
 import { getFlashcardIdsForTopic } from "@/lib/topics/topic-flashcard-ids";
 
-// --- Shared types & helpers for snapshot-based undo/reset ---
-
-type AppSupabaseClient = Awaited<ReturnType<typeof createClient>>;
-
-interface BeforeSnapshot {
-  stability_before: number | null;
-  difficulty_before: number | null;
-  state_before: string | null;
-  reps_before: number | null;
-  lapses_before: number | null;
-  elapsed_days_before: number | null;
-  scheduled_days_before: number | null;
-  last_review_before: string | null;
-  due_before: string | null;
-  learning_steps_before: number | null;
-}
-
-const SNAPSHOT_SELECT =
-  "id, flashcard_id, stability_before, difficulty_before, state_before, reps_before, lapses_before, elapsed_days_before, scheduled_days_before, last_review_before, due_before, learning_steps_before";
-
-function captureSnapshot(
-  existingState: {
-    stability: number;
-    difficulty: number;
-    state: string;
-    reps: number;
-    lapses: number;
-    elapsed_days: number;
-    scheduled_days: number;
-    last_review: string | null;
-    due: string;
-    learning_steps?: number | null;
-  } | null,
-): BeforeSnapshot {
-  if (!existingState) {
-    return {
-      stability_before: null,
-      difficulty_before: null,
-      state_before: null,
-      reps_before: null,
-      lapses_before: null,
-      elapsed_days_before: null,
-      scheduled_days_before: null,
-      last_review_before: null,
-      due_before: null,
-      learning_steps_before: null,
-    };
-  }
-  return {
-    stability_before: existingState.stability,
-    difficulty_before: existingState.difficulty,
-    state_before: existingState.state,
-    reps_before: existingState.reps,
-    lapses_before: existingState.lapses,
-    elapsed_days_before: existingState.elapsed_days,
-    scheduled_days_before: existingState.scheduled_days,
-    last_review_before: existingState.last_review,
-    due_before: existingState.due,
-    learning_steps_before: existingState.learning_steps ?? 0,
-  };
-}
-
-async function restoreFromSnapshot(
-  supabase: AppSupabaseClient,
-  userId: string,
-  flashcardId: string,
-  snapshot: BeforeSnapshot,
-) {
-  if (snapshot.state_before === null) {
-    await supabase
-      .from("user_card_state")
-      .delete()
-      .eq("user_id", userId)
-      .eq("flashcard_id", flashcardId);
-  } else {
-    await supabase
-      .from("user_card_state")
-      .update({
-        stability: snapshot.stability_before,
-        difficulty: snapshot.difficulty_before,
-        state: snapshot.state_before,
-        reps: snapshot.reps_before,
-        lapses: snapshot.lapses_before,
-        elapsed_days: snapshot.elapsed_days_before,
-        scheduled_days: snapshot.scheduled_days_before,
-        last_review: snapshot.last_review_before,
-        due: snapshot.due_before,
-        learning_steps: snapshot.learning_steps_before ?? 0,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("flashcard_id", flashcardId);
-  }
-}
-
-async function insertReviewLog(
-  supabase: AppSupabaseClient,
-  params: {
-    user_id: string;
-    flashcard_id: string;
-    card_state_id: string;
-    rating: number;
-    answer_time_ms: number | null;
-  },
-  snapshot: BeforeSnapshot,
-) {
-  const { error } = await supabase
-    .from("review_logs")
-    .insert({ ...params, ...snapshot });
-  if (error) {
-    console.error("Failed to insert review log:", error.message);
-  }
-}
-
-// --- Exported server actions ---
+// Re-export for backward compatibility
+export { optimizeFsrsParameters, resetFsrsWeights } from "@/lib/fsrs/auto-optimizer";
 
 export async function scheduleFlashcardReview(
   flashcardId: string,
@@ -370,114 +260,4 @@ export async function findNextTopic(
     (p) => p.topicId !== excludeTopicId && p.dueToday > 0,
   );
   return next?.topicId ?? null;
-}
-
-// --- FSRS Parameter Optimization ---
-
-/** Reviews required since last optimization before auto-re-optimizing */
-const AUTO_REOPTIMIZE_REVIEWS = 100;
-
-export async function optimizeFsrsParameters(): Promise<
-  | { success: true; weights: number[]; reviewCount: number }
-  | { success: false; error: string; reviewCount?: number }
-> {
-  const { supabase, userId } = await requireUserId();
-
-  try {
-    const result = await optimizeUserParameters(userId);
-    if (!result) {
-      // optimizeUserParameters returns null when valid items < threshold.
-      // Valid items require spaced reviews (delta_t > 0), so same-day-only
-      // review data won't produce enough items even with many raw reviews.
-      return {
-        success: false,
-        error: "not_enough_reviews",
-      };
-    }
-
-    const now = new Date().toISOString();
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({
-        fsrs_weights: result.weights,
-        fsrs_weights_updated_at: now,
-        updated_at: now,
-      })
-      .eq("id", userId);
-
-    if (updateError) {
-      return { success: false, error: updateError.message };
-    }
-
-    return {
-      success: true,
-      weights: result.weights,
-      reviewCount: result.reviewCount,
-    };
-  } catch (e) {
-    console.error("FSRS optimization failed:", e);
-    return {
-      success: false,
-      error: "optimization_failed",
-    };
-  }
-}
-
-export async function resetFsrsWeights(): Promise<void> {
-  const { supabase, userId } = await requireUserId();
-  const { error } = await supabase
-    .from("profiles")
-    .update({
-      fsrs_weights: null,
-      fsrs_weights_updated_at: null,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", userId);
-  if (error) throw new Error(error.message);
-}
-
-/**
- * Check if auto-optimization should run and trigger it in the background.
- * Called after each review via `after()` to avoid blocking.
- */
-async function maybeAutoOptimize(userId: string): Promise<void> {
-  try {
-    const supabase = await createClient();
-
-    // Get current optimization state
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("fsrs_weights_updated_at")
-      .eq("id", userId)
-      .single();
-
-    // Count total reviews
-    const { count: totalReviews } = await supabase
-      .from("review_logs")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId);
-
-    const total = totalReviews ?? 0;
-    if (total < MIN_REVIEWS_FOR_OPTIMIZATION) return;
-
-    if (!profile?.fsrs_weights_updated_at) {
-      // Never optimized — run it
-      await optimizeFsrsParameters();
-      return;
-    }
-
-    // Count reviews since last optimization
-    const { count: reviewsSinceOpt } = await supabase
-      .from("review_logs")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", userId)
-      .gt("reviewed_at", profile.fsrs_weights_updated_at);
-
-    if ((reviewsSinceOpt ?? 0) >= AUTO_REOPTIMIZE_REVIEWS) {
-      await optimizeFsrsParameters();
-    }
-  } catch (e) {
-    // Auto-optimization is best-effort, don't throw
-    console.error("Auto-optimization check failed:", e);
-  }
 }
