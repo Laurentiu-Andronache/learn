@@ -22,4 +22,16 @@ export const env = {
       );
     return key;
   },
+  get ELEVENLABS_API_KEY() {
+    return requiredEnv("ELEVENLABS_API_KEY");
+  },
+  get ELEVENLABS_VOICE_ID() {
+    return process.env.ELEVENLABS_VOICE_ID ?? "XrExE9yKIg1WjnnlVkGX";
+  },
+  get ANTHROPIC_API_KEY() {
+    return process.env.ANTHROPIC_API_KEY;
+  },
+  get ANTHROPIC_TRANSLATE_MODEL() {
+    return process.env.ANTHROPIC_TRANSLATE_MODEL || "claude-3-5-haiku-20241022";
+  },
 };

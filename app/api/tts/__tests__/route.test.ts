@@ -31,6 +31,15 @@ vi.mock("next/server", () => ({
   after: mocks.afterFn,
 }));
 
+vi.mock("@/lib/env", () => ({
+  env: {
+    SUPABASE_URL: "http://localhost:54321",
+    ELEVENLABS_API_KEY: "test-elevenlabs-key",
+    ELEVENLABS_VOICE_ID: "test-voice-id",
+    SERVICE_ROLE_KEY: "test-service-role-key",
+  },
+}));
+
 // ── Helpers ─────────────────────────────────────────────────────────
 
 function makeRequest(body?: unknown): Request {

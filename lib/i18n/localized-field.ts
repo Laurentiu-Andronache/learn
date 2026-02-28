@@ -9,3 +9,15 @@ export function localizedField(
   const fallback = item[`${field}_${locale === "es" ? "en" : "es"}`];
   return typeof fallback === "string" ? fallback : "";
 }
+
+export function localizedArrayField(
+  // biome-ignore lint/suspicious/noExplicitAny: accepts any object with locale-suffixed fields
+  item: Record<string, any>,
+  field: string,
+  locale: "en" | "es",
+): string[] {
+  const localized = item[`${field}_${locale}`];
+  if (Array.isArray(localized) && localized.length > 0) return localized;
+  const fallback = item[`${field}_${locale === "es" ? "en" : "es"}`];
+  return Array.isArray(fallback) ? fallback : [];
+}

@@ -4,7 +4,10 @@ import { useLocale, useTranslations } from "next-intl";
 import { useCallback, useRef, useState } from "react";
 import { toast } from "sonner";
 import { SessionToolbar } from "@/components/session/session-toolbar";
-import { localizedField } from "@/lib/i18n/localized-field";
+import {
+  localizedArrayField,
+  localizedField,
+} from "@/lib/i18n/localized-field";
 import { deleteQuestion } from "@/lib/services/admin-reviews";
 import { saveQuizAttempt } from "@/lib/services/quiz-attempts";
 import type { FsrsSettings } from "@/lib/services/user-preferences";
@@ -57,8 +60,7 @@ export function QuizSession({
     (wasCorrect: boolean | null, timeMs: number) => {
       const q = questions[currentIndex];
       const catName = locale === "es" ? q.categoryNameEs : q.categoryNameEn;
-      const opts =
-        (locale === "es" ? q.question.options_es : q.question.options_en) ?? [];
+      const opts = localizedArrayField(q.question, "options", locale);
 
       const answer: QuizAnswer = {
         questionId: q.question.id,

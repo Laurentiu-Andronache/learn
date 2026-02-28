@@ -1,5 +1,6 @@
 import { getTopicProgress } from "@/lib/fsrs/progress";
 import { getQuizSummary } from "@/lib/services/quiz-attempts";
+import { CATEGORY_TOPIC_ONLY_SELECT } from "@/lib/supabase/category-select";
 import { createClient } from "@/lib/supabase/server";
 
 export async function getTopicPageData(topicId: string, userId: string) {
@@ -10,7 +11,7 @@ export async function getTopicPageData(topicId: string, userId: string) {
       getTopicProgress(userId, topicId),
       supabase
         .from("questions")
-        .select("id, categories!inner(topic_id)", {
+        .select(`id, ${CATEGORY_TOPIC_ONLY_SELECT}`, {
           count: "exact",
           head: true,
         })

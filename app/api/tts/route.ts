@@ -6,7 +6,7 @@ import { env } from "@/lib/env";
 import { createRateLimiter } from "@/lib/rate-limit";
 import { createApiClient } from "@/lib/supabase/server";
 
-const VOICE_ID = process.env.ELEVENLABS_VOICE_ID ?? "XrExE9yKIg1WjnnlVkGX";
+const VOICE_ID = env.ELEVENLABS_VOICE_ID;
 const BUCKET = "tts-audio";
 const MAX_TEXT_LENGTH = 5000;
 const RATE_LIMIT_WINDOW_MS = 60_000;
@@ -20,10 +20,10 @@ const SILENCE_MP3 = Buffer.from(
   "base64",
 );
 
-const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+const STORAGE_URL = env.SUPABASE_URL;
 
 const elevenlabs = new ElevenLabsClient({
-  apiKey: process.env.ELEVENLABS_API_KEY,
+  apiKey: env.ELEVENLABS_API_KEY,
 });
 
 /** Prepend ~200ms silence to prevent ElevenLabs first-word clipping */

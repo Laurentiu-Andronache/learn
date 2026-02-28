@@ -23,7 +23,10 @@ const mocks = vi.hoisted(() => {
 });
 
 vi.mock("@/lib/env", () => ({
-  env: { SERVICE_ROLE_KEY: "test-service-role-key" },
+  env: {
+    SUPABASE_URL: "https://test.supabase.co",
+    SERVICE_ROLE_KEY: "test-service-role-key",
+  },
 }));
 
 vi.mock("sharp", () => ({ default: mocks.sharpFn }));

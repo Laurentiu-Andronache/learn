@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { unsuspendFlashcard } from "@/lib/services/user-preferences";
 
 interface SuspendedFlashcardsListProps {
@@ -58,11 +59,9 @@ export function SuspendedFlashcardsList({
       {items.map((item) => {
         if (!item.flashcard) return null;
         const fc = item.flashcard;
-        const text = locale === "es" ? fc.question_es : fc.question_en;
+        const text = localizedField(fc, "question", locale as "en" | "es");
         const cat = fc.category
-          ? locale === "es"
-            ? fc.category.name_es
-            : fc.category.name_en
+          ? localizedField(fc.category, "name", locale as "en" | "es")
           : null;
 
         return (

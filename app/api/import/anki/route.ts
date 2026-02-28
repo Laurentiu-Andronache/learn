@@ -91,7 +91,12 @@ export async function POST(request: Request) {
           const { translateTopicContent } = await import(
             "@/lib/import/anki-translate"
           );
-          await translateTopicContent(result.topicId, language as "en" | "es");
+          const warnings = await translateTopicContent(
+            result.topicId,
+            language as "en" | "es",
+          );
+          if (warnings.length > 0)
+            console.warn("Auto-translate warnings:", warnings);
         } catch (err) {
           console.error("Auto-translate failed:", err);
         }

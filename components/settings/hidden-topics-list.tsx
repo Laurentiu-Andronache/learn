@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { unhideTopic } from "@/lib/services/user-preferences";
 
 interface HiddenTopicsListProps {
@@ -59,7 +60,7 @@ export function HiddenTopicsList({
       {items.map((item) => {
         if (!item.topic) return null;
         const topic = item.topic;
-        const title = locale === "es" ? topic.title_es : topic.title_en;
+        const title = localizedField(topic, "title", locale as "en" | "es");
 
         return (
           <div

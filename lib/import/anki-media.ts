@@ -14,7 +14,7 @@ import { IMPORT_LIMITS } from "./anki-types";
 
 // ── Supabase Storage config ──
 
-const STORAGE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const STORAGE_URL = env.SUPABASE_URL;
 const BUCKET = "anki-media";
 
 /** Sanitize a filename for Supabase Storage (ASCII-safe, no special chars). */

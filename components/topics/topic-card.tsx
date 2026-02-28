@@ -2,36 +2,14 @@
 
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { useRef } from "react";
 import { SegmentedBar } from "@/components/shared/segmented-bar";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { resetAllProgress, resetTodayProgress } from "@/lib/fsrs/actions";
 import type { TopicProgress } from "@/lib/fsrs/progress";
-import {
-  hideTopic,
-  unsuspendAllFlashcardsForTopic,
-} from "@/lib/services/user-preferences";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { topicUrl } from "@/lib/topics/topic-url";
+import { TopicCardMenu } from "./topic-card-menu";
 
 interface TopicData {
   id: string;
@@ -55,80 +33,16 @@ interface TopicCardProps {
 export function TopicCard({ topic, progress, locale }: TopicCardProps) {
   const router = useRouter();
   const t = useTranslations("topics");
-  const tc = useTranslations("common");
-  const [confirmAction, setConfirmAction] = useState<
-    "resetToday" | "resetAll" | null
-  >(null);
   const menuInteracting = useRef(false);
 
-  const title =
-    locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
-  const description =
-    locale === "es"
-      ? topic.description_es || topic.description_en
-      : topic.description_en;
+  const title = localizedField(topic, "title", locale as "en" | "es");
+  const description = localizedField(
+    topic,
+    "description",
+    locale as "en" | "es",
+  );
 
   const total = progress?.total ?? 0;
-
-  const handleHide = async () => {
-    try {
-      await hideTopic(topic.id);
-      router.refresh();
-    } catch {
-      toast.error(t("actionFailed"));
-    }
-  };
-
-  const handleShareLink = async () => {
-    const url = `${window.location.origin}${topicUrl(topic)}`;
-    await navigator.clipboard.writeText(url);
-    toast.success(t("linkCopied"));
-  };
-
-  const handleUnsuspendAll = async () => {
-    try {
-      const count = await unsuspendAllFlashcardsForTopic(topic.id);
-      if (count > 0) {
-        toast.success(t("unsuspendAllSuccess", { count }));
-        router.refresh();
-      } else {
-        toast.info(t("noSuspendedQuestions"));
-      }
-    } catch {
-      toast.error(t("actionFailed"));
-    }
-  };
-
-  const handleResetToday = async () => {
-    try {
-      const count = await resetTodayProgress(topic.id);
-      if (count > 0) {
-        toast.success(t("resetTodaySuccess", { count }));
-        router.refresh();
-      } else {
-        toast.info(t("noReviewsToday"));
-      }
-    } catch {
-      toast.error(t("actionFailed"));
-    }
-    setConfirmAction(null);
-  };
-
-  const handleResetAll = async () => {
-    try {
-      const result = await resetAllProgress(topic.id);
-      const total = result.reviewLogs + result.cardStates + result.suspended;
-      if (total > 0) {
-        toast.success(t("resetAllSuccess"));
-        router.refresh();
-      } else {
-        toast.info(t("noProgressToReset"));
-      }
-    } catch {
-      toast.error(t("actionFailed"));
-    }
-    setConfirmAction(null);
-  };
 
   return (
     <div className="h-full">
@@ -147,56 +61,13 @@ export function TopicCard({ topic, progress, locale }: TopicCardProps) {
               </span>
               <h3 className="font-semibold text-lg leading-tight">{title}</h3>
             </div>
-            <DropdownMenu
-              onOpenChange={(open) => {
-                if (!open) {
-                  menuInteracting.current = true;
-                  setTimeout(() => {
-                    menuInteracting.current = false;
-                  }, 0);
-                }
+            <TopicCardMenu
+              topicId={topic.id}
+              topicSlug={topic.slug}
+              onInteractionChange={(v) => {
+                menuInteracting.current = v;
               }}
-            >
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 shrink-0"
-                  onPointerDown={() => {
-                    menuInteracting.current = true;
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  &#x22EF;
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <DropdownMenuItem onClick={handleShareLink}>
-                  {t("shareLink")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleUnsuspendAll}>
-                  {t("unsuspendAll")}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setConfirmAction("resetToday")}
-                >
-                  {t("resetToday")}
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleHide}>
-                  {t("hide")}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  className="text-destructive"
-                  onClick={() => setConfirmAction("resetAll")}
-                >
-                  {t("resetAll")}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            />
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -263,48 +134,6 @@ export function TopicCard({ topic, progress, locale }: TopicCardProps) {
           </div>
         </CardContent>
       </Card>
-
-      {/* Confirmation dialogs */}
-      <AlertDialog
-        open={confirmAction !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setConfirmAction(null);
-            menuInteracting.current = true;
-            setTimeout(() => {
-              menuInteracting.current = false;
-            }, 0);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmAction === "resetToday"
-                ? t("resetTodayTitle")
-                : t("resetAllTitle")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction === "resetToday"
-                ? t("resetTodayConfirm")
-                : t("resetAllConfirm")}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>{tc("cancel")}</AlertDialogCancel>
-            <AlertDialogAction
-              variant={confirmAction === "resetAll" ? "destructive" : "default"}
-              onClick={
-                confirmAction === "resetToday"
-                  ? handleResetToday
-                  : handleResetAll
-              }
-            >
-              {tc("confirm")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

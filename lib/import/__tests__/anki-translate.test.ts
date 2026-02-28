@@ -19,6 +19,19 @@ vi.mock("@/lib/services/anthropic", () => ({
   stripCodeFences: mocks.stripCodeFences,
 }));
 
+vi.mock("@/lib/env", () => ({
+  env: {
+    get ANTHROPIC_API_KEY() {
+      return process.env.ANTHROPIC_API_KEY;
+    },
+    get ANTHROPIC_TRANSLATE_MODEL() {
+      return (
+        process.env.ANTHROPIC_TRANSLATE_MODEL || "claude-3-5-haiku-20241022"
+      );
+    },
+  },
+}));
+
 import { translateTopicContent } from "../anki-translate";
 
 const originalApiKey = process.env.ANTHROPIC_API_KEY;
@@ -44,9 +57,12 @@ describe("translateTopicContent", () => {
     delete process.env.ANTHROPIC_API_KEY;
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-    await translateTopicContent("topic-1", "en");
+    const result = await translateTopicContent("topic-1", "en");
 
     expect(mocks.mockFrom).not.toHaveBeenCalled();
+    expect(result).toEqual([
+      "Auto-translate: ANTHROPIC_API_KEY not configured",
+    ]);
     spy.mockRestore();
   });
 
@@ -59,9 +75,10 @@ describe("translateTopicContent", () => {
     selectMock.mockReturnValue({ eq: eqMock });
     eqMock.mockResolvedValue({ data: [] });
 
-    await translateTopicContent("topic-1", "en");
+    const result = await translateTopicContent("topic-1", "en");
 
     expect(mocks.callAnthropicAPI).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 
   it("returns early when no flashcards found", async () => {
@@ -83,9 +100,10 @@ describe("translateTopicContent", () => {
     fcSelectMock.mockReturnValue({ in: fcInMock });
     fcInMock.mockResolvedValue({ data: [] });
 
-    await translateTopicContent("topic-1", "en");
+    const result = await translateTopicContent("topic-1", "en");
 
     expect(mocks.callAnthropicAPI).not.toHaveBeenCalled();
+    expect(result).toEqual([]);
   });
 
   // ─── BATCH TRANSLATION ─────────────────────────────────────────────
@@ -187,12 +205,13 @@ describe("translateTopicContent", () => {
     // Third API call: category name translation
     mocks.callAnthropicAPI.mockResolvedValueOnce("Basicos");
 
-    await translateTopicContent("topic-1", "en");
+    const result = await translateTopicContent("topic-1", "en");
 
     expect(mocks.callAnthropicAPI).toHaveBeenCalledTimes(3);
     // Verify flashcard update was called
     expect(updateMock).toHaveBeenCalled();
     expect(updateEqMock).toHaveBeenCalledWith("id", "fc-1");
+    expect(result).toEqual([]);
   });
 
   // ─── TOPIC METADATA TRANSLATION ───────────────────────────────────
@@ -266,11 +285,12 @@ describe("translateTopicContent", () => {
     catNamesEqMock.mockResolvedValue({ data: [] }); // no categories to translate
 
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await translateTopicContent("topic-1", "en");
+    const result = await translateTopicContent("topic-1", "en");
     spy.mockRestore();
 
     // Verify topic update was attempted with the translated data
     expect(topicUpdateMock).toHaveBeenCalled();
+    expect(result).toContain("Flashcard batch 0 translation failed");
   });
 
   // ─── BATCH FAILURE CONTINUES ──────────────────────────────────────
@@ -349,12 +369,89 @@ describe("translateTopicContent", () => {
     catNamesEqMock.mockResolvedValue({ data: [] });
 
     const spy = vi.spyOn(console, "error").mockImplementation(() => {});
-    await translateTopicContent("topic-1", "en");
+    const result = await translateTopicContent("topic-1", "en");
     spy.mockRestore();
 
     // callAnthropicAPI called at least twice (batch 1 fail + batch 2 success)
     expect(mocks.callAnthropicAPI).toHaveBeenCalledTimes(2);
     // Second batch should have triggered updates
     expect(updateMocks[0].update).toHaveBeenCalled();
+    expect(result).toContain("Flashcard batch 0 translation failed");
+    expect(result).toHaveLength(1);
+  });
+
+  // ─── PER-CATEGORY FAILURE ─────────────────────────────────────────
+
+  it("per-category failure returns warnings but translates other categories", async () => {
+    // Setup: 1 flashcard (to not early-return), no topic metadata, 2 categories
+    const catSelectMock = vi.fn();
+    const catEqMock = vi.fn();
+    const fcSelectMock = vi.fn();
+    const fcInMock = vi.fn();
+    const topicSelectMock = vi.fn();
+    const topicEqMock = vi.fn();
+    const topicSingleMock = vi.fn().mockResolvedValue({ data: null });
+    const catNamesSelectMock = vi.fn();
+    const catNamesEqMock = vi.fn();
+    const catNameUpdateMock = vi.fn();
+    const catNameUpdateEqMock = vi.fn();
+
+    mocks.mockFrom
+      .mockReturnValueOnce({ select: catSelectMock }) // categories
+      .mockReturnValueOnce({ select: fcSelectMock }) // flashcards
+      .mockReturnValueOnce({ select: topicSelectMock }) // topic metadata
+      .mockReturnValueOnce({ select: catNamesSelectMock }) // category names
+      .mockReturnValueOnce({ update: catNameUpdateMock }); // cat-2 update
+
+    catSelectMock.mockReturnValue({ eq: catEqMock });
+    catEqMock.mockResolvedValue({ data: [{ id: "cat-1" }, { id: "cat-2" }] });
+
+    fcSelectMock.mockReturnValue({ in: fcInMock });
+    fcInMock.mockResolvedValue({
+      data: [
+        {
+          id: "fc-1",
+          question_en: "Q",
+          question_es: "",
+          answer_en: "A",
+          answer_es: "",
+          extra_en: null,
+          extra_es: null,
+        },
+      ],
+    });
+
+    // Flashcard batch fails
+    mocks.callAnthropicAPI.mockRejectedValueOnce(new Error("batch fail"));
+
+    topicSelectMock.mockReturnValue({ eq: topicEqMock });
+    topicEqMock.mockReturnValue({ single: topicSingleMock });
+
+    catNamesSelectMock.mockReturnValue({ eq: catNamesEqMock });
+    catNamesEqMock.mockResolvedValue({
+      data: [
+        { id: "cat-1", name_en: "First", name_es: "" },
+        { id: "cat-2", name_en: "Second", name_es: "" },
+      ],
+    });
+
+    // cat-1 translation fails
+    mocks.callAnthropicAPI.mockRejectedValueOnce(new Error("cat fail"));
+    // cat-2 translation succeeds
+    mocks.callAnthropicAPI.mockResolvedValueOnce("Segundo");
+
+    catNameUpdateMock.mockReturnValue({ eq: catNameUpdateEqMock });
+    catNameUpdateEqMock.mockResolvedValue({ error: null });
+
+    const spy = vi.spyOn(console, "error").mockImplementation(() => {});
+    const result = await translateTopicContent("topic-1", "en");
+    spy.mockRestore();
+
+    // cat-1 failed, cat-2 succeeded
+    expect(result).toContain("Flashcard batch 0 translation failed");
+    expect(result).toContain("Category translation failed: cat-1");
+    expect(result).toHaveLength(2);
+    // cat-2 update was called
+    expect(catNameUpdateMock).toHaveBeenCalled();
   });
 });

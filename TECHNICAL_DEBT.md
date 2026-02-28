@@ -1,6 +1,6 @@
 # Technical Debt Register — Learn App
 
-**Last updated:** 2026-02-27
+**Last updated:** 2026-02-28
 **Files analyzed:** ~270 source files (`.ts`/`.tsx`, excluding `node_modules`, `.next`, tests)
 **Total LOC:** ~21,800 (app source) + ~2,100 (MCP server)
 
@@ -11,23 +11,23 @@
 │ Metric                         │ Value    │
 ├────────────────────────────────┼──────────┤
 │ Files >300 LOC                 │ 8        │
-│ Functions >200 LOC             │ 3        │
-│ Type casts (as unknown/any)    │ 10       │
+│ Functions complexity >15       │ 2        │
+│ Type casts (as unknown/any)    │ 1        │
 │ @ts-expect-error               │ 0        │
 │ TODO/FIXME/HACK markers        │ 0        │
 │ Dead/commented-out code        │ 0        │
 │ Unused UI components           │ 0        │
-│ Console statements (error/warn)│ 20       │
+│ Console statements (error/warn)│ 16       │
 │ Dependency issues              │ 0        │
 │ Security issues                │ 0        │
-│ Test coverage (files)          │ 37 files │
-│ Test count                     │ 464      │
+│ Test coverage (files)          │ 38 files │
+│ Test count                     │ 473      │
 │ Active debt items              │ 0        │
-│ Resolved since last review     │ 26       │
-└────────────────────────────────┴──────────┘
+│ Resolved since last review     │ 38       │
+└────────────────────────────────┘
 ```
 
-**Overall**: Zero active debt. Clean architecture (no circular deps), solid security (parameterized queries, proper auth, RLS everywhere), zero debt markers. All previous gaps (large components, untested modules, dead code, magic numbers) have been addressed.
+**Overall**: Very healthy codebase. Zero critical/security issues. Zero active debt items. Clean architecture (no circular deps, no dead code, no TODO markers). All 38 identified items resolved.
 
 ---
 
@@ -39,19 +39,19 @@ No critical issues. Security, auth, RLS, and input validation patterns are solid
 
 ## HIGH (0)
 
-All resolved.
+No high-severity items.
 
 ---
 
 ## MEDIUM (0)
 
-All resolved.
+No medium-severity items.
 
 ---
 
 ## LOW (0)
 
-All resolved.
+No low-severity items.
 
 ---
 
@@ -61,7 +61,7 @@ All resolved.
 Props could be grouped (TTS state, report state) but the component is simple and props are all directly used. Refactoring would add indirection for minimal clarity gain.
 
 ### No E2E tests
-Unit test suite (464 tests) covers critical logic paths. E2E tests (Playwright) would add value for import/flashcard/quiz flows but are outside current scope and would require CI infrastructure changes.
+Unit test suite (473 tests) covers critical logic paths. E2E tests (Playwright) would add value for import/flashcard/quiz flows but are outside current scope and would require CI infrastructure changes.
 
 ### `lamejs` unmaintained (7+ years)
 Used only for WAV-to-MP3 in Anki imports. Works correctly. Will swap to `@breezystack/lamejs` (maintained fork) if issues arise.
@@ -69,8 +69,14 @@ Used only for WAV-to-MP3 in Anki imports. Works correctly. Will swap to `@breezy
 ### `anki-reader` stale peer dep
 Forces `legacy-peer-deps=true` in `.npmrc`. Works fine with TS5. No action until upstream fixes.
 
-### `console.error`/`console.warn` in production code (20 instances)
+### `console.error`/`console.warn` in production code (16 instances)
 All are in error handlers (error boundaries, API routes, catch blocks). No `console.log` debug statements. Appropriate for server-side error logging.
+
+### `eslint-disable react-hooks/exhaustive-deps` in `use-card-audio.ts` (2 instances)
+Lines 48 and 86 intentionally omit deps for stable-identity callbacks. Reviewed — not stale closure bugs, just React hook linter overcaution on refs.
+
+### `processNotes` cyclomatic complexity 21 in `crowdanki-parser.ts`
+Complex note parsing logic with tag extraction, model mapping, field validation. Splitting would scatter related parsing logic across files for no readability gain. Well-tested (9 tests).
 
 ---
 
@@ -109,6 +115,13 @@ All are in error handlers (error boundaries, API routes, catch blocks). No `cons
 | DEBT-029 | `FsrsSettingsCard` 291 LOC | Extracted `useFsrsSettingsForm` hook + `OptimizerSection` component. Main component now ~190 LOC. |
 | DEBT-030 | Dead route `/protected` | Deleted `app/protected/`. Updated redirects in password/signup forms to `/topics`. |
 | DEBT-031 | Duplicate `SERVICE_KEY` + `require()` | Added `SERVICE_ROLE_KEY` getter to `lib/env.ts`. Replaced `require()` with ESM import. |
+| DEBT-032 | Category join shape duplicated 4x | Created `lib/supabase/category-select.ts` with shared `CATEGORY_JOIN_SELECT`, `CATEGORY_TOPIC_ONLY_SELECT` constants and `CategoryJoin` type. Updated 5 consumer files. |
+| DEBT-033 | Incomplete `localizedField()` adoption (~20 inline ternaries) | Added `localizedArrayField()` to `lib/i18n/localized-field.ts`. Converted 11 inline ternaries across 6 files. Fixed 3 missing fallback bugs. |
+| DEBT-034 | Repeated flashcard/suspended query pattern | Added `fetchSuspendedSet()` to `lib/fsrs/card-data-helpers.ts`. Updated 5 query sites in `flashcard-ordering.ts` and `progress.ts`. |
+| DEBT-035 | `process.env` bypassing `env.ts` for 6 env vars | Added 4 getters to `lib/env.ts` (ELEVENLABS_API_KEY/VOICE_ID, ANTHROPIC_API_KEY/MODEL). Updated 4 consumers. Removed unsafe `!` assertion. |
+| DEBT-036 | `anki-translate.ts` silently swallows translation errors | Changed return type to `Promise<string[]>`. Fixed critical bug: per-category try/catch moved inside loop. Added warnings collection and surfacing. |
+| DEBT-037 | Duplicate title/description in topic page.tsx | Resolved via DEBT-033 `localizedField()` adoption. |
+| DEBT-038 | `topic-card.tsx` 310 LOC mixed concerns | Extracted `TopicCardMenu` (~170 LOC) to `topic-card-menu.tsx`. TopicCard now ~140 LOC display-only. |
 
 ---
 
@@ -119,14 +132,13 @@ All are in error handlers (error boundaries, API routes, catch blocks). No `cons
 - Zero @ts-expect-error suppressions
 - Zero security issues — no SQL injection, no XSS, no exposed secrets
 - Zero circular dependencies
-- Zero active debt items
-- Only 1 `any` type in production code (justified, with biome-ignore)
-- No `console.log` debug statements (all 20 console calls are `error`/`warn`)
+- Only 1 type cast in production code (Supabase join mismatch)
+- No `console.log` debug statements (all 16 console calls are `error`/`warn`)
 - Consistent auth patterns (`requireUserId`, `requireAdmin`)
 - Consistent error handling (try/catch + toast.error on all server action calls)
 - Proper RLS enforcement across all data access
 - Error boundaries at 4 levels (global, app, topic, admin)
 - Loading skeletons for all major routes
-- 464 tests across 37 files, zero `.skip`/`.only` markers
+- 473 tests across 38 files, zero `.skip`/`.only` markers
 - Clean server/client boundary separation
 - All dependencies current, no duplicates, no wildcards

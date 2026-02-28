@@ -4,6 +4,10 @@ import { QuizSession } from "@/components/quiz/quiz-session";
 import { getCorrectQuestionIds } from "@/lib/services/quiz-attempts";
 import { getFsrsSettings } from "@/lib/services/user-preferences";
 import { shuffleArray } from "@/lib/shuffle";
+import {
+  CATEGORY_JOIN_SELECT,
+  type CategoryJoin,
+} from "@/lib/supabase/category-select";
 import { checkIsAdmin, createClient } from "@/lib/supabase/server";
 import { isUuidParam, resolveTopicSelect } from "@/lib/topics/resolve-topic";
 import { topicUrl } from "@/lib/topics/topic-url";
@@ -45,10 +49,8 @@ export default async function QuizPage({
   // Fetch all questions for this topic via categories join
   const { data: questionsRaw } = await supabase
     .from("questions")
-    .select(
-      "*, category:categories!inner(id, name_en, name_es, color, topic_id)",
-    )
-    .eq("category.topic_id", topic.id);
+    .select(`*, ${CATEGORY_JOIN_SELECT}`)
+    .eq("categories.topic_id", topic.id);
 
   let filtered = questionsRaw || [];
 
@@ -72,12 +74,7 @@ export default async function QuizPage({
       topicTitleEs={topic.title_es}
       fsrsSettings={fsrsSettings}
       questions={questions.map((q) => {
-        const cat = q.category as unknown as {
-          id: string;
-          name_en: string;
-          name_es: string;
-          color: string | null;
-        };
+        const cat = q.categories as CategoryJoin;
         return {
           question: {
             id: q.id,

@@ -1,5 +1,6 @@
 "use server";
 
+import { env } from "@/lib/env";
 import { callAnthropicAPI, stripCodeFences } from "@/lib/services/anthropic";
 import { requireAdmin } from "@/lib/supabase/server";
 
@@ -26,10 +27,9 @@ export async function translateFields({
     return { data: null, error: "Unauthorized" };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = env.ANTHROPIC_API_KEY;
   if (!apiKey) return { data: null, error: "ANTHROPIC_API_KEY not configured" };
-  const model =
-    process.env.ANTHROPIC_TRANSLATE_MODEL || "claude-3-5-haiku-20241022";
+  const model = env.ANTHROPIC_TRANSLATE_MODEL;
 
   // Filter out null/empty fields
   const toTranslate: TranslatableFields = {};

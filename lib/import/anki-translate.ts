@@ -3,6 +3,7 @@
  * Called in after() context for admin imports.
  */
 
+import { env } from "@/lib/env";
 import { callAnthropicAPI, stripCodeFences } from "@/lib/services/anthropic";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,20 +11,21 @@ const BATCH_SIZE = 10; // flashcards per translation request
 
 /**
  * Translate all flashcard content in a topic from sourceLang to the other language.
+ * Returns an array of warning messages (empty on full success).
  */
 export async function translateTopicContent(
   topicId: string,
   sourceLang: "en" | "es",
-): Promise<void> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+): Promise<string[]> {
+  const apiKey = env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.error("Auto-translate: ANTHROPIC_API_KEY not configured");
-    return;
+    return ["Auto-translate: ANTHROPIC_API_KEY not configured"];
   }
 
+  const warnings: string[] = [];
   const targetLang = sourceLang === "en" ? "es" : "en";
-  const model =
-    process.env.ANTHROPIC_TRANSLATE_MODEL || "claude-3-5-haiku-20241022";
+  const model = env.ANTHROPIC_TRANSLATE_MODEL;
   const langNames = { en: "English", es: "Spanish" };
 
   const supabase = await createClient();
@@ -34,7 +36,7 @@ export async function translateTopicContent(
     .select("id")
     .eq("topic_id", topicId);
 
-  if (!categories?.length) return;
+  if (!categories?.length) return [];
 
   const categoryIds = categories.map((c) => c.id);
 
@@ -46,7 +48,7 @@ export async function translateTopicContent(
     )
     .in("category_id", categoryIds);
 
-  if (!flashcards?.length) return;
+  if (!flashcards?.length) return [];
 
   // Translate in batches
   for (let i = 0; i < flashcards.length; i += BATCH_SIZE) {
@@ -96,6 +98,7 @@ Return ONLY a valid JSON array matching the input structure.`,
       }
     } catch (err) {
       console.error(`Auto-translate batch ${i} failed:`, err);
+      warnings.push(`Flashcard batch ${i} translation failed`);
       // Continue with next batch
     }
   }
@@ -137,17 +140,18 @@ Return ONLY a valid JSON array matching the input structure.`,
     }
   } catch (err) {
     console.error("Auto-translate topic metadata failed:", err);
+    warnings.push("Topic metadata translation failed");
   }
 
   // Translate category names
-  try {
-    const { data: cats } = await supabase
-      .from("categories")
-      .select("id, name_en, name_es")
-      .eq("topic_id", topicId);
+  const { data: cats } = await supabase
+    .from("categories")
+    .select("id, name_en, name_es")
+    .eq("topic_id", topicId);
 
-    if (cats?.length) {
-      for (const cat of cats) {
+  if (cats?.length) {
+    for (const cat of cats) {
+      try {
         const name = (
           sourceLang === "en" ? cat.name_en : cat.name_es
         ) as string;
@@ -165,9 +169,12 @@ Return ONLY a valid JSON array matching the input structure.`,
             .update({ [`name_${targetLang}`]: translated })
             .eq("id", cat.id);
         }
+      } catch (err) {
+        console.error(`Auto-translate category ${cat.id} failed:`, err);
+        warnings.push(`Category translation failed: ${cat.id}`);
       }
     }
-  } catch (err) {
-    console.error("Auto-translate categories failed:", err);
   }
+
+  return warnings;
 }

@@ -189,7 +189,7 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `lib/fsrs/progress.ts` — `getTopicProgress`, `getAllTopicsProgress` (flashcard-based), shared `computeTopicProgress` helper
 - `lib/shuffle.ts` — `shuffleArray<T>()` (Fisher-Yates, used by quiz-card, quiz page, question-ordering)
 - `lib/rate-limit.ts` — `createRateLimiter(max, windowMs)` factory (used by TTS + Anki import API routes)
-- `lib/env.ts` — Lazy env validation via getters (throws on first access, not import — safe for tests). `env.SUPABASE_URL`, `env.SUPABASE_KEY`, `env.SERVICE_ROLE_KEY`
+- `lib/env.ts` — Lazy env validation via getters (throws on first access, not import — safe for tests). Required: `env.SUPABASE_URL`, `env.SUPABASE_KEY`, `env.SERVICE_ROLE_KEY`, `env.ELEVENLABS_API_KEY`. Optional: `env.ELEVENLABS_VOICE_ID` (default voice), `env.ANTHROPIC_API_KEY` (returns undefined if unset), `env.ANTHROPIC_TRANSLATE_MODEL` (default haiku)
 - `lib/supabase/server.ts` — `createClient`, `createApiClient` (read-only, for API routes), `checkIsAdmin`, `requireAdmin`, `requireUserId`
 - `lib/services/quiz-attempts.ts` — `saveQuizAttempt`, `getLatestQuizAttempt`
 - `lib/services/user-preferences.ts` — `suspendFlashcard`, `hideTopic`, `getFsrsSettings`, `updateFsrsSettings`, etc.
@@ -199,11 +199,13 @@ Users click/tap any paragraph in reading mode, flashcard answers/extras, or quiz
 - `hooks/use-admin-list.ts` — `useAdminList<T>()` generic hook for admin CRUD pages (filters, debounced search, deep-link, auto-translate, editing state). Used by `questions-client.tsx` and `flashcards-client.tsx`
 - `app/api/tts/route.ts` — TTS API route (auth, rate limit, Supabase Storage cache, ElevenLabs)
 - `lib/fsrs/optimizer.ts` — `optimizeUserParameters()`, `transformReviewLogs()`
+- `components/topics/topic-card-menu.tsx` — Dropdown menu + action handlers + confirmation dialogs (extracted from topic-card)
 - `components/admin/topic-visibility-toggle.tsx` — Public/Private switch for admin topics list
 - `lib/services/admin-topics.ts` — `toggleTopicVisibility` server action
 - `lib/flashcards/strip-front-from-answer.ts` — `stripFrontFromAnswer` (Anki `{{FrontSide}}` dedup), `isExtraDuplicate` (audio URL + word overlap detection)
-- `lib/fsrs/card-data-helpers.ts` — `buildSuspendedSet()`, `buildStateMap()` (shared helpers for flashcard-ordering + progress)
-- `lib/i18n/localized-field.ts` — `localizedField(item, field, locale)` accepts any typed object directly (Topic, Question, Flashcard, etc.) — no casting needed
+- `lib/supabase/category-select.ts` — `CATEGORY_JOIN_SELECT`, `CATEGORY_TOPIC_ONLY_SELECT` constants + `CategoryJoin` type (shared PostgREST join selectors)
+- `lib/fsrs/card-data-helpers.ts` — `buildSuspendedSet()`, `buildStateMap()`, `fetchSuspendedSet()` (shared helpers for flashcard-ordering + progress)
+- `lib/i18n/localized-field.ts` — `localizedField(item, field, locale)` for string fields, `localizedArrayField(item, field, locale)` for array fields (e.g., quiz options). Both accept any typed object directly — no casting needed
 - `app/import/` — Import client decomposed: `use-import-state.ts` (hook), `import-preview.tsx`, `import-result.tsx`
 - `components/session/help-dialog.tsx` — Keyboard shortcuts/help dialog (extracted from session-toolbar)
 - `components/session/edit-dialog.tsx` — Admin edit dialog for flashcards/questions (extracted from session-toolbar)
@@ -314,9 +316,10 @@ Vitest configured with jsdom + @testing-library. Run: `npm run test`
 | `lib/services/__tests__/admin-translate.test.ts` | 8 | Auth, API errors, code-fence stripping, array validation |
 | `lib/services/__tests__/admin-topics.test.ts` | 13 | CRUD for all 8 server actions, auth, revalidation |
 | `lib/services/__tests__/admin-import.test.ts` | 8 | validateImportJson, importTopicJson, error handling |
-| `lib/import/__tests__/anki-translate.test.ts` | 6 | Batch translation, topic metadata, error recovery |
+| `lib/i18n/__tests__/localized-field.test.ts` | 8 | localizedField + localizedArrayField: primary, fallback, empty |
+| `lib/import/__tests__/anki-translate.test.ts` | 7 | Batch translation, topic metadata, error recovery, per-category warnings |
 
-**Total: 464 tests across 37 test files.**
+**Total: 473 tests across 38 test files.**
 
 ## Anki Import Cleanup
 

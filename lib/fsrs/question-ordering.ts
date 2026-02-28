@@ -1,17 +1,13 @@
 import { shuffleArray } from "@/lib/shuffle";
+import {
+  CATEGORY_JOIN_SELECT,
+  CATEGORY_TOPIC_ONLY_SELECT,
+  type CategoryJoin,
+} from "@/lib/supabase/category-select";
 import { createClient } from "@/lib/supabase/server";
 import type { Question } from "@/lib/types/database";
 
-/** Question row with joined category (PostgREST returns single object for FK) */
-type QuestionWithCategoryJoin = Question & {
-  categories: {
-    id: string;
-    name_en: string;
-    name_es: string;
-    color: string | null;
-    topic_id: string;
-  };
-};
+type QuestionWithCategoryJoin = Question & { categories: CategoryJoin };
 
 export interface OrderedQuestion {
   question: Question;
@@ -32,10 +28,7 @@ export async function getOrderedQuestions(
 
   const { data: questions, error: qError } = await supabase
     .from("questions")
-    .select(`
-      *,
-      categories!inner(id, name_en, name_es, color, topic_id)
-    `)
+    .select(`*, ${CATEGORY_JOIN_SELECT}`)
     .eq("categories.topic_id", topicId)
     .returns<QuestionWithCategoryJoin[]>();
 
@@ -59,7 +52,7 @@ export async function getQuizQuestionCount(topicId: string): Promise<number> {
   const supabase = await createClient();
   const { count } = await supabase
     .from("questions")
-    .select("id, categories!inner(topic_id)", { count: "exact", head: true })
+    .select(`id, ${CATEGORY_TOPIC_ONLY_SELECT}`, { count: "exact", head: true })
     .eq("categories.topic_id", topicId);
   return count ?? 0;
 }

@@ -5,20 +5,16 @@ import {
   RAMP_UP_BASE_OFFSET,
   RAMP_UP_DURATION_DAYS,
 } from "@/lib/constants";
+import {
+  CATEGORY_JOIN_SELECT,
+  CATEGORY_TOPIC_ONLY_SELECT,
+  type CategoryJoin,
+} from "@/lib/supabase/category-select";
 import { createClient } from "@/lib/supabase/server";
 import type { Flashcard, UserCardState } from "@/lib/types/database";
-import { buildStateMap, buildSuspendedSet } from "./card-data-helpers";
+import { buildStateMap, fetchSuspendedSet } from "./card-data-helpers";
 
-/** Flashcard row with joined category (PostgREST returns single object for FK) */
-type FlashcardWithCategoryJoin = Flashcard & {
-  categories: {
-    id: string;
-    name_en: string;
-    name_es: string;
-    color: string | null;
-    topic_id: string;
-  };
-};
+type FlashcardWithCategoryJoin = Flashcard & { categories: CategoryJoin };
 
 export type SubMode =
   | "full"
@@ -102,7 +98,7 @@ export async function getEmptyStateContext(
   // Fetch all flashcards for topic
   let flashcardsQuery = supabase
     .from("flashcards")
-    .select("id, categories!inner(topic_id)")
+    .select(`id, ${CATEGORY_TOPIC_ONLY_SELECT}`)
     .eq("categories.topic_id", topicId);
   if (options.subMode === "category_focus" && options.categoryId) {
     flashcardsQuery = flashcardsQuery.eq("category_id", options.categoryId);
@@ -115,19 +111,14 @@ export async function getEmptyStateContext(
   if (!flashcardIds.length)
     return { remainingNewCards: 0, nextDueAt: null, effectiveLimit: 0 };
 
-  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
-    supabase
-      .from("suspended_flashcards")
-      .select("flashcard_id")
-      .eq("user_id", userId)
-      .in("flashcard_id", flashcardIds),
+  const [suspendedSet, { data: cardStates }] = await Promise.all([
+    fetchSuspendedSet(supabase, userId, flashcardIds),
     supabase
       .from("user_card_state")
       .select("flashcard_id, due")
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
   ]);
-  const suspendedSet = buildSuspendedSet(suspended);
   const stateMap = buildStateMap(cardStates);
 
   const activeIds = flashcardIds.filter((id) => !suspendedSet.has(id));
@@ -171,10 +162,7 @@ export async function getOrderedFlashcards(
   // 1. Fetch all flashcards for topic with category info
   let flashcardsQuery = supabase
     .from("flashcards")
-    .select(`
-      *,
-      categories!inner(id, name_en, name_es, color, topic_id)
-    `)
+    .select(`*, ${CATEGORY_JOIN_SELECT}`)
     .eq("categories.topic_id", topicId);
 
   // Category focus filter
@@ -188,19 +176,14 @@ export async function getOrderedFlashcards(
 
   // 2. Fetch suspended flashcards and card states in parallel
   const flashcardIds = flashcards.map((f) => f.id);
-  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
-    supabase
-      .from("suspended_flashcards")
-      .select("flashcard_id")
-      .eq("user_id", userId)
-      .in("flashcard_id", flashcardIds),
+  const [suspendedSet, { data: cardStates }] = await Promise.all([
+    fetchSuspendedSet(supabase, userId, flashcardIds),
     supabase
       .from("user_card_state")
       .select("*")
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
   ]);
-  const suspendedSet = buildSuspendedSet(suspended);
   const stateMap = buildStateMap(cardStates);
 
   // 4. Build ordered list
@@ -347,7 +330,7 @@ export async function getSubModeCounts(userId: string, topicId: string) {
 
   const { data: flashcards } = await supabase
     .from("flashcards")
-    .select("id, categories!inner(topic_id)")
+    .select(`id, ${CATEGORY_TOPIC_ONLY_SELECT}`)
     .eq("categories.topic_id", topicId)
     .returns<{ id: string; categories: { topic_id: string } }[]>();
 
@@ -357,19 +340,14 @@ export async function getSubModeCounts(userId: string, topicId: string) {
 
   const flashcardIds = flashcards.map((f) => f.id);
 
-  const [{ data: suspended }, { data: cardStates }] = await Promise.all([
-    supabase
-      .from("suspended_flashcards")
-      .select("flashcard_id")
-      .eq("user_id", userId)
-      .in("flashcard_id", flashcardIds),
+  const [suspendedSet, { data: cardStates }] = await Promise.all([
+    fetchSuspendedSet(supabase, userId, flashcardIds),
     supabase
       .from("user_card_state")
       .select("flashcard_id, due, state")
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
   ]);
-  const suspendedSet = buildSuspendedSet(suspended);
   const activeIds = flashcardIds.filter((id) => !suspendedSet.has(id));
 
   const activeCardStates = (cardStates || []).filter(

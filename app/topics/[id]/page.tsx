@@ -10,6 +10,7 @@ import { StudyTipsDialog } from "@/components/topics/study-tips-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { localizedField } from "@/lib/i18n/localized-field";
 import { getBaseUrl } from "@/lib/seo/metadata-utils";
 import { createClient } from "@/lib/supabase/server";
 import { getTopicPageData } from "@/lib/topics/get-topic-page-data";
@@ -35,12 +36,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  const title =
-    locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
-  const description =
-    locale === "es"
-      ? topic.description_es || topic.description_en
-      : topic.description_en;
+  const title = localizedField(topic, "title", locale as "en" | "es");
+  const description = localizedField(
+    topic,
+    "description",
+    locale as "en" | "es",
+  );
 
   const baseUrl = getBaseUrl();
 
@@ -95,12 +96,12 @@ export default async function TopicDetailPage({ params }: Props) {
     user.id,
   );
 
-  const title =
-    locale === "es" ? topic.title_es || topic.title_en : topic.title_en;
-  const description =
-    locale === "es"
-      ? topic.description_es || topic.description_en
-      : topic.description_en;
+  const title = localizedField(topic, "title", locale as "en" | "es");
+  const description = localizedField(
+    topic,
+    "description",
+    locale as "en" | "es",
+  );
 
   const hasQuiz = (quizQuestionCount ?? 0) > 0;
   const hasReading = !!(topic.intro_text_en || topic.intro_text_es);
@@ -361,9 +362,14 @@ export default async function TopicDetailPage({ params }: Props) {
                     />
                   )}
                   <span className="text-sm font-medium">
-                    {locale === "es"
-                      ? cat.categoryNameEs || cat.categoryNameEn
-                      : cat.categoryNameEn}
+                    {localizedField(
+                      {
+                        name_en: cat.categoryNameEn,
+                        name_es: cat.categoryNameEs,
+                      },
+                      "name",
+                      locale as "en" | "es",
+                    )}
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

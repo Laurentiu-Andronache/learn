@@ -1,18 +1,19 @@
+import {
+  CATEGORY_JOIN_SELECT,
+  type CategoryJoin,
+} from "@/lib/supabase/category-select";
 import { createClient } from "@/lib/supabase/server";
-import { buildStateMap, buildSuspendedSet } from "./card-data-helpers";
+import {
+  buildStateMap,
+  buildSuspendedSet,
+  fetchSuspendedSet,
+} from "./card-data-helpers";
 
-/** Shape returned by Supabase when joining flashcards -> categories */
-interface FlashcardWithCategory {
+type FlashcardWithCategory = {
   id: string;
   category_id: string;
-  categories: {
-    id: string;
-    name_en: string;
-    name_es: string;
-    color: string | null;
-    topic_id: string;
-  };
-}
+  categories: CategoryJoin;
+};
 
 export interface CategoryProgress {
   categoryId: string;
@@ -159,11 +160,7 @@ export async function getTopicProgress(
   // Get all flashcards for this topic with their categories
   const { data: flashcards } = await supabase
     .from("flashcards")
-    .select(`
-      id,
-      category_id,
-      categories!inner(id, name_en, name_es, color, topic_id)
-    `)
+    .select(`id, category_id, ${CATEGORY_JOIN_SELECT}`)
     .eq("categories.topic_id", topicId)
     .returns<FlashcardWithCategory[]>();
 
@@ -193,13 +190,7 @@ export async function getTopicProgress(
 
   const stateMap = buildStateMap(cardStates);
 
-  // Get suspended flashcards to exclude
-  const { data: suspended } = await supabase
-    .from("suspended_flashcards")
-    .select("flashcard_id")
-    .eq("user_id", userId)
-    .in("flashcard_id", flashcardIds);
-  const suspendedSet = buildSuspendedSet(suspended);
+  const suspendedSet = await fetchSuspendedSet(supabase, userId, flashcardIds);
 
   return computeTopicProgress(topicId, flashcards, stateMap, suspendedSet, now);
 }
@@ -230,9 +221,7 @@ export async function getAllTopicsProgress(
   ] = await Promise.all([
     supabase
       .from("flashcards")
-      .select(
-        "id, category_id, categories!inner(id, name_en, name_es, color, topic_id)",
-      )
+      .select(`id, category_id, ${CATEGORY_JOIN_SELECT}`)
       .in("categories.topic_id", topicIds)
       .returns<FlashcardWithCategory[]>(),
     supabase
@@ -307,21 +296,16 @@ export async function getCategoryProgress(
   const flashcardIds = flashcards.map((f) => f.id);
   const now = new Date().toISOString();
 
-  const [{ data: cardStates }, { data: suspended }] = await Promise.all([
+  const [{ data: cardStates }, suspendedSet] = await Promise.all([
     supabase
       .from("user_card_state")
       .select("flashcard_id, state, stability, due")
       .eq("user_id", userId)
       .in("flashcard_id", flashcardIds),
-    supabase
-      .from("suspended_flashcards")
-      .select("flashcard_id")
-      .eq("user_id", userId)
-      .in("flashcard_id", flashcardIds),
+    fetchSuspendedSet(supabase, userId, flashcardIds),
   ]);
 
   const stateMap = buildStateMap(cardStates);
-  const suspendedSet = buildSuspendedSet(suspended);
 
   const activeFlashcards = flashcards.filter((f) => !suspendedSet.has(f.id));
 

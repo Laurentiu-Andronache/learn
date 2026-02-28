@@ -8,7 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTTS } from "@/hooks/use-tts";
-import { localizedField } from "@/lib/i18n/localized-field";
+import {
+  localizedArrayField,
+  localizedField,
+} from "@/lib/i18n/localized-field";
 import { shuffleArray } from "@/lib/shuffle";
 import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -75,8 +78,7 @@ export function QuizCard({
   }, [question.id]);
 
   const questionText = localizedField(question, "question", locale);
-  const rawOptions =
-    (locale === "es" ? question.options_es : question.options_en) ?? [];
+  const rawOptions = localizedArrayField(question, "options", locale);
   const explanation = localizedField(question, "explanation", locale);
   const extra = localizedField(question, "extra", locale) || null;
   const correctIdx = question.correct_index ?? 0;
