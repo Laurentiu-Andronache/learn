@@ -12,6 +12,7 @@ import {
   localizedArrayField,
   localizedField,
 } from "@/lib/i18n/localized-field";
+import { stripTooltipSyntax } from "@/lib/markdown/preprocess-tooltips";
 import { shuffleArray } from "@/lib/shuffle";
 import type { Language, Question } from "@/lib/types/database";
 import { cn } from "@/lib/utils";
@@ -154,7 +155,7 @@ export function QuizCard({
               : undefined
           }
         >
-          {questionText}
+          {stripTooltipSyntax(questionText)}
         </p>
 
         {/* Options */}
@@ -199,7 +200,7 @@ export function QuizCard({
                   >
                     {String.fromCharCode(65 + i)}
                   </span>
-                  <span className="text-sm">{option}</span>
+                  <span className="text-sm">{stripTooltipSyntax(option)}</span>
                   {showResult && isCorrectOption && (
                     <span className="ml-auto text-rating-good font-bold">
                       &#10003;

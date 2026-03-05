@@ -3,7 +3,11 @@
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
-export function LogoutButton() {
+export function LogoutButton({
+  variant = "default",
+}: {
+  variant?: "default" | "ghost" | "outline";
+}) {
   const logout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
@@ -17,5 +21,9 @@ export function LogoutButton() {
     window.location.href = "/";
   };
 
-  return <Button onClick={logout}>Logout</Button>;
+  return (
+    <Button variant={variant} onClick={logout}>
+      Logout
+    </Button>
+  );
 }

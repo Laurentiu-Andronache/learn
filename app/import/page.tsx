@@ -29,8 +29,10 @@ export default async function ImportPage() {
     redirect("/auth/login");
   }
 
+  const isAnonymous = user.is_anonymous ?? false;
+
   let isAdmin = false;
-  if (user.email) {
+  if (!isAnonymous && user.email) {
     const { data: admin } = await supabase
       .from("admin_users")
       .select("id")
@@ -39,5 +41,5 @@ export default async function ImportPage() {
     isAdmin = !!admin;
   }
 
-  return <ImportClient isAdmin={isAdmin} />;
+  return <ImportClient isAdmin={isAdmin} isAnonymous={isAnonymous} />;
 }

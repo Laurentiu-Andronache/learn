@@ -53,6 +53,12 @@ export default async function AdminTopicsPage() {
                 topicId={topic.id}
                 isPrivate={topic.visibility === "private"}
               />
+              <Button asChild variant="ghost" size="sm">
+                {/* biome-ignore lint/a11y/useValidAnchor: download link */}
+                <a href={`/api/admin/export?topicId=${topic.id}`} download>
+                  Export
+                </a>
+              </Button>
               <Button asChild variant="outline" size="sm">
                 <Link href={`/admin/topics/${topic.id}/edit`}>Edit</Link>
               </Button>

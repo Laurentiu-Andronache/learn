@@ -29,7 +29,8 @@
     "upgrade": "Mejorar Cuenta",
     "import": "Importar",
     "menu": "Menú",
-    "greeting": "¡Hola, {email}!"
+    "greeting": "¡Hola, {email}!",
+    "saveProgress": "Guardar Progreso"
   },
   "landing": {
     "hero": "Aprendizaje respaldado por la ciencia que te mejorará",
@@ -498,7 +499,9 @@
     "badges": {
       "imported": "Importado",
       "private": "Privado"
-    }
+    },
+    "guestNotice": "Debes crear una cuenta para importar mazos.",
+    "nonAdminNotice": "La importación de mazos está deshabilitada temporalmente, solo funciona para administradores."
   },
   "errors": {
     "somethingWentWrong": "Algo salió mal",

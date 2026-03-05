@@ -86,7 +86,12 @@ function makeRequest(opts?: Parameters<typeof makeMockFormData>[0]): Request {
   return req;
 }
 
-const MOCK_USER = { id: "user-123", email: "test@example.com" };
+const MOCK_USER = {
+  id: "user-123",
+  email: "test@example.com",
+  is_anonymous: false,
+};
+const MOCK_ANON_USER = { id: "anon-456", email: null, is_anonymous: true };
 const MOCK_RESULT = {
   topicId: "topic-1",
   flashcardsImported: 42,
@@ -99,7 +104,7 @@ const MOCK_RESULT = {
 beforeEach(() => {
   vi.clearAllMocks();
   mockGetUser.mockResolvedValue({ data: { user: MOCK_USER } });
-  mockCheckIsAdmin.mockResolvedValue(false);
+  mockCheckIsAdmin.mockResolvedValue(true); // default: admin user
   mockImportAnkiFile.mockResolvedValue(MOCK_RESULT);
   mockIsRateLimited.mockReturnValue(false);
 });
@@ -155,7 +160,23 @@ describe("POST /api/import/anki", () => {
     expect(await res.json()).toEqual({ error: "Invalid language" });
   });
 
-  it("successfully imports and returns result for valid .apkg file", async () => {
+  it("returns 401 for anonymous (guest) users", async () => {
+    mockGetUser.mockResolvedValue({ data: { user: MOCK_ANON_USER } });
+
+    const res = await POST(makeRequest());
+
+    expect(res.status).toBe(401);
+  });
+
+  it("returns 403 for authenticated non-admin users", async () => {
+    mockCheckIsAdmin.mockResolvedValue(false);
+
+    const res = await POST(makeRequest());
+
+    expect(res.status).toBe(403);
+  });
+
+  it("successfully imports and returns result for valid .apkg file (admin)", async () => {
     const res = await POST(
       makeRequest({ language: "en", visibility: "private" }),
     );
@@ -169,19 +190,9 @@ describe("POST /api/import/anki", () => {
         language: "en",
         visibility: "private",
         userId: "user-123",
-        isAdmin: false,
+        isAdmin: true,
         autoTranslate: false,
       }),
-    );
-  });
-
-  it("non-admin users always get private visibility even when requesting public", async () => {
-    const res = await POST(makeRequest({ visibility: "public" }));
-
-    expect(res.status).toBe(200);
-    expect(mockImportAnkiFile).toHaveBeenCalledWith(
-      expect.any(ArrayBuffer),
-      expect.objectContaining({ visibility: "private", isAdmin: false }),
     );
   });
 

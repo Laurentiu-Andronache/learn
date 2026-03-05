@@ -29,7 +29,8 @@
     "upgrade": "Upgrade Account",
     "import": "Import",
     "menu": "Menu",
-    "greeting": "Hey, {email}!"
+    "greeting": "Hey, {email}!",
+    "saveProgress": "Save Progress"
   },
   "landing": {
     "hero": "Science-backed learning that will improve you",
@@ -498,7 +499,9 @@
     "badges": {
       "imported": "Imported",
       "private": "Private"
-    }
+    },
+    "guestNotice": "You must create an account to import decks.",
+    "nonAdminNotice": "Importing decks is disabled temporarily, only working for admins."
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",

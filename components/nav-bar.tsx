@@ -12,7 +12,9 @@ export async function NavBar() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  const isAdmin = user ? await checkIsAdmin(supabase, user.email) : false;
+  const isAnonymous = user?.is_anonymous ?? false;
+  const isAdmin =
+    user && !isAnonymous ? await checkIsAdmin(supabase, user.email) : false;
   const t = await getTranslations("nav");
 
   return (
@@ -43,7 +45,12 @@ export async function NavBar() {
                   <Link href="/admin">{t("admin")}</Link>
                 </Button>
               )}
-              <LogoutButton />
+              {isAnonymous && (
+                <Button asChild size="sm">
+                  <Link href="/auth/upgrade">{t("saveProgress")}</Link>
+                </Button>
+              )}
+              <LogoutButton variant={isAnonymous ? "ghost" : "default"} />
             </>
           ) : (
             <>
@@ -63,7 +70,11 @@ export async function NavBar() {
         <div className="flex md:hidden items-center gap-1">
           <LanguageSwitcher />
           <ThemeSwitcher />
-          <MobileNav isLoggedIn={!!user} isAdmin={isAdmin} />
+          <MobileNav
+            isLoggedIn={!!user}
+            isAdmin={isAdmin}
+            isAnonymous={isAnonymous}
+          />
         </div>
       </div>
     </nav>

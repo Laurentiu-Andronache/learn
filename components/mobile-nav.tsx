@@ -17,9 +17,11 @@ import {
 export function MobileNav({
   isLoggedIn,
   isAdmin,
+  isAnonymous,
 }: {
   isLoggedIn: boolean;
   isAdmin: boolean;
+  isAnonymous: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("nav");
@@ -74,8 +76,17 @@ export function MobileNav({
                   {t("admin")}
                 </Link>
               )}
+              {isAnonymous && (
+                <Link
+                  href="/auth/upgrade"
+                  onClick={() => setOpen(false)}
+                  className="rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                >
+                  {t("saveProgress")}
+                </Link>
+              )}
               <div className="mt-2 border-t pt-2 px-3">
-                <LogoutButton />
+                <LogoutButton variant={isAnonymous ? "ghost" : "default"} />
               </div>
             </>
           ) : (

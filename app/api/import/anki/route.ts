@@ -21,11 +21,28 @@ export async function POST(request: Request) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  if (user.is_anonymous) {
+    return Response.json(
+      { error: "You must create an account to import decks." },
+      { status: 401 },
+    );
+  }
+
   if (isRateLimited(user.id)) {
     return Response.json({ error: "Rate limited" }, { status: 429 });
   }
 
   const isAdmin = await checkIsAdmin(supabase, user.email);
+
+  if (!isAdmin) {
+    return Response.json(
+      {
+        error:
+          "Importing decks is disabled temporarily, only working for admins.",
+      },
+      { status: 403 },
+    );
+  }
 
   let formData: FormData;
   try {

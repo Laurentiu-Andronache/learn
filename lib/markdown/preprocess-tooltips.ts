@@ -1,4 +1,12 @@
 /**
+ * Strips {{term|explanation}} syntax to plain term text.
+ * Use for plain-text contexts where markdown is not rendered (e.g. quiz options).
+ */
+export function stripTooltipSyntax(text: string): string {
+  return text.replace(/\{\{([^|]+)\|[^}]+\}\}/g, "$1");
+}
+
+/**
  * Converts {{term|explanation}} syntax in markdown to tooltip-flavored links.
  * Code blocks and inline code are left untouched.
  */

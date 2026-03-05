@@ -17,7 +17,14 @@ import { ImportPreview } from "./import-preview";
 import { ImportResult } from "./import-result";
 import { useImportState } from "./use-import-state";
 
-export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
+export function ImportClient({
+  isAdmin,
+  isAnonymous,
+}: {
+  isAdmin: boolean;
+  isAnonymous: boolean;
+}) {
+  const isBlocked = isAnonymous || !isAdmin;
   const t = useTranslations("import");
 
   const {
@@ -59,11 +66,12 @@ export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
           {/* Drop Zone */}
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
-            className={`w-full rounded-lg border-2 border-dashed p-8 text-center transition-colors cursor-pointer ${
+            disabled={isBlocked}
+            onClick={() => !isBlocked && fileInputRef.current?.click()}
+            onDragOver={!isBlocked ? handleDragOver : undefined}
+            onDragLeave={!isBlocked ? handleDragLeave : undefined}
+            onDrop={!isBlocked ? handleDrop : undefined}
+            className={`w-full rounded-lg border-2 border-dashed p-8 text-center transition-colors ${isBlocked ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${
               dragOver
                 ? "border-primary bg-primary/5"
                 : file
@@ -77,6 +85,7 @@ export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
               accept=".apkg,.zip"
               onChange={handleFileInput}
               className="hidden"
+              disabled={isBlocked}
             />
             <div className="flex flex-col items-center gap-3">
               {file ? (
@@ -178,6 +187,20 @@ export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
             </CardContent>
           </Card>
 
+          {/* Block notice for guest / non-admin */}
+          {isAnonymous && (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              <p className="text-sm text-destructive">{t("guestNotice")}</p>
+            </div>
+          )}
+          {!isAnonymous && !isAdmin && (
+            <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+              <AlertTriangle className="h-4 w-4 text-destructive shrink-0" />
+              <p className="text-sm text-destructive">{t("nonAdminNotice")}</p>
+            </div>
+          )}
+
           {/* Error */}
           {error && (
             <div className="flex items-center gap-2 rounded-lg border border-destructive/50 bg-destructive/10 p-3">
@@ -189,7 +212,7 @@ export function ImportClient({ isAdmin }: { isAdmin: boolean }) {
           {/* Import Button */}
           <Button
             onClick={startImport}
-            disabled={!file}
+            disabled={!file || isBlocked}
             className="w-full"
             size="lg"
           >
