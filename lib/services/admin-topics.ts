@@ -96,6 +96,58 @@ export async function toggleTopicVisibility(
   revalidatePath("/admin/topics");
 }
 
+export async function hardDeleteTopic(id: string) {
+  const { supabase } = await requireAdmin();
+
+  // Clean up anki-media storage folder using service role (user client lacks storage delete perms)
+  await deleteStorageFolder(id);
+
+  // Hard delete topic — CASCADE handles all DB cleanup (categories, flashcards,
+  // user_card_state, review_logs, quiz_attempts, reading_progress, hidden_topics, etc.)
+  const { error } = await supabase.from("topics").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin/topics");
+}
+
+async function deleteStorageFolder(topicId: string) {
+  const storageUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey =
+    process.env.LEARN_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!storageUrl || !serviceKey) return;
+
+  const headers = {
+    Authorization: `Bearer ${serviceKey}`,
+    "Content-Type": "application/json",
+  };
+
+  // List all files (up to 1000 per page; paginate if needed)
+  let offset = 0;
+  const limit = 1000;
+  const allPaths: string[] = [];
+
+  for (;;) {
+    const res = await fetch(`${storageUrl}/storage/v1/object/list/anki-media`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ prefix: `${topicId}/`, limit, offset }),
+    });
+    const files: { name: string }[] = await res.json();
+    if (!Array.isArray(files) || files.length === 0) break;
+    for (const f of files) allPaths.push(`${topicId}/${f.name}`);
+    if (files.length < limit) break;
+    offset += limit;
+  }
+
+  if (allPaths.length === 0) return;
+
+  await fetch(`${storageUrl}/storage/v1/object/anki-media`, {
+    method: "DELETE",
+    headers,
+    body: JSON.stringify({ prefixes: allPaths }),
+  });
+}
+
 export async function getAllTopics() {
   const { supabase } = await requireAdmin();
   const { data, error } = await supabase

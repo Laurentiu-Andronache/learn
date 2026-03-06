@@ -65,6 +65,7 @@ export default async function AdminTopicsPage() {
               <AdminTopicActions
                 topicId={topic.id}
                 isActive={topic.is_active ?? true}
+                topicTitle={topic.title_en}
               />
             </div>
           </div>
